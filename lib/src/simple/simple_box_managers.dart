@@ -7,7 +7,7 @@ import '../typedefs.dart';
 
 part 'collection_box_managers.dart';
 
-final class BoxManager<T, I> extends BaseBoxManager<T, I> {
+final class BoxManager<T, I extends Object> extends BaseBoxManager<T, I> {
   BoxManager({required super.boxKey, required super.defaultValue, super.logCallback});
 
   late final Box<T> _box;
@@ -33,7 +33,7 @@ final class BoxManager<T, I> extends BaseBoxManager<T, I> {
   }).map((_) => unit);
 }
 
-final class LazyBoxManager<T, I> extends BaseBoxManager<T, I> {
+final class LazyBoxManager<T, I extends Object> extends BaseBoxManager<T, I> {
   LazyBoxManager({required super.boxKey, required super.defaultValue, super.logCallback});
 
   late final LazyBox<T> _lazyBox;
