@@ -18,7 +18,7 @@ final class DualIntIndexLazyBoxManager<T> extends _BaseDualIndexLazyBoxManager<T
     boxKey: boxKey,
     defaultValue: defaultValue,
     logCallback: logCallback,
-    encoder: _bitShiftEncoder,
+    encoder: bitShiftEncoder,
   );
 
   /// ### ✅ Pros:
@@ -46,7 +46,8 @@ final class DualIntIndexLazyBoxManager<T> extends _BaseDualIndexLazyBoxManager<T
   static const _bitShift = 32;
   static const _bitMask = 0xFFFFFFFF;
 
-  static int _bitShiftEncoder(int primaryIndex, int secondaryIndex) {
+  @visibleForTesting
+  static int bitShiftEncoder(int primaryIndex, int secondaryIndex) {
     assert(primaryIndex >= 0 && primaryIndex <= _bitMask, 'First number must be 32-bit unsigned');
     assert(
       secondaryIndex >= 0 && secondaryIndex <= _bitMask,

@@ -7,8 +7,6 @@ environment:
   sdk: '>=3.9.0 <4.0.0'
 
 dependencies:
-  flutter:
-    sdk: flutter
   collection: ^1.19.1
   fpdart: ^1.2.0
   hive_ce: ^2.15.1

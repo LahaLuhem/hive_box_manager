@@ -1,5 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:hive_ce/hive.dart';
+import 'package:meta/meta.dart';
 
 import '../base_box_manager.dart';
 import '../typedefs.dart';
