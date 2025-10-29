@@ -10,6 +10,8 @@ final class DualIntIndexLazyBoxManager<T> extends _BaseDualIndexLazyBoxManager<T
   /// + No negative numbers without additional handling
   /// + Not great if data distribution is sparse
   /// + Potential platform issues if Dart's integer behavior changes
+  /// ### Collision Test
+  /// Up to 20,000 possible indices (~16 mins)
   factory DualIntIndexLazyBoxManager({
     required String boxKey,
     required T defaultValue,
