@@ -4,13 +4,14 @@ import 'dart:math';
 
 import 'package:dart_bloom_filter/dart_bloom_filter.dart';
 import 'package:hive_box_manager/hive_box_manager.dart';
+import 'package:shouldly/shouldly_bool.dart';
 import 'package:test/test.dart';
 
 void main() {
   group('Encoder Tests', () {
-    test('Range uniqueness', () async {
+    test('Range uniqueness (Just a formality. Mathematically proven.)', () async {
       final result = await _runParallelTest(20_000);
-      expect(result, isTrue);
+      result.should.beTrue();
     }, timeout: Timeout.none);
   }, timeout: Timeout.none);
 }
