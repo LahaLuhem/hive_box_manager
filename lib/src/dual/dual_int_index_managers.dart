@@ -110,7 +110,7 @@ final class DualIntIndexLazyBoxManager<T> extends _BaseDualIndexLazyBoxManager<T
   }
 
   //////////////////// NEGATIVE NUMBERS ////////////////////
-  // Max 32-bit signed int
+  /// Max 32-bit signed int
   static const _negativeNumberOffset = (2 ^ 31) - 1;
   static const _negativeNumberRange = 2 ^ 32;
 

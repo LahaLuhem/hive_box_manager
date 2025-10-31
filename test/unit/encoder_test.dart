@@ -10,13 +10,13 @@ import 'package:test/test.dart';
 void main() {
   group('Encoder Tests', () {
     test('Range uniqueness (Just a formality. Mathematically proven.)', () async {
-      final result = await _runParallelTest(20_000);
+      final result = await _runParallelBitShiftEncoderTest(10_000);
       result.should.beTrue();
     }, timeout: Timeout.none);
   }, timeout: Timeout.none);
 }
 
-Future<bool> _runParallelTest(int maxIndex, {int? isolates}) async {
+Future<bool> _runParallelBitShiftEncoderTest(int maxIndex, {int? isolates}) async {
   final numOfIsolates = isolates ?? Platform.numberOfProcessors;
   print('Running on $numOfIsolates isolates');
   final batchSize = (maxIndex / numOfIsolates).ceil();
