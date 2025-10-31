@@ -9,8 +9,9 @@ import 'package:test/test.dart';
 
 void main() {
   group('Encoder Tests', () {
+    const maxIndex = 10_000;   // Max tested: 20_000
     test('Range uniqueness (Just a formality. Mathematically proven.)', () async {
-      final result = await _runParallelBitShiftEncoderTest(10_000);
+      final result = await _runParallelBitShiftEncoderTest(maxIndex);
       result.should.beTrue();
     }, timeout: Timeout.none);
   }, timeout: Timeout.none);
@@ -34,6 +35,7 @@ Future<bool> _runParallelBitShiftEncoderTest(int maxIndex, {int? isolates}) asyn
       for (var p = start; p < end; p++) {
         for (var s = 0; s <= maxIndex; s++) {
           final value = DualIntIndexLazyBoxManager.bitShiftEncoder(p, s);
+          if (value > 0xFFFFFFFF) throw TestFailure('Overflow at ($p, $s) = $value');
           if (!localSet.add(value)) throw TestFailure('Duplicate at ($p, $s) = $value');
         }
       }

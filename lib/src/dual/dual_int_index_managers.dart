@@ -3,10 +3,10 @@ part of 'base_dual_index_managers.dart';
 final class DualIntIndexLazyBoxManager<T> extends _BaseDualIndexLazyBoxManager<T, int, int, int> {
   /// ### ✅ Pros:
   /// + Maximum performance - Bit operations are the fastest CPU operations
-  /// + Perfect distribution - Uses all 64 bits efficiently (32 bits each)
-  /// + No wasted space - Can represent 0 to 4,294,967,295 for both numbers
+  /// + Perfect distribution - Uses all 32 bits efficiently (16 bits each)
+  /// + No wasted space - Can represent 0 to 65,536 for both numbers
   /// ### ❌ Cons:
-  /// + Fixed range - Limited to 32-bit integers (0-4.3 billion)
+  /// + Fixed range - Limited to 16-bit integers (0-65536)
   /// + No negative numbers without additional handling
   /// + Not great if data distribution is sparse
   /// + Potential platform issues if Dart's integer behavior changes
@@ -46,69 +46,69 @@ final class DualIntIndexLazyBoxManager<T> extends _BaseDualIndexLazyBoxManager<T
 
   ////////////////////// BIT-SHIFT //////////////////////
 
-  /// Encodes two 32-bit unsigned integers into a unique 64-bit integer using bit shifting.
+  /// Encodes two 16-bit unsigned integers into a unique 32-bit integer using bit shifting.
   /// ## Mathematical Foundation
   /// This method provides a bijective mapping between pairs of 32-bit integers
   /// `(primaryIndex, secondaryIndex)` and 64-bit integers, ensuring that each
   /// unique input pair produces a unique output value.
   /// ### Encoding Operation:
   /// ```dart
-  /// result = (primaryIndex << 32) | (secondaryIndex & 0xFFFFFFFF)
+  /// result = (primaryIndex << 16) | (secondaryIndex & 0xFFFFFFFF)
   /// ```
   /// ### Mathematical Proof of Uniqueness:
   /// Let:
-  /// - `P = primaryIndex` (32-bit unsigned integer: 0 ≤ P ≤ 2³² - 1)
-  /// - `S = secondaryIndex` (32-bit unsigned integer: 0 ≤ S ≤ 2³² - 1)
-  /// The encoding can be mathematically expressed as: `encoded = P × 2³² + S`
+  /// - `P = primaryIndex` (16-bit unsigned integer: 0 ≤ P ≤ 2¹⁶ - 1)
+  /// - `S = secondaryIndex` (16-bit unsigned integer: 0 ≤ S ≤ 2¹⁶ - 1)
+  /// The encoding can be mathematically expressed as: `encoded = P × 2¹⁶ + S`
   /// **Proof:**
   /// 1. **Bit Shift as Multiplication:**
-  ///    - `P << 32` is equivalent to `P × 2³²`
-  ///    - This places `P` in the upper 32 bits of a 64-bit space
-  ///    - The lower 32 bits of `P << 32` are guaranteed to be zeros
+  ///    - `P << 16` is equivalent to `P × 2¹⁶`
+  ///    - This places `P` in the upper 16 bits of a 32-bit space
+  ///    - The lower 16 bits of `P << 16` are guaranteed to be zeros
   /// 2. **Bit Mask Preservation:**
-  ///    - `S & 0xFFFFFFFF` ensures `S` is treated as a 32-bit value
-  ///    - This preserves all bits of `S` in the lower 32-bit range
+  ///    - `S & 0xFFFFFFFF` ensures `S` is treated as a 16-bit value
+  ///    - This preserves all bits of `S` in the lower 16-bit range
   /// 3. **Non-Overlapping Bit Fields:**
-  ///    - `P << 32` occupies bits [32, 63] (all zeros in [0, 31])
-  ///    - `S` occupies bits [0, 31] (all zeros in [32, 63])
+  ///    - `P << 16` occupies bits [16, 31] (all zeros in [0, 15])
+  ///    - `S` occupies bits [0, 15] (all zeros in [16, 31])
   ///    - These are disjoint bit ranges with no overlap
   /// 4. **OR Operation as Addition:**
   ///    - For non-overlapping bit fields: `(A | B) = A + B`
-  ///    - Therefore: `(P << 32) | S = (P × 2³²) + S`
+  ///    - Therefore: `(P << 16) | S = (P × 2¹⁶) + S`
   /// 5. **Uniqueness Guarantee:**
   ///    - Assume two different pairs `(P₁, S₁)` and `(P₂, S₂)` produce the same output
   ///    - Case 1: If `P₁ ≠ P₂`, then `P₁ × 2³² ≠ P₂ × 2³²` (difference in upper bits)
   ///    - Case 2: If `P₁ = P₂` but `S₁ ≠ S₂`, then lower bits differ
   ///    - Therefore, different inputs must produce different outputs
   /// ### Range and Constraints:
-  /// - Input range for both parameters: `[0, 4294967295]` (0xFFFFFFFF)
-  /// - Output range: `[0, 18446744073709551615]` (64-bit unsigned range)
+  /// - Input range for both parameters: `[0, 65535]` (0xFFFF)
+  /// - Output range: `[0, 4294967295]` (64-bit unsigned range)
   /// - The mapping is reversible: original values can be extracted using:
   ///   ```dart
-  ///   primaryIndex = encoded >> 32;
-  ///   secondaryIndex = encoded & 0xFFFFFFFF;
+  ///   primaryIndex = encoded >> 16;
+  ///   secondaryIndex = encoded & 0xFFFF;
   ///   ```
   /// ### Example:
   /// ```dart
   /// bitShiftEncoder(0x12345678, 0xABCDEF01) == 0x12345678ABCDEF01
   /// ```
-  /// [primaryIndex ]The first 32-bit unsigned integer (upper 32 bits of result)
-  /// [secondaryIndex] The second 32-bit unsigned integer (lower 32 bits of result)
-  /// Returns: A unique 64-bit integer encoding both input values
-  /// Throws: AssertionError if either input exceeds 32-bit unsigned range
+  /// [primaryIndex ]The first 16-bit unsigned integer (upper 16 bits of result)
+  /// [secondaryIndex] The second 16-bit unsigned integer (lower 16 bits of result)
+  /// Returns: A unique 32-bit integer encoding both input values
+  /// Throws: AssertionError if either input exceeds 16-bit unsigned range
   @visibleForTesting
   static int bitShiftEncoder(int primaryIndex, int secondaryIndex) {
-    assert(primaryIndex >= 0 && primaryIndex <= _bitMask, 'First number must be 32-bit unsigned');
+    assert(primaryIndex >= 0 && primaryIndex <= _bitMask, 'Primary index must be in range 0-65535');
     assert(
       secondaryIndex >= 0 && secondaryIndex <= _bitMask,
-      'Second number must be 32-bit unsigned',
+      'Secondary index must be in range 0-65535',
     );
 
-    return (primaryIndex << _bitShift) | (secondaryIndex & _bitMask);
+    return (primaryIndex << _bitShift) | secondaryIndex;
   }
 
-  static const _bitShift = 32;
-  static const _bitMask = 0xFFFFFFFF;
+  static const _bitShift = 16;
+  static const _bitMask = 0xFFFF;
 
   //////////////////// NEGATIVE NUMBERS ////////////////////
 
