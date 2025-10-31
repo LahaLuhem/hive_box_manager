@@ -1,4 +1,4 @@
-part of 'base_dual_index_managers.dart';
+part of '../base_dual_index_managers.dart';
 
 final class DualIntIndexLazyBoxManager<T> extends _BaseDualIndexLazyBoxManager<T, int, int, int> {
   /// ### ✅ Pros:
