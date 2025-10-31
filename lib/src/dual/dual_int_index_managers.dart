@@ -35,7 +35,7 @@ final class DualIntIndexLazyBoxManager<T> extends _BaseDualIndexLazyBoxManager<T
     boxKey: boxKey,
     defaultValue: defaultValue,
     logCallback: logCallback,
-    encoder: _negativeNumbersEncoder,
+    encoder: negativeNumbersEncoder,
   );
 
   ////////////////////// BIT-SHIFT //////////////////////
@@ -107,7 +107,8 @@ final class DualIntIndexLazyBoxManager<T> extends _BaseDualIndexLazyBoxManager<T
   //////////////////// NEGATIVE NUMBERS ////////////////////
 
   /// Just shift and OR - no bounds checking for maximum speed
-  static int _negativeNumbersEncoder(int primaryIndex, int secondaryIndex) =>
+  @visibleForTesting
+  static int negativeNumbersEncoder(int primaryIndex, int secondaryIndex) =>
       ((primaryIndex + _negativeNumbersOffset) << _bitShiftNegative) |
       (secondaryIndex + _negativeNumbersOffset);
 
