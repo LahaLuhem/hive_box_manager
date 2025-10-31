@@ -45,7 +45,7 @@ final class LazyBoxManager<T, I extends Object> extends BaseBoxManager<T, I> {
   Task<Unit> clear() => Task(() => _lazyBox.clear()).map((_) => unit);
 
   Task<T> get(I index) =>
-      Task(() async => (await _lazyBox.get(index, defaultValue: defaultValue))!);
+      Task(() async => (await _lazyBox.get(index, defaultValue: defaultValue)) as T);
 
   TaskOption<T> tryGet(I index) =>
       TaskOption(() async => Option.fromNullable(await _lazyBox.get(index, defaultValue: null)));
@@ -55,7 +55,7 @@ final class LazyBoxManager<T, I extends Object> extends BaseBoxManager<T, I> {
     if (indices.isEmpty) return const [];
 
     // Non-empty indices should have a value => no need for [defaultValue]
-    return indices.map((index) async => (await _lazyBox.get(index))!).wait;
+    return indices.map((index) async => (await _lazyBox.get(index)) as T).wait;
   });
 
   /// Returns [TaskOption.none()] if the box is empty.

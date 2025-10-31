@@ -9,7 +9,7 @@ import 'package:test/test.dart';
 
 void main() {
   group('Encoder Tests', () {
-    const maxIndex = 10_000;   // Max tested: 20_000
+    const maxIndex = 10_000; // Max tested: 20_000
     test('Range uniqueness (Just a formality. Mathematically proven.)', () async {
       final result = await _runParallelBitShiftEncoderTest(maxIndex);
       result.should.beTrue();

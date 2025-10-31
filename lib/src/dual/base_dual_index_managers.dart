@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:fpdart/fpdart.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:meta/meta.dart';
@@ -27,7 +25,8 @@ abstract class _BaseDualIndexLazyBoxManager<T, I1, I2, O extends Object>
 
   Task<T> get({required I1 primaryIndex, required I2 secondaryIndex}) => Task(
     () async =>
-        (await _lazyBox.get(_encoder(primaryIndex, secondaryIndex), defaultValue: defaultValue)) as T,
+        (await _lazyBox.get(_encoder(primaryIndex, secondaryIndex), defaultValue: defaultValue))
+            as T,
   );
 
   TaskOption<T> tryGet({required I1 primaryIndex, required I2 secondaryIndex}) => TaskOption(
