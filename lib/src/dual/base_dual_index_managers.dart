@@ -6,18 +6,19 @@ import '../base_box_manager.dart';
 import '../typedefs.dart';
 
 part 'pure_int/dual_int_index_managers.dart';
+part 'base_query_dual_index_managers.dart';
 
 abstract class _BaseDualIndexLazyBoxManager<T, I1, I2, O extends Object>
     extends BaseBoxManager<T, O> {
   _BaseDualIndexLazyBoxManager({
     required super.boxKey,
     required super.defaultValue,
-    required O Function(I1 primaryIndex, I2 secondaryIndex) encoder,
+    required Encoder<I1, I2, O> encoder,
     super.logCallback,
   }) : _encoder = encoder;
 
   late final LazyBox<T> _lazyBox;
-  final O Function(I1 primaryIndex, I2 secondaryIndex) _encoder;
+  final Encoder<I1, I2, O> _encoder;
 
   @override
   Future<void> init({HiveCipher? encryptionCipher}) async =>
