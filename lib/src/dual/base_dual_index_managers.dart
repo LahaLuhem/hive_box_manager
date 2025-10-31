@@ -14,12 +14,12 @@ abstract class _BaseDualIndexLazyBoxManager<T, I1, I2, O extends Object>
   _BaseDualIndexLazyBoxManager({
     required super.boxKey,
     required super.defaultValue,
-    required this.encoder,
+    required O Function(I1 primaryIndex, I2 secondaryIndex) encoder,
     super.logCallback,
-  });
+  }) : _encoder = encoder;
 
   late final LazyBox<T> _lazyBox;
-  final O Function(I1 primaryIndex, I2 secondaryIndex) encoder;
+  final O Function(I1 primaryIndex, I2 secondaryIndex) _encoder;
 
   @override
   Future<void> init({HiveCipher? encryptionCipher}) async =>
@@ -27,12 +27,12 @@ abstract class _BaseDualIndexLazyBoxManager<T, I1, I2, O extends Object>
 
   Task<T> get({required I1 primaryIndex, required I2 secondaryIndex}) => Task(
     () async =>
-        (await _lazyBox.get(encoder(primaryIndex, secondaryIndex), defaultValue: defaultValue)) as T,
+        (await _lazyBox.get(_encoder(primaryIndex, secondaryIndex), defaultValue: defaultValue)) as T,
   );
 
   TaskOption<T> tryGet({required I1 primaryIndex, required I2 secondaryIndex}) => TaskOption(
     () async => Option.fromNullable(
-      await _lazyBox.get(encoder(primaryIndex, secondaryIndex), defaultValue: null),
+      await _lazyBox.get(_encoder(primaryIndex, secondaryIndex), defaultValue: null),
     ),
   );
 
@@ -51,7 +51,7 @@ abstract class _BaseDualIndexLazyBoxManager<T, I1, I2, O extends Object>
 
   Task<Unit> put({required I1 primaryIndex, required I2 secondaryIndex, required T value}) =>
       Task(() {
-        final encodedIndex = encoder(primaryIndex, secondaryIndex);
+        final encodedIndex = _encoder(primaryIndex, secondaryIndex);
 
         return _lazyBox
             .put(encodedIndex, value)
@@ -68,7 +68,7 @@ abstract class _BaseDualIndexLazyBoxManager<T, I1, I2, O extends Object>
             values.map((value) {
               final primaryAndSecondaryIndices = indexTransformer(value);
 
-              return encoder(primaryAndSecondaryIndices.$1, primaryAndSecondaryIndices.$2);
+              return _encoder(primaryAndSecondaryIndices.$1, primaryAndSecondaryIndices.$2);
             }),
             values,
           ),
@@ -87,7 +87,7 @@ abstract class _BaseDualIndexLazyBoxManager<T, I1, I2, O extends Object>
     final updatedValue = boxUpdater.call(currentValue);
 
     return Task(() {
-      final encodedIndex = encoder(primaryIndex, secondaryIndex);
+      final encodedIndex = _encoder(primaryIndex, secondaryIndex);
 
       return _lazyBox
           .put(encodedIndex, updatedValue)
@@ -96,7 +96,7 @@ abstract class _BaseDualIndexLazyBoxManager<T, I1, I2, O extends Object>
   });
 
   Task<Unit> delete({required I1 primaryIndex, required I2 secondaryIndex}) => Task(() {
-    final encodedIndex = encoder(primaryIndex, secondaryIndex);
+    final encodedIndex = _encoder(primaryIndex, secondaryIndex);
 
     return _lazyBox
         .delete(encodedIndex)
