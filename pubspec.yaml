@@ -10,7 +10,7 @@ dependencies:
   collection: ^1.19.1
   fpdart: ^1.2.0
   hive_ce: ^2.15.1
-  meta: ^1.17.0
+  meta: ^1.16.0
 
 dev_dependencies:
   dart_bloom_filter: ^1.0.0
