@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:fpdart/fpdart.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:meta/meta.dart';

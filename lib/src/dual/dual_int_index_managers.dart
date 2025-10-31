@@ -45,8 +45,6 @@ final class DualIntIndexLazyBoxManager<T> extends _BaseDualIndexLazyBoxManager<T
   );
 
   ////////////////////// BIT-SHIFT //////////////////////
-  static const _bitShift = 32;
-  static const _bitMask = 0xFFFFFFFF;
 
   /// Encodes two 32-bit unsigned integers into a unique 64-bit integer using bit shifting.
   /// ## Mathematical Foundation
@@ -109,11 +107,65 @@ final class DualIntIndexLazyBoxManager<T> extends _BaseDualIndexLazyBoxManager<T
     return (primaryIndex << _bitShift) | (secondaryIndex & _bitMask);
   }
 
-  //////////////////// NEGATIVE NUMBERS ////////////////////
-  /// Max 32-bit signed int
-  static const _negativeNumberOffset = (2 ^ 31) - 1;
-  static const _negativeNumberRange = 2 ^ 32;
+  static const _bitShift = 32;
+  static const _bitMask = 0xFFFFFFFF;
 
+  //////////////////// NEGATIVE NUMBERS ////////////////////
+
+  /// Encodes two 32-bit signed integers into a unique 64-bit integer by shifting
+  /// them to the non-negative range and combining them.
+  /// ## Mathematical Foundation
+  /// This method provides a bijective mapping between pairs of 32-bit signed integers
+  /// `(primaryIndex, secondaryIndex)` and 64-bit integers, ensuring that each
+  /// unique input pair produces a unique output value.
+  /// ### Mathematical Proof of Uniqueness:
+  /// Let:
+  /// - `P = primaryIndex` (32-bit signed integer: -2³¹ ≤ P ≤ 2³¹ - 1)
+  /// - `S = secondaryIndex` (32-bit signed integer: -2³¹ ≤ S ≤ 2³¹ - 1)
+  /// - `O = _negativeNumberOffset = 2³¹ - 1` (converts range to non-negative)
+  /// - `R = _negativeNumberRange = 2³²` (ensures non-overlapping ranges)
+  /// The encoding can be mathematically expressed as `encoded = (P + O) × R + (S + O)`.
+  /// **Proof:**
+  /// 1. **Range Transformation:**
+  ///    - Original range for P and S: [-2147483648, 2147483647]
+  ///    - After adding O: P + O ∈ [1, 4294967294]
+  ///    - After adding O: S + O ∈ [1, 4294967294]
+  ///    - Both shifted values become strictly positive 32-bit integers
+  /// 2. **Non-Overlapping Product Ranges:**
+  ///    - Minimum product: (1) × R + (1) = R + 1
+  ///    - Maximum product: (R - 2) × R + (R - 2) = R² - R - 2
+  ///    - Each unique P creates a distinct interval of size R
+  ///    - Intervals are disjoint: [k×R + 1, (k+1)×R - 1] for k = P + O
+  /// 3. **Uniqueness Guarantee:**
+  ///    - Assume two different pairs (P₁, S₁) and (P₂, S₂) produce the same output:
+  ///        (P₁ + O) × R + (S₁ + O) = (P₂ + O) × R + (S₂ + O)
+  ///    - Rearranging: (P₁ - P₂) × R = (S₂ - S₁)
+  ///    - Since |S₂ - S₁| < R (S values are in [1, R-2]), the only solution is:
+  ///        P₁ = P₂ and S₁ = S₂
+  ///    - Therefore, the mapping is injective (one-to-one)
+  /// 4. **Range Coverage:**
+  ///    - Total input pairs: (2³²) × (2³²) = 2⁶⁴ possible combinations
+  ///    - Output range covers: [R + 1, R² - R - 2] ⊆ [0, 2⁶⁴ - 1]
+  ///    - The encoding uses a subset of 64-bit integers but maintains uniqueness
+  /// ### Why This Works:
+  /// The key insight is that multiplication by R (2³²) creates non-overlapping
+  /// "blocks" in the output space, each large enough to contain all possible
+  /// secondary index values without collisions.
+  /// ### Example:
+  /// ```dart
+  /// // With O = 2147483647, R = 4294967296
+  /// _negativeNumbersEncoder(-2147483648, -2147483648)
+  ///   = ( -2147483648 + 2147483647 ) * 4294967296 + ( -2147483648 + 2147483647 )
+  ///   = (-1) * 4294967296 + (-1) = -4294967297
+  /// // But in practice, this wraps around to a large positive 64-bit value
+  /// ```
+  /// ### Note on Integer Representation:
+  /// - In practice, negative results wrap around due to two's complement
+  /// - The uniqueness property is preserved under modular arithmetic
+  /// - The method works correctly within Dart's 64-bit integer semantics
+  /// [primaryIndex]: The first 32-bit signed integer
+  /// [secondaryIndex]: The second 32-bit signed integer
+  /// Returns a unique 64-bit integer encoding both input values
   static int _negativeNumbersEncoder(int primaryIndex, int secondaryIndex) {
     // Shift negative numbers to positive range
     final shiftedA = primaryIndex + _negativeNumberOffset;
@@ -122,6 +174,10 @@ final class DualIntIndexLazyBoxManager<T> extends _BaseDualIndexLazyBoxManager<T
     // Use mathematical encoding
     return shiftedA * _negativeNumberRange + shiftedB;
   }
+
+  /// Max 32-bit signed int
+  static const  _negativeNumberOffset = 2147483647; //2^31 -1
+  static const _negativeNumberRange = 4294967296;  //2^32
 
   DualIntIndexLazyBoxManager._({
     required super.boxKey,
