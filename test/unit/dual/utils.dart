@@ -3,52 +3,17 @@ import 'dart:isolate';
 
 import 'package:dart_bloom_filter/dart_bloom_filter.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:hive_box_manager/hive_box_manager.dart';
-import 'package:shouldly/shouldly_bool.dart';
 import 'package:test/test.dart';
 
-void main() {
-  group('Encoder Tests', () {
-    const maxIndex = 10_000; // Max tested: 20_000
+typedef ValueCheck = void Function(int primary, int secondary, int value);
+typedef IndexGenerator = Iterable<int> Function(int maxIndex);
 
-    test('Range uniqueness (Just a formality. Mathematically proven.)', () async {
-      final result = await _runParallelEncoderTest(
-        encoder: DualIntIndexLazyBoxManager.bitShiftEncoder,
-        maxIndex: maxIndex,
-        primaryIndexGenerator: _positiveIndexGenerator,
-        secondaryIndexGenerator: _positiveIndexGenerator,
-      );
-      result.should.beTrue();
-    }, timeout: Timeout.none);
-
-    test('Negative indices uniqueness (Just a formality. Mathematically proven.)', () async {
-      final result = await _runParallelEncoderTest(
-        encoder: DualIntIndexLazyBoxManager.negativeNumbersEncoder,
-        maxIndex: (maxIndex / 2).ceil(),
-        primaryIndexGenerator: _signedIndexGenerator,
-        secondaryIndexGenerator: _signedIndexGenerator,
-        additionalChecks: [
-          (primary, secondary, value) {
-            if (value < 0) throw TestFailure('Negative value at ($primary, $secondary) = $value');
-          },
-        ],
-      );
-      result.should.beTrue();
-    }, timeout: Timeout.none);
-  }, timeout: Timeout.none);
-}
-
-// Given as type param -> loss in readbility
-//ignore: avoid_private_typedef_functions
-typedef _ValueCheck = void Function(int primary, int secondary, int value);
-typedef _IndexGenerator = Iterable<int> Function(int maxIndex);
-
-Future<bool> _runParallelEncoderTest({
+Future<bool> runParallelEncoderTest({
   required int Function(int primary, int secondary) encoder,
   required int maxIndex,
-  required _IndexGenerator primaryIndexGenerator,
-  required _IndexGenerator secondaryIndexGenerator,
-  List<_ValueCheck> additionalChecks = const [],
+  required IndexGenerator primaryIndexGenerator,
+  required IndexGenerator secondaryIndexGenerator,
+  List<ValueCheck> additionalChecks = const [],
   int? isolates,
 }) async {
   final numOfIsolates = isolates ?? Platform.numberOfProcessors;
@@ -123,15 +88,13 @@ Future<bool> _runParallelEncoderTest({
 }
 
 // For positive indices only (0 to maxIndex)
-Iterable<int> _positiveIndexGenerator(int maxIndex) => Iterable.generate(maxIndex);
+Iterable<int> positiveIndexGenerator(int maxIndex) => Iterable.generate(maxIndex);
 
 // For negative and positive indices (-maxIndex to maxIndex)
-Iterable<int> _signedIndexGenerator(int maxIndex) =>
+Iterable<int> signedIndexGenerator(int maxIndex) =>
     Iterable.generate(maxIndex * 2, (i) => i - maxIndex).append(maxIndex);
 
-// For custom ranges
-// ignore: unused_element
-Iterable<int> _customRangeIndexGenerator(int start, int end) sync* {
+Iterable<int> customRangeIndexGenerator(int start, int end) sync* {
   for (var i = start; i <= end; i++) {
     yield i;
   }
