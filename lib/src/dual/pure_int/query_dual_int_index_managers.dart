@@ -1,0 +1,69 @@
+part of '../base_dual_index_managers.dart';
+
+abstract class QueryDualIntIndexLazyBoxManager<T extends Object>
+    extends _BaseQueryDualIndexLazyBoxManager<T, int, int, int> {
+  QueryDualIntIndexLazyBoxManager._({
+    required super.boxKey,
+    required super.defaultValue,
+    required super.encoder,
+    super.logCallback,
+  });
+
+  /// ### ✅ Pros
+  /// + Perfect accuracy: Always reflects current box state
+  /// + Zero storage overhead: No additional boxes or memory structures
+  /// + Memory efficient: Only stores seen indices during iteration
+  /// + Simple & robust: Less code, fewer failure points
+  /// + Leverages Hive optimizations: Uses Hive's built-in key indexing
+  /// ### ❌ Cons
+  /// + Still O(K) per query: Performance degrades with total records
+  /// + No pre-computation: Each query scans all keys
+  /// + Not optimal for very large datasets: >100K records may cause UI jank
+  /// + No indexing benefits: Each decomposition is a full scan
+  factory QueryDualIntIndexLazyBoxManager.bitShift({
+    required String boxKey,
+    required T defaultValue,
+    LogCallback? logCallback,
+  }) = _BitShiftQueryDualIntIndexLazyBoxManager._;
+}
+
+/// Uses Hive.keys for O(K) decomposition instead of O(65536)
+final class _BitShiftQueryDualIntIndexLazyBoxManager<T extends Object>
+    extends QueryDualIntIndexLazyBoxManager<T> {
+  @override
+  Iterable<int> primariesDecomposer(int secondaryIndex) sync* {
+    final seen = <int>{};
+    for (final key in _lazyBox.keys.cast<int>()) {
+      final (primary, secondary) = _decode(key);
+      if (secondary == secondaryIndex && seen.add(primary)) {
+        yield primary;
+      }
+    }
+  }
+
+  @override
+  Iterable<int> secondariesDecomposer(int primaryIndex) sync* {
+    final seen = <int>{};
+    for (final key in _lazyBox.keys.cast<int>()) {
+      final (primary, secondary) = _decode(key);
+      if (primary == primaryIndex && seen.add(secondary)) {
+        yield secondary;
+      }
+    }
+  }
+
+  @protected
+  static int encoder(int primaryIndex, int secondaryIndex) =>
+      DualIntIndexLazyBoxManager.bitShiftEncoder(primaryIndex, secondaryIndex);
+
+  static (int, int) _decode(int encodedKey) => (
+    (encodedKey >> ConstValues.bitShift) & ConstValues.bitMask,
+    encodedKey & ConstValues.bitMask,
+  );
+
+  _BitShiftQueryDualIntIndexLazyBoxManager._({
+    required super.boxKey,
+    required super.defaultValue,
+    super.logCallback,
+  }) : super._(encoder: encoder);
+}

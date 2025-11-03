@@ -12,7 +12,7 @@ final class DualIntIndexLazyBoxManager<T> extends _BaseDualIndexLazyBoxManager<T
   /// + Potential platform issues if Dart's integer behavior changes
   /// ### Collision Test
   /// Empirically tested up to 20,000 possible indices
-  factory DualIntIndexLazyBoxManager({
+  factory DualIntIndexLazyBoxManager.bitShift({
     required String boxKey,
     required T defaultValue,
     LogCallback? logCallback,
@@ -92,17 +92,17 @@ final class DualIntIndexLazyBoxManager<T> extends _BaseDualIndexLazyBoxManager<T
   /// Throws: AssertionError if either input exceeds 16-bit unsigned range
   @visibleForTesting
   static int bitShiftEncoder(int primaryIndex, int secondaryIndex) {
-    assert(primaryIndex >= 0 && primaryIndex <= _bitMask, 'Primary index must be in range 0-65535');
     assert(
-      secondaryIndex >= 0 && secondaryIndex <= _bitMask,
+      primaryIndex >= 0 && primaryIndex <= ConstValues.bitMask,
+      'Primary index must be in range 0-65535',
+    );
+    assert(
+      secondaryIndex >= 0 && secondaryIndex <= ConstValues.bitMask,
       'Secondary index must be in range 0-65535',
     );
 
-    return (primaryIndex << _bitShift) | secondaryIndex;
+    return (primaryIndex << ConstValues.bitShift) | secondaryIndex;
   }
-
-  static const _bitShift = 16;
-  static const _bitMask = 0xFFFF;
 
   //////////////////// NEGATIVE NUMBERS ////////////////////
 
@@ -112,7 +112,7 @@ final class DualIntIndexLazyBoxManager<T> extends _BaseDualIndexLazyBoxManager<T
       ((primaryIndex + _negativeNumbersOffset) << _bitShiftNegative) |
       (secondaryIndex + _negativeNumbersOffset);
 
-  static const _bitShiftNegative = _bitShift - 1;
+  static const _bitShiftNegative = ConstValues.bitShift - 1;
 
   // Maximum range: -16383 to +16383 for both numbers
   static const _negativeNumbersOffset = 16383; // Maximum range: -16383 to +16383 for both numbers

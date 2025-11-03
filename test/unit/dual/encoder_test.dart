@@ -10,7 +10,7 @@ void main() {
 
     test('Range uniqueness (Just a formality. Mathematically proven.)', () async {
       final result = await runParallelEncoderTest(
-        encoder: QueryDualIntIndexLazyBoxManager.bitShiftEncoder,
+        encoder: DualIntIndexLazyBoxManager.bitShiftEncoder,
         maxIndex: maxIndex,
         primaryIndexGenerator: positiveIndexGenerator,
         secondaryIndexGenerator: positiveIndexGenerator,
@@ -20,7 +20,7 @@ void main() {
 
     test('Negative indices uniqueness (Just a formality. Mathematically proven.)', () async {
       final result = await runParallelEncoderTest(
-        encoder: QueryDualIntIndexLazyBoxManager.negativeNumbersEncoder,
+        encoder: DualIntIndexLazyBoxManager.negativeNumbersEncoder,
         maxIndex: (maxIndex / 2).ceil(),
         primaryIndexGenerator: signedIndexGenerator,
         secondaryIndexGenerator: signedIndexGenerator,

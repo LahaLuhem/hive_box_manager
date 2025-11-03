@@ -3,10 +3,12 @@ import 'package:hive_ce/hive.dart';
 import 'package:meta/meta.dart';
 
 import '../base_box_manager.dart';
+import '../const_values.dart';
 import '../typedefs.dart';
 
 part 'pure_int/dual_int_index_managers.dart';
 part 'base_query_dual_index_managers.dart';
+part 'pure_int/query_dual_int_index_managers.dart';
 
 abstract class _BaseDualIndexLazyBoxManager<T, I1, I2, O extends Object>
     extends BaseBoxManager<T, O> {

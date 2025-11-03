@@ -6,20 +6,26 @@ abstract class _BaseQueryDualIndexLazyBoxManager<T, I1, I2, O extends Object>
     required super.boxKey,
     required super.defaultValue,
     required super.encoder,
-    required Decomposer<I2, I1> primariesDecomposer,
-    required Decomposer<I1, I2> secondariesDecomposer,
     super.logCallback,
-  }) : _primariesDecomposer = primariesDecomposer,
-       _secondariesDecomposer = secondariesDecomposer;
+  });
 
-  final Iterable<I1> Function(I2 secondaryIndex) _primariesDecomposer;
-  final Iterable<I2> Function(I1 primaryIndex) _secondariesDecomposer;
+  @protected
+  @visibleForOverriding
+  Iterable<I1> primariesDecomposer(I2 secondaryIndex);
 
-  Task<List<T>> queryByPrimary(I1 primaryIndex) => _secondariesDecomposer(primaryIndex)
+  @protected
+  @visibleForOverriding
+  Iterable<I2> secondariesDecomposer(I1 primaryIndex);
+
+  @protected
+  @nonVirtual
+  Task<List<T>> queryByPrimary(I1 primaryIndex) => secondariesDecomposer(primaryIndex)
       .map((secondaryIndex) => get(primaryIndex: primaryIndex, secondaryIndex: secondaryIndex))
       .sequenceTask();
 
-  Task<List<T>> queryBySecondary(I2 secondaryIndex) => _primariesDecomposer(secondaryIndex)
+  @protected
+  @nonVirtual
+  Task<List<T>> queryBySecondary(I2 secondaryIndex) => primariesDecomposer(secondaryIndex)
       .map((primaryIndex) => get(primaryIndex: primaryIndex, secondaryIndex: secondaryIndex))
       .sequenceTask();
 }
