@@ -11,7 +11,7 @@ import 'package:test/test.dart';
 part 'fakes.dart';
 
 void main() {
-  group('Query tests', () {
+  group('Bit-shift query tests', () {
     const maxIndex = 10;
     final sut = _FakeBitShiftQueryDualIntIndexLazyBoxManager(defaultValue: '');
 

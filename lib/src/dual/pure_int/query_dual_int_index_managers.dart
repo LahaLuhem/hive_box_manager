@@ -6,7 +6,6 @@ abstract class QueryDualIntIndexLazyBoxManager<T extends Object>
     required super.boxKey,
     required super.defaultValue,
     required super.encoder,
-    super.logCallback,
   });
 
   /// ### ✅ Pros
@@ -23,7 +22,6 @@ abstract class QueryDualIntIndexLazyBoxManager<T extends Object>
   factory QueryDualIntIndexLazyBoxManager.bitShift({
     required String boxKey,
     required T defaultValue,
-    LogCallback? logCallback,
   }) = BitShiftQueryDualIntIndexLazyBoxManager;
 }
 
@@ -69,9 +67,6 @@ class BitShiftQueryDualIntIndexLazyBoxManager<T extends Object>
 
   @protected
   @visibleForTesting
-  BitShiftQueryDualIntIndexLazyBoxManager({
-    required super.boxKey,
-    required super.defaultValue,
-    super.logCallback,
-  }) : super._(encoder: encoder);
+  BitShiftQueryDualIntIndexLazyBoxManager({required super.boxKey, required super.defaultValue})
+    : super._(encoder: encoder);
 }

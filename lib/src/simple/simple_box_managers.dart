@@ -8,7 +8,7 @@ import '../typedefs.dart';
 part 'collection_box_managers.dart';
 
 final class BoxManager<T, I extends Object> extends BaseBoxManager<T, I> {
-  BoxManager({required super.boxKey, required super.defaultValue, super.logCallback});
+  BoxManager({required super.boxKey, required super.defaultValue});
 
   late final Box<T> _box;
 
@@ -21,7 +21,7 @@ final class BoxManager<T, I extends Object> extends BaseBoxManager<T, I> {
   Task<Unit> put({required I index, required T value}) => Task(
     () => _box
         .put(index, value)
-        .then((_) => logCallback?.call("Wrote to Box[$boxKey] at '$index' with $value")),
+        .then((_) => assignedLogCallback?.call("Wrote to Box[$boxKey] at '$index' with $value")),
   ).map((_) => unit);
 
   Task<Unit> upsert({required I index, required BoxUpdater<T> boxUpdater}) => Task(() {
@@ -29,12 +29,14 @@ final class BoxManager<T, I extends Object> extends BaseBoxManager<T, I> {
 
     return _box
         .put(index, updatedValue)
-        .then((_) => logCallback?.call("Upserted Box[$boxKey] at '$index' with $updatedValue"));
+        .then(
+          (_) => assignedLogCallback?.call("Upserted Box[$boxKey] at '$index' with $updatedValue"),
+        );
   }).map((_) => unit);
 }
 
 final class LazyBoxManager<T, I extends Object> extends BaseBoxManager<T, I> {
-  LazyBoxManager({required super.boxKey, required super.defaultValue, super.logCallback});
+  LazyBoxManager({required super.boxKey, required super.defaultValue});
 
   late final LazyBox<T> _lazyBox;
 
@@ -66,7 +68,7 @@ final class LazyBoxManager<T, I extends Object> extends BaseBoxManager<T, I> {
     () => _lazyBox
         .put(index, value)
         .then(
-          (_) => logCallback?.call(
+          (_) => assignedLogCallback?.call(
             logPattern?.call(boxKey, index, value) ?? _defaultLogCallback(boxKey, index, value),
           ),
         ),
@@ -77,8 +79,9 @@ final class LazyBoxManager<T, I extends Object> extends BaseBoxManager<T, I> {
         () => _lazyBox
             .putAll(Map.fromIterables(values.map(indexTransformer), values))
             .then(
-              (_) =>
-                  logCallback?.call('Wrote ${values.length} key-value pairs to LazyBox[$boxKey]'),
+              (_) => assignedLogCallback?.call(
+                'Wrote ${values.length} key-value pairs to LazyBox[$boxKey]',
+              ),
             ),
       ).map((_) => unit);
 
@@ -93,7 +96,7 @@ final class LazyBoxManager<T, I extends Object> extends BaseBoxManager<T, I> {
       () => _lazyBox
           .put(index, updatedValue)
           .then(
-            (_) => logCallback?.call(
+            (_) => assignedLogCallback?.call(
               logPattern?.call(boxKey, index, updatedValue) ??
                   _defaultLogCallback(boxKey, index, updatedValue),
             ),
@@ -104,7 +107,7 @@ final class LazyBoxManager<T, I extends Object> extends BaseBoxManager<T, I> {
   Task<Unit> delete(I index) => Task(
     () => _lazyBox
         .delete(index)
-        .then((_) => logCallback?.call("Deleted from LazyBox[$boxKey] at '$index'")),
+        .then((_) => assignedLogCallback?.call("Deleted from LazyBox[$boxKey] at '$index'")),
   ).map((_) => unit);
 
   String _defaultLogCallback(String key, I index, T value) =>

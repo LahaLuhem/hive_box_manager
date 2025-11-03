@@ -6,7 +6,6 @@ abstract class _BaseQueryDualIndexLazyBoxManager<T, I1, I2, O extends Object>
     required super.boxKey,
     required super.defaultValue,
     required super.encoder,
-    super.logCallback,
   });
 
   @protected

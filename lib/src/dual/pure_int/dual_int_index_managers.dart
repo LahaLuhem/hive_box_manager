@@ -12,31 +12,23 @@ final class DualIntIndexLazyBoxManager<T> extends _BaseDualIndexLazyBoxManager<T
   /// + Potential platform issues if Dart's integer behavior changes
   /// ### Collision Test
   /// Empirically tested up to 20,000 possible indices
-  factory DualIntIndexLazyBoxManager.bitShift({
-    required String boxKey,
-    required T defaultValue,
-    LogCallback? logCallback,
-  }) => DualIntIndexLazyBoxManager._(
-    boxKey: boxKey,
-    defaultValue: defaultValue,
-    logCallback: logCallback,
-    encoder: bitShiftEncoder,
-  );
+  factory DualIntIndexLazyBoxManager.bitShift({required String boxKey, required T defaultValue}) =>
+      DualIntIndexLazyBoxManager._(
+        boxKey: boxKey,
+        defaultValue: defaultValue,
+        encoder: bitShiftEncoder,
+      );
 
   /// ### ✅ Pros:
   /// + Range-shifted variant of [DualIntIndexLazyBoxManager].
   /// ### ❌ Cons:
   /// + Limited range - Only handles ±16,383
-  factory DualIntIndexLazyBoxManager.negative({
-    required String boxKey,
-    required T defaultValue,
-    LogCallback? logCallback,
-  }) => DualIntIndexLazyBoxManager._(
-    boxKey: boxKey,
-    defaultValue: defaultValue,
-    logCallback: logCallback,
-    encoder: negativeNumbersEncoder,
-  );
+  factory DualIntIndexLazyBoxManager.negative({required String boxKey, required T defaultValue}) =>
+      DualIntIndexLazyBoxManager._(
+        boxKey: boxKey,
+        defaultValue: defaultValue,
+        encoder: negativeNumbersEncoder,
+      );
 
   ////////////////////// BIT-SHIFT //////////////////////
 
@@ -123,6 +115,5 @@ final class DualIntIndexLazyBoxManager<T> extends _BaseDualIndexLazyBoxManager<T
     required super.boxKey,
     required super.defaultValue,
     required super.encoder,
-    super.logCallback,
   });
 }

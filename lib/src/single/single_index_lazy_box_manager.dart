@@ -8,11 +8,7 @@ final class SingleIndexLazyBoxManager<T> extends BaseBoxManager<T, int> {
   late final LazyBox<T> _lazyBox;
   static const _defaultSingleIndex = 0;
 
-  SingleIndexLazyBoxManager({
-    required super.boxKey,
-    required super.defaultValue,
-    super.logCallback,
-  });
+  SingleIndexLazyBoxManager({required super.boxKey, required super.defaultValue});
 
   @override
   Future<void> init({HiveCipher? encryptionCipher}) async =>
@@ -42,7 +38,7 @@ final class SingleIndexLazyBoxManager<T> extends BaseBoxManager<T, int> {
   Task<Unit> put({required T value}) => Task(
     () => _lazyBox
         .put(_defaultSingleIndex, value)
-        .then((_) => logCallback?.call('Wrote to SingleIndexLazyBox[$boxKey] with $value')),
+        .then((_) => assignedLogCallback?.call('Wrote to SingleIndexLazyBox[$boxKey] with $value')),
   ).map((_) => unit);
 
   Task<Unit> upsert({required BoxUpdater<T> boxUpdater}) => get().flatMap((currentValue) {
@@ -52,7 +48,9 @@ final class SingleIndexLazyBoxManager<T> extends BaseBoxManager<T, int> {
       () => _lazyBox
           .put(_defaultSingleIndex, updatedValue)
           .then(
-            (_) => logCallback?.call('Wrote to SingleIndexLazyBox[$boxKey] with $updatedValue'),
+            (_) => assignedLogCallback?.call(
+              'Wrote to SingleIndexLazyBox[$boxKey] with $updatedValue',
+            ),
           ),
     ).map((_) => unit);
   });
@@ -60,6 +58,6 @@ final class SingleIndexLazyBoxManager<T> extends BaseBoxManager<T, int> {
   Task<Unit> delete() => Task(
     () => _lazyBox
         .delete(_defaultSingleIndex)
-        .then((_) => logCallback?.call('Deleted from SingleIndexLazyBox[$boxKey]')),
+        .then((_) => assignedLogCallback?.call('Deleted from SingleIndexLazyBox[$boxKey]')),
   ).map((_) => unit);
 }

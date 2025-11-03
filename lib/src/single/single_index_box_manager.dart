@@ -8,7 +8,7 @@ final class SingleIndexBoxManager<T> extends BaseBoxManager<T, int> {
   late final Box<T> _box;
   static const _defaultSingleIndex = 0;
 
-  SingleIndexBoxManager({required super.boxKey, required super.defaultValue, super.logCallback});
+  SingleIndexBoxManager({required super.boxKey, required super.defaultValue});
 
   @override
   Future<void> init({HiveCipher? encryptionCipher}) async =>
@@ -19,7 +19,7 @@ final class SingleIndexBoxManager<T> extends BaseBoxManager<T, int> {
   Task<Unit> put({required T value}) => Task(
     () => _box
         .put(_defaultSingleIndex, value)
-        .then((_) => logCallback?.call('Wrote to SingleIndexBox[$boxKey] with $value')),
+        .then((_) => assignedLogCallback?.call('Wrote to SingleIndexBox[$boxKey] with $value')),
   ).map((_) => unit);
 
   Task<Unit> upsert({required BoxUpdater<T> boxUpdater}) => Task(() {
@@ -27,6 +27,8 @@ final class SingleIndexBoxManager<T> extends BaseBoxManager<T, int> {
 
     return _box
         .put(_defaultSingleIndex, updatedValue)
-        .then((_) => logCallback?.call('Upserted SingleIndexBox[$boxKey] with $updatedValue'));
+        .then(
+          (_) => assignedLogCallback?.call('Upserted SingleIndexBox[$boxKey] with $updatedValue'),
+        );
   }).map((_) => unit);
 }

@@ -8,7 +8,7 @@ part of 'simple_box_managers.dart';
 /// Solved by keeping the [_lazyBox] as `dynamic` and safe-casting the values around its CRUD. (Covariance)
 final class CollectionLazyBoxManager<T, I extends Object> extends LazyBoxManager<dynamic, I> {
   /// When adding type-info, make sure that [T] itself is not an Iterable but the actual base type.
-  CollectionLazyBoxManager({required super.boxKey, required super.defaultValue, super.logCallback});
+  CollectionLazyBoxManager({required super.boxKey, required super.defaultValue});
 
   @override
   Task<Iterable<T>> get(I index) =>

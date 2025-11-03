@@ -16,7 +16,6 @@ abstract class _BaseDualIndexLazyBoxManager<T, I1, I2, O extends Object>
     required super.boxKey,
     required super.defaultValue,
     required Encoder<I1, I2, O> encoder,
-    super.logCallback,
   }) : _encoder = encoder;
 
   @protected
@@ -59,7 +58,7 @@ abstract class _BaseDualIndexLazyBoxManager<T, I1, I2, O extends Object>
 
         return lazyBox
             .put(encodedIndex, value)
-            .then((_) => logCallback?.call(_defaultLogCallback(encodedIndex, value)));
+            .then((_) => assignedLogCallback?.call(_defaultLogCallback(encodedIndex, value)));
       }).map((_) => unit);
 
   Task<Unit> putAll({
@@ -78,7 +77,7 @@ abstract class _BaseDualIndexLazyBoxManager<T, I1, I2, O extends Object>
           ),
         )
         .then(
-          (_) => logCallback?.call('Wrote ${values.length} key-value pairs to LazyBox[$boxKey]'),
+          (_) => assignedLogCallback?.call('Wrote ${values.length} key-value pairs to LazyBox[$boxKey]'),
         ),
   ).map((_) => unit);
 
@@ -95,7 +94,7 @@ abstract class _BaseDualIndexLazyBoxManager<T, I1, I2, O extends Object>
 
       return lazyBox
           .put(encodedIndex, updatedValue)
-          .then((_) => logCallback?.call(_defaultLogCallback(encodedIndex, updatedValue)));
+          .then((_) => assignedLogCallback?.call(_defaultLogCallback(encodedIndex, updatedValue)));
     }).map((_) => unit);
   });
 
@@ -104,7 +103,7 @@ abstract class _BaseDualIndexLazyBoxManager<T, I1, I2, O extends Object>
 
     return lazyBox
         .delete(encodedIndex)
-        .then((_) => logCallback?.call("Deleted from LazyBox[$boxKey] at '$encodedIndex'"));
+        .then((_) => assignedLogCallback?.call("Deleted from LazyBox[$boxKey] at '$encodedIndex'"));
   }).map((_) => unit);
 
   String _defaultLogCallback(O index, T value) =>
