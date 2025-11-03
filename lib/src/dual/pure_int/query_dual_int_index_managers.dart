@@ -29,6 +29,7 @@ abstract class QueryDualIntIndexLazyBoxManager<T extends Object>
 
 /// Uses Hive.keys for O(K) decomposition instead of O(65536)
 /// Made not final just for testing.
+@protected
 @visibleForTesting
 class BitShiftQueryDualIntIndexLazyBoxManager<T extends Object>
     extends QueryDualIntIndexLazyBoxManager<T> {
@@ -67,6 +68,7 @@ class BitShiftQueryDualIntIndexLazyBoxManager<T extends Object>
   );
 
   @protected
+  @visibleForTesting
   BitShiftQueryDualIntIndexLazyBoxManager({
     required super.boxKey,
     required super.defaultValue,

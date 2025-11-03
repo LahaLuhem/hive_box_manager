@@ -90,6 +90,7 @@ final class DualIntIndexLazyBoxManager<T> extends _BaseDualIndexLazyBoxManager<T
   /// [secondaryIndex] The second 16-bit unsigned integer (lower 16 bits of result)
   /// Returns: A unique 32-bit integer encoding both input values
   /// Throws: AssertionError if either input exceeds 16-bit unsigned range
+  @protected
   @visibleForTesting
   static int bitShiftEncoder(int primaryIndex, int secondaryIndex) {
     assert(
@@ -107,6 +108,7 @@ final class DualIntIndexLazyBoxManager<T> extends _BaseDualIndexLazyBoxManager<T
   //////////////////// NEGATIVE NUMBERS ////////////////////
 
   /// Just shift and OR - no bounds checking for maximum speed
+  @protected
   @visibleForTesting
   static int negativeNumbersEncoder(int primaryIndex, int secondaryIndex) =>
       ((primaryIndex + _negativeNumbersOffset) << _bitShiftNegative) |
