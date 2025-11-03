@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:fpdart/fpdart.dart';
 import 'package:hive_box_manager/hive_box_manager.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:meta/meta.dart';
@@ -11,7 +12,7 @@ part 'fakes.dart';
 
 void main() {
   group('Query tests', () {
-    const maxIndex = 100;
+    const maxIndex = 10;
     final sut = _FakeBitShiftQueryDualIntIndexLazyBoxManager(defaultValue: '');
 
     final random = math.Random(42);
@@ -34,22 +35,35 @@ void main() {
       );
     });
 
-    final queriedIndex = random.nextInt(existingBoxEntries.length);
-    test('Primary decomposition', () async {
-      final primaryQueryResults = await sut.queryByPrimary(queriedIndex).run();
+    test('Primary decomposition (positive)', () async {
+      final queriedValue = testData.keys.elementAt(random.nextInt(existingBoxEntries.length)).$1;
+      final primaryQueryResults = await sut.queryByPrimary(queriedValue).run();
       final expectedResults = testData.keys
-          .where((e) => e.$1 == queriedIndex)
+          .where((e) => e.$1 == queriedValue)
           .map((e) => testData[e]!)
           .toList(growable: false);
-      primaryQueryResults.should.be(expectedResults);
+      primaryQueryResults.should.beOfType<Some<List<String>>>();
+      primaryQueryResults.getOrElse(() => const []).should.be(expectedResults);
     });
-    test('Secondary decomposition', () async {
-      final secondaryQueryResults = await sut.queryBySecondary(queriedIndex).run();
+    test('Secondary decomposition (positive)', () async {
+      final queriedValue = testData.keys.elementAt(random.nextInt(existingBoxEntries.length)).$2;
+      final secondaryQueryResults = await sut.queryBySecondary(queriedValue).run();
       final expectedResults = testData.keys
-          .where((e) => e.$2 == queriedIndex)
+          .where((e) => e.$2 == queriedValue)
           .map((e) => testData[e]!)
           .toList(growable: false);
-      secondaryQueryResults.should.be(expectedResults);
+      secondaryQueryResults.should.beOfType<Some<List<String>>>();
+      secondaryQueryResults.getOrElse(() => const []).should.be(expectedResults);
+    });
+
+    final nonExistentIndex = existingBoxEntries.length + 1;
+    test('Primary decomposition (negative)', () async {
+      final primaryQueryResults = await sut.queryByPrimary(nonExistentIndex).run();
+      primaryQueryResults.should.beOfType<None>();
+    });
+    test('Secondary decomposition (negative)', () async {
+      final secondaryQueryResults = await sut.queryBySecondary(nonExistentIndex).run();
+      secondaryQueryResults.should.beOfType<None>();
     });
   });
 }
