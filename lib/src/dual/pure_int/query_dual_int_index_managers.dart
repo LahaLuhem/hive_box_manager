@@ -24,16 +24,18 @@ abstract class QueryDualIntIndexLazyBoxManager<T extends Object>
     required String boxKey,
     required T defaultValue,
     LogCallback? logCallback,
-  }) = _BitShiftQueryDualIntIndexLazyBoxManager._;
+  }) = BitShiftQueryDualIntIndexLazyBoxManager;
 }
 
 /// Uses Hive.keys for O(K) decomposition instead of O(65536)
-final class _BitShiftQueryDualIntIndexLazyBoxManager<T extends Object>
+/// Made not final just for testing.
+@visibleForTesting
+class BitShiftQueryDualIntIndexLazyBoxManager<T extends Object>
     extends QueryDualIntIndexLazyBoxManager<T> {
   @override
   Iterable<int> primariesDecomposer(int secondaryIndex) sync* {
     final seen = <int>{};
-    for (final key in _lazyBox.keys.cast<int>()) {
+    for (final key in boxKeys) {
       final (primary, secondary) = _decode(key);
       if (secondary == secondaryIndex && seen.add(primary)) {
         yield primary;
@@ -44,7 +46,7 @@ final class _BitShiftQueryDualIntIndexLazyBoxManager<T extends Object>
   @override
   Iterable<int> secondariesDecomposer(int primaryIndex) sync* {
     final seen = <int>{};
-    for (final key in _lazyBox.keys.cast<int>()) {
+    for (final key in boxKeys) {
       final (primary, secondary) = _decode(key);
       if (primary == primaryIndex && seen.add(secondary)) {
         yield secondary;
@@ -53,6 +55,7 @@ final class _BitShiftQueryDualIntIndexLazyBoxManager<T extends Object>
   }
 
   @protected
+  @visibleForTesting
   static int encoder(int primaryIndex, int secondaryIndex) =>
       DualIntIndexLazyBoxManager.bitShiftEncoder(primaryIndex, secondaryIndex);
 
@@ -61,7 +64,7 @@ final class _BitShiftQueryDualIntIndexLazyBoxManager<T extends Object>
     encodedKey & ConstValues.bitMask,
   );
 
-  _BitShiftQueryDualIntIndexLazyBoxManager._({
+  BitShiftQueryDualIntIndexLazyBoxManager({
     required super.boxKey,
     required super.defaultValue,
     super.logCallback,
