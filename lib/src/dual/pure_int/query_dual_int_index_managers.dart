@@ -32,6 +32,7 @@ abstract class QueryDualIntIndexLazyBoxManager<T extends Object>
 @visibleForTesting
 class BitShiftQueryDualIntIndexLazyBoxManager<T extends Object>
     extends QueryDualIntIndexLazyBoxManager<T> {
+  @protected
   @override
   Iterable<int> primariesDecomposer(int secondaryIndex) sync* {
     final seen = <int>{};
@@ -43,6 +44,7 @@ class BitShiftQueryDualIntIndexLazyBoxManager<T extends Object>
     }
   }
 
+  @protected
   @override
   Iterable<int> secondariesDecomposer(int primaryIndex) sync* {
     final seen = <int>{};
@@ -64,6 +66,7 @@ class BitShiftQueryDualIntIndexLazyBoxManager<T extends Object>
     encodedKey & ConstValues.bitMask,
   );
 
+  @protected
   BitShiftQueryDualIntIndexLazyBoxManager({
     required super.boxKey,
     required super.defaultValue,

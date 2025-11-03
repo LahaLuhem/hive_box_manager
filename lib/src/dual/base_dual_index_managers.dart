@@ -19,43 +19,45 @@ abstract class _BaseDualIndexLazyBoxManager<T, I1, I2, O extends Object>
     super.logCallback,
   }) : _encoder = encoder;
 
-  late final LazyBox<T> _lazyBox;
+  @protected
+  @visibleForTesting
+  late final LazyBox<T> lazyBox;
   final Encoder<I1, I2, O> _encoder;
 
   @override
   Future<void> init({HiveCipher? encryptionCipher}) async =>
-      _lazyBox = await Hive.openLazyBox(boxKey, encryptionCipher: encryptionCipher);
+      lazyBox = await Hive.openLazyBox(boxKey, encryptionCipher: encryptionCipher);
 
   Task<T> get({required I1 primaryIndex, required I2 secondaryIndex}) => Task(
     () async =>
-        (await _lazyBox.get(_encoder(primaryIndex, secondaryIndex), defaultValue: defaultValue))
+        (await lazyBox.get(_encoder(primaryIndex, secondaryIndex), defaultValue: defaultValue))
             as T,
   );
 
   TaskOption<T> tryGet({required I1 primaryIndex, required I2 secondaryIndex}) => TaskOption(
     () async => Option.fromNullable(
-      await _lazyBox.get(_encoder(primaryIndex, secondaryIndex), defaultValue: null),
+      await lazyBox.get(_encoder(primaryIndex, secondaryIndex), defaultValue: null),
     ),
   );
 
   Task<List<T>> getAll() => Task(() async {
-    if (_lazyBox.isEmpty) return const [];
+    if (lazyBox.isEmpty) return const [];
 
     // Non-empty indices should have a value => no need for [defaultValue]
-    return _lazyBox.keys
-        .map((index) async => (await _lazyBox.get(index)) as T)
+    return lazyBox.keys
+        .map((index) async => (await lazyBox.get(index)) as T)
         .toList(growable: false)
         .wait;
   });
 
   TaskOption<List<T>> tryGetAll() =>
-      _lazyBox.isEmpty ? TaskOption.none() : TaskOption.fromTask(getAll());
+      lazyBox.isEmpty ? TaskOption.none() : TaskOption.fromTask(getAll());
 
   Task<Unit> put({required I1 primaryIndex, required I2 secondaryIndex, required T value}) =>
       Task(() {
         final encodedIndex = _encoder(primaryIndex, secondaryIndex);
 
-        return _lazyBox
+        return lazyBox
             .put(encodedIndex, value)
             .then((_) => logCallback?.call(_defaultLogCallback(encodedIndex, value)));
       }).map((_) => unit);
@@ -64,7 +66,7 @@ abstract class _BaseDualIndexLazyBoxManager<T, I1, I2, O extends Object>
     required Iterable<T> values,
     required (I1, I2) Function(T value) indexTransformer,
   }) => Task(
-    () => _lazyBox
+    () => lazyBox
         .putAll(
           Map.fromIterables(
             values.map((value) {
@@ -91,7 +93,7 @@ abstract class _BaseDualIndexLazyBoxManager<T, I1, I2, O extends Object>
     return Task(() {
       final encodedIndex = _encoder(primaryIndex, secondaryIndex);
 
-      return _lazyBox
+      return lazyBox
           .put(encodedIndex, updatedValue)
           .then((_) => logCallback?.call(_defaultLogCallback(encodedIndex, updatedValue)));
     }).map((_) => unit);
@@ -100,7 +102,7 @@ abstract class _BaseDualIndexLazyBoxManager<T, I1, I2, O extends Object>
   Task<Unit> delete({required I1 primaryIndex, required I2 secondaryIndex}) => Task(() {
     final encodedIndex = _encoder(primaryIndex, secondaryIndex);
 
-    return _lazyBox
+    return lazyBox
         .delete(encodedIndex)
         .then((_) => logCallback?.call("Deleted from LazyBox[$boxKey] at '$encodedIndex'"));
   }).map((_) => unit);

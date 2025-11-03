@@ -19,7 +19,7 @@ abstract class _BaseQueryDualIndexLazyBoxManager<T, I1, I2, O extends Object>
 
   @protected
   @visibleForTesting
-  Iterable<O> get boxKeys => _lazyBox.keys.cast<O>();
+  Iterable<O> get boxKeys => lazyBox.keys.cast<O>();
 
   @nonVirtual
   Task<List<T>> queryByPrimary(I1 primaryIndex) => secondariesDecomposer(primaryIndex)

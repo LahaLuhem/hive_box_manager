@@ -1,6 +1,9 @@
-import 'package:collection/collection.dart';
-import 'package:fpdart/fpdart.dart';
+import 'dart:math' as math;
+
 import 'package:hive_box_manager/hive_box_manager.dart';
+import 'package:hive_ce/hive.dart';
+import 'package:meta/meta.dart';
+import 'package:mockito/mockito.dart';
 import 'package:shouldly/shouldly.dart';
 import 'package:test/test.dart';
 
@@ -8,24 +11,30 @@ part 'fakes.dart';
 
 void main() {
   group('Query tests', () {
-    const maxIndex = 10;
-    final sut = FakeBitShiftQueryDualIntIndexLazyBoxManager(defaultValue: '');
+    const maxIndex = 100;
+    final sut = _FakeBitShiftQueryDualIntIndexLazyBoxManager(defaultValue: '');
+
+    final random = math.Random(42);
     final existingBoxEntries = Iterable.generate(
       maxIndex,
-      (index) => [(index, index), (index, index + 1), (index + 1, index)],
-    ).flattened.append((maxIndex, maxIndex));
+      (_) => (random.nextInt(maxIndex), random.nextInt(maxIndex)),
+    );
     final testData = Map.fromIterables(
       existingBoxEntries,
       existingBoxEntries.map((e) => '(${e.$1},${e.$2})'),
     );
-    sut._mockBox.addAll(
-      Map.fromIterables(
-        testData.keys.map((e) => BitShiftQueryDualIntIndexLazyBoxManager.encoder(e.$1, e.$2)),
-        testData.values,
-      ),
-    );
 
-    const queriedIndex = 5;
+    setUpAll(() async {
+      await sut.init();
+      sut.addAllEntries(
+        Map.fromIterables(
+          testData.keys.map((e) => BitShiftQueryDualIntIndexLazyBoxManager.encoder(e.$1, e.$2)),
+          testData.values,
+        ),
+      );
+    });
+
+    final queriedIndex = random.nextInt(existingBoxEntries.length);
     test('Primary decomposition', () async {
       final primaryQueryResults = await sut.queryByPrimary(queriedIndex).run();
       final expectedResults = testData.keys
