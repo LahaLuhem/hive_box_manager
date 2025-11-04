@@ -34,8 +34,8 @@ abstract class QueryDualIntIndexLazyBoxManager<T extends Object>
   /// + I/O overhead: Multiple disk reads per query
   /// + Write amplification: 3x writes per record
   /// + Verification cost: Consistency checks are O(K)
-  // factory QueryDualIntIndexLazyBoxManager.multiBox({
-  //   required String boxKey,
-  //   required T defaultValue,
-  // }) = MultiBoxQueryDualIntIndexLazyBoxManager;
+  factory QueryDualIntIndexLazyBoxManager.multiBox({
+    required String boxKey,
+    required T defaultValue,
+  }) = MultiBoxQueryDualIntIndexLazyBoxManager;
 }
