@@ -34,7 +34,7 @@ final class CollectionLazyBoxManager<T, I extends Object> extends LazyBoxManager
       .entries
       .map((groupedEntries) => put(index: groupedEntries.key, value: groupedEntries.value))
       .sequenceTask()
-      .map((_) => unit);
+      .mapToUnit();
 
   @override
   Task<Unit> upsert({

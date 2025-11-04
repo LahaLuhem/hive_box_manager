@@ -19,6 +19,34 @@ class MultiBoxQueryDualIntIndexLazyBoxManager<T extends Object>
   ].wait;
 
   @override
+  Task<Unit> put({required int primaryIndex, required int secondaryIndex, required T value}) {
+    final encodedKey = encoder(primaryIndex, secondaryIndex);
+    if (lazyBox.containsKey(encodedKey)) return Task.of(unit);
+
+    // Nature of this box
+    // ignore: avoid_annotating_with_dynamic, avoid-dynamic
+    List<int> boxUpdater(dynamic currentValue) =>
+        // Nature of this box
+        // ignore: avoid-dynamic
+        (currentValue as List<dynamic>).cast<int>()..add(encodedKey);
+
+    return [
+      Task(() => lazyBox.put(encodedKey, value)),
+      _primaryIndexBox.upsert(index: primaryIndex, boxUpdater: boxUpdater),
+      _secondaryIndexBox.upsert(index: secondaryIndex, boxUpdater: boxUpdater),
+    ].sequenceTask().mapToUnit().attachAction(
+      () => assignedLogCallback?.call('Wrote to LazyBox[$boxKey] at $encodedKey with $value'),
+    );
+  }
+
+  @override
+  Task<Unit> putAll({required Iterable<T> values, required (int, int) Function(T value) indexTransformer}) => throw UnimplementedError();
+  @override
+  Task<Unit> upsert({required int primaryIndex, required int secondaryIndex, required BoxUpdater<T> boxUpdater, LogPattern<int, T>? logPattern}) => throw UnimplementedError();
+  @override
+  Task<Unit> delete({required int primaryIndex, required int secondaryIndex}) => throw UnimplementedError();
+
+  @override
   Task<Iterable<int>> primariesDecomposer(int secondaryIndex) => _secondaryIndexBox
       .get(secondaryIndex)
       .map(
