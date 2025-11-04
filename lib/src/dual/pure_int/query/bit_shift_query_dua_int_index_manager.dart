@@ -8,7 +8,10 @@ class BitShiftQueryDualIntIndexLazyBoxManager<T extends Object>
     extends QueryDualIntIndexLazyBoxManager<T> {
   @protected
   @override
-  Iterable<int> primariesDecomposer(int secondaryIndex) sync* {
+  Task<Iterable<int>> primariesDecomposer(int secondaryIndex) =>
+      Task.of(_primariesDecomposer(secondaryIndex));
+
+  Iterable<int> _primariesDecomposer(int secondaryIndex) sync* {
     final seen = <int>{};
     for (final key in boxKeys) {
       final (primary, secondary) = _decode(key);
@@ -20,7 +23,10 @@ class BitShiftQueryDualIntIndexLazyBoxManager<T extends Object>
 
   @protected
   @override
-  Iterable<int> secondariesDecomposer(int primaryIndex) sync* {
+  Task<Iterable<int>> secondariesDecomposer(int primaryIndex) =>
+      Task.of(_secondariesDecomposer(primaryIndex));
+
+  Iterable<int> _secondariesDecomposer(int primaryIndex) sync* {
     final seen = <int>{};
     for (final key in boxKeys) {
       final (primary, secondary) = _decode(key);

@@ -10,29 +10,42 @@ abstract class _BaseQueryDualIndexLazyBoxManager<T, I1, I2, O extends Object>
 
   @protected
   @visibleForOverriding
-  Iterable<I1> primariesDecomposer(I2 secondaryIndex);
+  Task<Iterable<I1>> primariesDecomposer(I2 secondaryIndex);
 
   @protected
   @visibleForOverriding
-  Iterable<I2> secondariesDecomposer(I1 primaryIndex);
+  Task<Iterable<I2>> secondariesDecomposer(I1 primaryIndex);
 
   @protected
   @visibleForTesting
   Iterable<O> get boxKeys => lazyBox.keys.cast<O>();
 
   @nonVirtual
-  TaskOption<List<T>> queryByPrimary(I1 primaryIndex) => secondariesDecomposer(primaryIndex)
-      .map((secondaryIndex) => tryGet(primaryIndex: primaryIndex, secondaryIndex: secondaryIndex))
-      .sequenceTaskOption()
-      .flatMap(
-        (searchResults) => TaskOption.fromPredicate(searchResults, (_) => searchResults.isNotEmpty),
+  TaskOption<List<T>> queryByPrimary(I1 primaryIndex) =>
+      secondariesDecomposer(primaryIndex).toTaskOption().flatMap(
+        (secondaryIndices) => secondaryIndices
+            .map(
+              (secondaryIndex) =>
+                  tryGet(primaryIndex: primaryIndex, secondaryIndex: secondaryIndex),
+            )
+            .sequenceTaskOption()
+            .flatMap(
+              (searchResults) =>
+                  TaskOption.fromPredicate(searchResults, (_) => searchResults.isNotEmpty),
+            ),
       );
 
   @nonVirtual
-  TaskOption<List<T>> queryBySecondary(I2 secondaryIndex) => primariesDecomposer(secondaryIndex)
-      .map((primaryIndex) => tryGet(primaryIndex: primaryIndex, secondaryIndex: secondaryIndex))
-      .sequenceTaskOption()
-      .flatMap(
-        (searchResults) => TaskOption.fromPredicate(searchResults, (_) => searchResults.isNotEmpty),
+  TaskOption<List<T>> queryBySecondary(I2 secondaryIndex) =>
+      primariesDecomposer(secondaryIndex).toTaskOption().flatMap(
+        (primaryIndices) => primaryIndices
+            .map(
+              (primaryIndex) => tryGet(primaryIndex: primaryIndex, secondaryIndex: secondaryIndex),
+            )
+            .sequenceTaskOption()
+            .flatMap(
+              (searchResults) =>
+                  TaskOption.fromPredicate(searchResults, (_) => searchResults.isNotEmpty),
+            ),
       );
 }

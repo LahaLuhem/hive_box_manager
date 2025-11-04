@@ -11,6 +11,7 @@ part 'pure_int/dual_int_index_managers.dart';
 part 'base_query_dual_index_managers.dart';
 part 'pure_int/query/query_dual_int_index_managers.dart';
 part 'pure_int/query/bit_shift_query_dua_int_index_manager.dart';
+part 'pure_int/query/multi_box_query_dual_int_index_manager.dart';
 
 abstract class _BaseDualIndexLazyBoxManager<T, I1, I2, O extends Object>
     extends BaseBoxManager<T, O> {

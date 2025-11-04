@@ -23,4 +23,19 @@ abstract class QueryDualIntIndexLazyBoxManager<T extends Object>
     required String boxKey,
     required T defaultValue,
   }) = BitShiftQueryDualIntIndexLazyBoxManager;
+
+  /// ### ✅ Pros
+  /// + Fast targeted queries: Only loads relevant index segments
+  /// + Consistency verification: Can detect/correct index corruption
+  /// + Memory efficient: No large in-memory structures
+  /// + Scalable: Handles very large datasets well (100k+ entries)
+  /// ### ❌ Cons
+  /// + Storage overhead: 3x storage usage
+  /// + I/O overhead: Multiple disk reads per query
+  /// + Write amplification: 3x writes per record
+  /// + Verification cost: Consistency checks are O(K)
+  // factory QueryDualIntIndexLazyBoxManager.multiBox({
+  //   required String boxKey,
+  //   required T defaultValue,
+  // }) = MultiBoxQueryDualIntIndexLazyBoxManager;
 }
