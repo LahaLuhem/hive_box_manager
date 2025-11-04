@@ -17,7 +17,9 @@ abstract class BaseBoxManager<T, I extends Object> {
   @nonVirtual
   LogCallback? get assignedLogCallback => _logCallback;
 
-  set assignCallback(LogCallback? logCallback) => _logCallback = logCallback;
+  // Not visible for exporting via [HiveBoxManager]
+  //ignore: use_setters_to_change_properties
+  static void assignCallback(LogCallback? logCallback) => _logCallback = logCallback;
 
   Future<void> init({HiveCipher? encryptionCipher});
 }
