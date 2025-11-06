@@ -2,6 +2,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hive_ce/hive.dart';
 
 import '../base_box_manager.dart';
+import '../extensions.dart';
 import '../typedefs.dart';
 
 final class SingleIndexBoxManager<T> extends BaseBoxManager<T, int> {
@@ -20,7 +21,7 @@ final class SingleIndexBoxManager<T> extends BaseBoxManager<T, int> {
     () => _box
         .put(_defaultSingleIndex, value)
         .then((_) => assignedLogCallback?.call('Wrote to SingleIndexBox[$boxKey] with $value')),
-  ).map((_) => unit);
+  ).mapToUnit();
 
   Task<Unit> upsert({required BoxUpdater<T> boxUpdater}) => Task(() {
     final updatedValue = boxUpdater.call(get());
@@ -30,5 +31,13 @@ final class SingleIndexBoxManager<T> extends BaseBoxManager<T, int> {
         .then(
           (_) => assignedLogCallback?.call('Upserted SingleIndexBox[$boxKey] with $updatedValue'),
         );
-  }).map((_) => unit);
+  }).mapToUnit();
+
+  Task<Unit> delete() => Task(
+    () => _box
+        .delete(_defaultSingleIndex)
+        .then((_) => assignedLogCallback?.call('Deleted from SingleIndexBox[$boxKey]')),
+  ).mapToUnit();
+
+  Task<Unit> clear() => Task(() => _box.clear()).mapToUnit();
 }

@@ -32,7 +32,15 @@ final class BoxManager<T, I extends Object> extends BaseBoxManager<T, I> {
         .then(
           (_) => assignedLogCallback?.call("Upserted Box[$boxKey] at '$index' with $updatedValue"),
         );
-  }).map((_) => unit);
+  }).mapToUnit();
+
+  Task<Unit> delete(I index) => Task(
+    () => _box
+        .delete(index)
+        .then((_) => assignedLogCallback?.call("Deleted from Box[$boxKey] at '$index'")),
+  ).mapToUnit();
+
+  Task<Unit> clear() => Task(() => _box.clear()).mapToUnit();
 }
 
 final class LazyBoxManager<T, I extends Object> extends BaseBoxManager<T, I> {
@@ -43,8 +51,6 @@ final class LazyBoxManager<T, I extends Object> extends BaseBoxManager<T, I> {
   @override
   Future<void> init({HiveCipher? encryptionCipher}) async =>
       _lazyBox = await Hive.openLazyBox(super.boxKey, encryptionCipher: encryptionCipher);
-
-  Task<Unit> clear() => Task(() => _lazyBox.clear()).map((_) => unit);
 
   Task<T> get(I index) =>
       Task(() async => (await _lazyBox.get(index, defaultValue: defaultValue)) as T);
@@ -72,7 +78,7 @@ final class LazyBoxManager<T, I extends Object> extends BaseBoxManager<T, I> {
             logPattern?.call(boxKey, index, value) ?? _defaultLogCallback(boxKey, index, value),
           ),
         ),
-  ).map((_) => unit);
+  ).mapToUnit();
 
   Task<Unit> putAll({required Iterable<T> values, required I Function(T value) indexTransformer}) =>
       Task(
@@ -83,7 +89,7 @@ final class LazyBoxManager<T, I extends Object> extends BaseBoxManager<T, I> {
                 'Wrote ${values.length} key-value pairs to LazyBox[$boxKey]',
               ),
             ),
-      ).map((_) => unit);
+      ).mapToUnit();
 
   Task<Unit> upsert({
     required I index,
@@ -101,14 +107,16 @@ final class LazyBoxManager<T, I extends Object> extends BaseBoxManager<T, I> {
                   _defaultLogCallback(boxKey, index, updatedValue),
             ),
           ),
-    ).map((_) => unit);
+    ).mapToUnit();
   });
 
   Task<Unit> delete(I index) => Task(
     () => _lazyBox
         .delete(index)
         .then((_) => assignedLogCallback?.call("Deleted from LazyBox[$boxKey] at '$index'")),
-  ).map((_) => unit);
+  ).mapToUnit();
+
+  Task<Unit> clear() => Task(() => _lazyBox.clear()).mapToUnit();
 
   String _defaultLogCallback(String key, I index, T value) =>
       "Wrote to LazyBox[$key] at '$index' with $value";

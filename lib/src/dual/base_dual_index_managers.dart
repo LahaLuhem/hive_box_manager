@@ -59,7 +59,7 @@ abstract class _BaseDualIndexLazyBoxManager<T, I1, I2, O extends Object>
         return lazyBox
             .put(encodedIndex, value)
             .then((_) => assignedLogCallback?.call(_defaultLogCallback(encodedIndex, value)));
-      }).map((_) => unit);
+      }).mapToUnit();
 
   Task<Unit> putAll({
     required Iterable<T> values,
@@ -77,9 +77,11 @@ abstract class _BaseDualIndexLazyBoxManager<T, I1, I2, O extends Object>
           ),
         )
         .then(
-          (_) => assignedLogCallback?.call('Wrote ${values.length} key-value pairs to LazyBox[$boxKey]'),
+          (_) => assignedLogCallback?.call(
+            'Wrote ${values.length} key-value pairs to LazyBox[$boxKey]',
+          ),
         ),
-  ).map((_) => unit);
+  ).mapToUnit();
 
   Task<Unit> upsert({
     required I1 primaryIndex,
@@ -95,7 +97,7 @@ abstract class _BaseDualIndexLazyBoxManager<T, I1, I2, O extends Object>
       return lazyBox
           .put(encodedIndex, updatedValue)
           .then((_) => assignedLogCallback?.call(_defaultLogCallback(encodedIndex, updatedValue)));
-    }).map((_) => unit);
+    }).mapToUnit();
   });
 
   Task<Unit> delete({required I1 primaryIndex, required I2 secondaryIndex}) => Task(() {
@@ -104,7 +106,11 @@ abstract class _BaseDualIndexLazyBoxManager<T, I1, I2, O extends Object>
     return lazyBox
         .delete(encodedIndex)
         .then((_) => assignedLogCallback?.call("Deleted from LazyBox[$boxKey] at '$encodedIndex'"));
-  }).map((_) => unit);
+  }).mapToUnit();
+
+  Task<Unit> clear() => Task(
+    () => lazyBox.clear().then((_) => assignedLogCallback?.call('Cleared LazyBox[$boxKey]')),
+  ).mapToUnit();
 
   String _defaultLogCallback(O index, T value) =>
       "Wrote to LazyBox[$boxKey] at '$index' with $value";

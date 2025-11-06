@@ -2,6 +2,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hive_ce/hive.dart';
 
 import '../base_box_manager.dart';
+import '../extensions.dart';
 import '../typedefs.dart';
 
 final class SingleIndexLazyBoxManager<T> extends BaseBoxManager<T, int> {
@@ -13,8 +14,6 @@ final class SingleIndexLazyBoxManager<T> extends BaseBoxManager<T, int> {
   @override
   Future<void> init({HiveCipher? encryptionCipher}) async =>
       _lazyBox = await Hive.openLazyBox(boxKey, encryptionCipher: encryptionCipher);
-
-  Task<Unit> clear() => Task(() => _lazyBox.clear()).map((_) => unit);
 
   Task<T> get() =>
       Task(() async => (await _lazyBox.get(_defaultSingleIndex, defaultValue: defaultValue)) as T);
@@ -39,7 +38,7 @@ final class SingleIndexLazyBoxManager<T> extends BaseBoxManager<T, int> {
     () => _lazyBox
         .put(_defaultSingleIndex, value)
         .then((_) => assignedLogCallback?.call('Wrote to SingleIndexLazyBox[$boxKey] with $value')),
-  ).map((_) => unit);
+  ).mapToUnit();
 
   Task<Unit> upsert({required BoxUpdater<T> boxUpdater}) => get().flatMap((currentValue) {
     final updatedValue = boxUpdater.call(currentValue);
@@ -52,12 +51,14 @@ final class SingleIndexLazyBoxManager<T> extends BaseBoxManager<T, int> {
               'Wrote to SingleIndexLazyBox[$boxKey] with $updatedValue',
             ),
           ),
-    ).map((_) => unit);
+    ).mapToUnit();
   });
 
   Task<Unit> delete() => Task(
     () => _lazyBox
         .delete(_defaultSingleIndex)
         .then((_) => assignedLogCallback?.call('Deleted from SingleIndexLazyBox[$boxKey]')),
-  ).map((_) => unit);
+  ).mapToUnit();
+
+  Task<Unit> clear() => Task(() => _lazyBox.clear()).mapToUnit();
 }
