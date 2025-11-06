@@ -3,6 +3,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hive_ce/hive.dart';
 
 import '../base_box_manager.dart';
+import '../extensions.dart';
 import '../typedefs.dart';
 
 part 'collection_box_managers.dart';
