@@ -4,6 +4,7 @@ import 'package:meta/meta.dart';
 
 import '../base_box_manager.dart';
 import '../const_values.dart';
+import '../extensions.dart';
 import '../typedefs.dart';
 
 part 'pure_int/dual_int_index_managers.dart';
