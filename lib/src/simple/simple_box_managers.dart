@@ -27,6 +27,17 @@ final class BoxManager<T, I extends Object> extends BaseBoxManager<T, I> {
         .then((_) => assignedLogCallback?.call("Wrote to Box[$boxKey] at '$index' with $value")),
   ).map((_) => unit);
 
+  Task<Unit> putAll({required Iterable<T> values, required I Function(T value) indexTransformer}) =>
+      Task(
+        () => _box
+            .putAll(Map.fromIterables(values.map(indexTransformer), values))
+            .then(
+              (_) => assignedLogCallback?.call(
+                'Wrote ${values.length} key-value pairs to Box[$boxKey]',
+              ),
+            ),
+      ).mapToUnit();
+
   Task<Unit> upsert({required I index, required BoxUpdater<T> boxUpdater}) => Task(() {
     final updatedValue = boxUpdater.call(get(index));
 

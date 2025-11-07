@@ -1,3 +1,7 @@
+## [0.0.5] - 2025-11-07
+### Added
+- forgotten putAll for eager box manager
+
 ## [0.0.4] - 2025-11-07
 ### Added
 - Add eager box variant for dual boxes
@@ -21,6 +25,7 @@
 - Collection BoxManagers
 - (Lazy) Dual Int Index LazyBoxManager
 
+[0.0.5]: https://github.com/LahaLuhem/hive_box_manager/compare/0.0.4...0.0.5
 [0.0.4]: https://github.com/LahaLuhem/hive_box_manager/compare/0.0.3+1...0.0.4
 [0.0.3+1]: https://github.com/LahaLuhem/hive_box_manager/compare/0.0.3...0.0.3+1
 [0.0.3]: https://github.com/LahaLuhem/hive_box_manager/compare/0.0.2...0.0.3
