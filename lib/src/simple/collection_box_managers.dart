@@ -4,7 +4,7 @@
 part of 'simple_box_managers.dart';
 
 /// Exists because Hive does not support reading Iterables of custom types.<br>
-/// See (issue)[https://github.com/IO-Design-Team/hive_ce/issues/150]<br>
+/// See [issue](https://github.com/IO-Design-Team/hive_ce/issues/150)<br>
 /// Solved by keeping the [_lazyBox] as `dynamic` and safe-casting the values around its CRUD. (Covariance)
 final class CollectionLazyBoxManager<T, I extends Object> extends LazyBoxManager<dynamic, I> {
   /// When adding type-info, make sure that [T] itself is not an Iterable but the actual base type.
