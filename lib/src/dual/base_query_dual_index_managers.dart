@@ -36,3 +36,42 @@ abstract class _BaseQueryDualIndexLazyBoxManager<T, I1, I2, O extends Object>
         (searchResults) => TaskOption.fromPredicate(searchResults, (_) => searchResults.isNotEmpty),
       );
 }
+
+abstract class _BaseQueryDualIndexBoxManager<T, I1, I2, O extends Object>
+    extends _BaseDualIndexBoxManager<T, I1, I2, O> {
+  _BaseQueryDualIndexBoxManager({
+    required super.boxKey,
+    required super.defaultValue,
+    required super.encoder,
+  });
+
+  @protected
+  @visibleForOverriding
+  Iterable<I1> primariesDecomposer(I2 secondaryIndex);
+
+  @protected
+  @visibleForOverriding
+  Iterable<I2> secondariesDecomposer(I1 primaryIndex);
+
+  @protected
+  @visibleForTesting
+  Iterable<O> get boxKeys => box.keys.cast<O>();
+
+  @nonVirtual
+  Option<List<T>> queryByPrimary(I1 primaryIndex) {
+    final secondariesResults = secondariesDecomposer(
+      primaryIndex,
+    ).map((secondaryIndex) => tryGet(primaryIndex: primaryIndex, secondaryIndex: secondaryIndex));
+
+    return secondariesResults.isEmpty ? const None() : secondariesResults.sequenceOption();
+  }
+
+  @nonVirtual
+  Option<List<T>> queryBySecondary(I2 secondaryIndex) {
+    final primariesResults = primariesDecomposer(
+      secondaryIndex,
+    ).map((primaryIndex) => tryGet(primaryIndex: primaryIndex, secondaryIndex: secondaryIndex));
+
+    return primariesResults.isEmpty ? const None() : primariesResults.sequenceOption();
+  }
+}

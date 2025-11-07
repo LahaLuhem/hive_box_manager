@@ -3,7 +3,8 @@ import 'dart:isolate';
 
 import 'package:dart_bloom_filter/dart_bloom_filter.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:hive_box_manager/hive_box_manager.dart';
+import 'package:hive_box_manager/src/dual/base_dual_index_managers.dart'
+    show bitShiftEncoder, negativeNumbersEncoder;
 import 'package:shouldly/shouldly_bool.dart';
 import 'package:test/test.dart';
 
@@ -13,7 +14,7 @@ void main() {
 
     test('Range uniqueness (Just a formality. Mathematically proven.)', () async {
       final result = await runParallelEncoderTest(
-        encoder: DualIntIndexLazyBoxManager.bitShiftEncoder,
+        encoder: bitShiftEncoder,
         maxIndex: maxIndex,
         primaryIndexGenerator: positiveIndexGenerator,
         secondaryIndexGenerator: positiveIndexGenerator,
@@ -23,7 +24,7 @@ void main() {
 
     test('Negative indices uniqueness (Just a formality. Mathematically proven.)', () async {
       final result = await runParallelEncoderTest(
-        encoder: DualIntIndexLazyBoxManager.negativeNumbersEncoder,
+        encoder: negativeNumbersEncoder,
         maxIndex: (maxIndex / 2).ceil(),
         primaryIndexGenerator: signedIndexGenerator,
         secondaryIndexGenerator: signedIndexGenerator,

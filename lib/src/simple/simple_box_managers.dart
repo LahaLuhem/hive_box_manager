@@ -19,6 +19,8 @@ final class BoxManager<T, I extends Object> extends BaseBoxManager<T, I> {
 
   T get(I index) => _box.get(index, defaultValue: defaultValue)!;
 
+  Iterable<T> getAll() => _box.values;
+
   Task<Unit> put({required I index, required T value}) => Task(
     () => _box
         .put(index, value)

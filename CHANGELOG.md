@@ -1,3 +1,7 @@
+## [0.0.4] - 2025-11-07
+### Added
+- Add eager box variant for dual boxes
+
 ## [0.0.3+1] - 2025-11-06
 ### Added
 - Some missing clears from all box types
@@ -17,6 +21,7 @@
 - Collection BoxManagers
 - (Lazy) Dual Int Index LazyBoxManager
 
+[0.0.4]: https://github.com/LahaLuhem/hive_box_manager/compare/0.0.3+1...0.0.4
 [0.0.3+1]: https://github.com/LahaLuhem/hive_box_manager/compare/0.0.3...0.0.3+1
 [0.0.3]: https://github.com/LahaLuhem/hive_box_manager/compare/0.0.2...0.0.3
 [0.0.2]: https://github.com/LahaLuhem/hive_box_manager/compare/0.0.1...0.0.2
