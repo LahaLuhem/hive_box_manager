@@ -1,9 +1,11 @@
 # Hive Box Manager
-A set of FP-style abstractions for Hive boxes.
+Type-safe, FP-style abstraction layers for Hive's boxes. Provides Managers for almost all conceivable use-cases and scenarios.
 
 ## Features
 - Simple BoxManagers
     - Collection BoxManagers
 - Single BoxManagers
-- (Lazy) Dual Int Index LazyBoxManager: allows CRUD on two indices
-    - Query variant for retrieving by either of the indices
+- Dual Index LazyBoxManager: allows CRUD on two indices (primary and secondary)
+  - int-int
+  - String-int | int-String
+  - Query variants for retrieving by either of the indices
