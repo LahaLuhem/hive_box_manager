@@ -8,6 +8,7 @@ import '../extensions.dart';
 import '../typedefs.dart';
 
 part 'base_query_dual_index_managers.dart';
+part 'primitives/dual_primitive_index_managers.dart';
 part 'pure_int/dual_int_index_managers.dart';
 part 'pure_int/query_dual_int_index_managers.dart';
 

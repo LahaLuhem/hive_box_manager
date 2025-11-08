@@ -149,8 +149,3 @@ int bitShiftEncoder(int primaryIndex, int secondaryIndex) {
 int negativeNumbersEncoder(int primaryIndex, int secondaryIndex) =>
     ((primaryIndex + _negativeNumbersOffset) << _bitShiftNegative) |
     (secondaryIndex + _negativeNumbersOffset);
-
-const _bitShiftNegative = ConstValues.bitShift - 1;
-
-// Maximum range: -16383 to +16383 for both numbers
-const _negativeNumbersOffset = 16383; // Maximum range: -16383 to +16383 for both numbers
