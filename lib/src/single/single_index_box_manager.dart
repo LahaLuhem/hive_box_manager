@@ -15,6 +15,9 @@ final class SingleIndexBoxManager<T> extends BaseBoxManager<T, int> {
   Future<void> init({HiveCipher? encryptionCipher}) async =>
       _box = await Hive.openBox(boxKey, encryptionCipher: encryptionCipher);
 
+  @override
+  Stream<BoxEvent> watchStream() => _box.watch();
+
   T get() => _box.get(_defaultSingleIndex, defaultValue: defaultValue)!;
 
   Task<Unit> put({required T value}) => Task(

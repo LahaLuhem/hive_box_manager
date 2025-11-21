@@ -15,6 +15,9 @@ final class SingleIndexLazyBoxManager<T> extends BaseBoxManager<T, int> {
   Future<void> init({HiveCipher? encryptionCipher}) async =>
       _lazyBox = await Hive.openLazyBox(boxKey, encryptionCipher: encryptionCipher);
 
+  @override
+  Stream<BoxEvent> watchStream() => _lazyBox.watch();
+
   Task<T> get() =>
       Task(() async => (await _lazyBox.get(_defaultSingleIndex, defaultValue: defaultValue)) as T);
 
