@@ -43,7 +43,6 @@ doc/api/
 # Icon must end with two \r
 Icon
 
-
 # Thumbnails
 ._*
 
@@ -218,3 +217,6 @@ fabric.properties
 !/gradle/wrapper/gradle-wrapper.jar
 
 # End of https://www.toptal.com/developers/gitignore/api/dart,androidstudio,visualstudiocode,macos
+
+# FVM Version Cache
+.fvm/

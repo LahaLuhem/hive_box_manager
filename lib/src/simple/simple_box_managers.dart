@@ -17,6 +17,8 @@ final class BoxManager<T, I extends Object> extends BaseBoxManager<T, I> {
   Future<void> init({HiveCipher? encryptionCipher}) async =>
       _box = await Hive.openBox(super.boxKey, encryptionCipher: encryptionCipher);
 
+  Iterable<I> get storedIds => _box.keys.cast<I>();
+
   @override
   Stream<BoxEvent> watchStream() => _box.watch();
 
@@ -68,6 +70,8 @@ final class LazyBoxManager<T, I extends Object> extends BaseBoxManager<T, I> {
   @override
   Future<void> init({HiveCipher? encryptionCipher}) async =>
       _lazyBox = await Hive.openLazyBox(super.boxKey, encryptionCipher: encryptionCipher);
+
+  Iterable<I> get storedIds => _lazyBox.keys.cast<I>();
 
   @override
   Stream<BoxEvent> watchStream() => _lazyBox.watch();

@@ -1,3 +1,8 @@
+## [0.0.6] - 2025-11-26
+### Added
+- expose watchable stream
+- box.keys proxy for the managers
+
 ## [0.0.5] - 2025-11-07
 ### Added
 - forgotten putAll for eager box manager
@@ -25,6 +30,7 @@
 - Collection BoxManagers
 - (Lazy) Dual Int Index LazyBoxManager
 
+[0.0.6]: https://github.com/LahaLuhem/hive_box_manager/compare/0.0.5...0.0.6
 [0.0.5]: https://github.com/LahaLuhem/hive_box_manager/compare/0.0.4...0.0.5
 [0.0.4]: https://github.com/LahaLuhem/hive_box_manager/compare/0.0.3+1...0.0.4
 [0.0.3+1]: https://github.com/LahaLuhem/hive_box_manager/compare/0.0.3...0.0.3+1

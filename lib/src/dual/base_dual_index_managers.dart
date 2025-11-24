@@ -28,6 +28,8 @@ abstract class _BaseDualIndexLazyBoxManager<T, I1, I2, O extends Object>
   Future<void> init({HiveCipher? encryptionCipher}) async =>
       lazyBox = await Hive.openLazyBox(boxKey, encryptionCipher: encryptionCipher);
 
+  Iterable<O> get storedIds => lazyBox.keys.cast<O>();
+
   @override
   Stream<BoxEvent> watchStream() => lazyBox.watch();
 
@@ -135,6 +137,8 @@ abstract class _BaseDualIndexBoxManager<T, I1, I2, O extends Object> extends Bas
   @override
   Future<void> init({HiveCipher? encryptionCipher}) async =>
       box = await Hive.openBox(boxKey, encryptionCipher: encryptionCipher);
+
+  Iterable<O> get storedIds => box.keys.cast<O>();
 
   @override
   Stream<BoxEvent> watchStream() => box.watch();
