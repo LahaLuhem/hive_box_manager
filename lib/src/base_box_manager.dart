@@ -1,3 +1,4 @@
+import 'package:fpdart/fpdart.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:meta/meta.dart';
 
@@ -19,7 +20,6 @@ abstract class BaseBoxManager<T, I extends Object> {
   LogCallback? get assignedLogCallback => _logCallback;
 
   @protected
-  @visibleForOverriding
   Stream<BoxEvent> watchStream();
 
   // Not visible for exporting via [HiveBoxManager]
@@ -36,4 +36,7 @@ abstract class BaseBoxManager<T, I extends Object> {
       deleted: boxEvent.deleted,
     ),
   );
+
+  @protected
+  Task<Unit> deleteFromDisk();
 }

@@ -43,4 +43,7 @@ final class SingleIndexBoxManager<T> extends BaseBoxManager<T, int> {
   ).mapToUnit();
 
   Task<Unit> clear() => Task(() => _box.clear()).mapToUnit();
+
+  @override
+  Task<Unit> deleteFromDisk() => Task(() => _box.deleteFromDisk()).mapToUnit();
 }

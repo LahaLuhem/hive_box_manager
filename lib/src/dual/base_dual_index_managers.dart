@@ -118,6 +118,9 @@ abstract class _BaseDualIndexLazyBoxManager<T, I1, I2, O extends Object>
     () => lazyBox.clear().then((_) => assignedLogCallback?.call('Cleared LazyBox[$boxKey]')),
   ).mapToUnit();
 
+  @override
+  Task<Unit> deleteFromDisk() => Task(() => lazyBox.deleteFromDisk()).mapToUnit();
+
   String _defaultLogCallback(O index, T value) =>
       "Wrote to LazyBox[$boxKey] at '$index' with $value";
 }
@@ -207,6 +210,9 @@ abstract class _BaseDualIndexBoxManager<T, I1, I2, O extends Object> extends Bas
         .delete(encodedIndex)
         .then((_) => assignedLogCallback?.call("Deleted from Box[$boxKey] at '$encodedIndex'"));
   }).mapToUnit();
+
+  @override
+  Task<Unit> deleteFromDisk() => Task(() => box.deleteFromDisk()).mapToUnit();
 
   Task<Unit> clear() => Task(
     () => box.clear().then((_) => assignedLogCallback?.call('Cleared Box[$boxKey]')),

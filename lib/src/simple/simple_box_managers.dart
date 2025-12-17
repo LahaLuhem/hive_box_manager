@@ -60,6 +60,9 @@ final class BoxManager<T, I extends Object> extends BaseBoxManager<T, I> {
   ).mapToUnit();
 
   Task<Unit> clear() => Task(() => _box.clear()).mapToUnit();
+
+  @override
+  Task<Unit> deleteFromDisk() => Task(() => _box.deleteFromDisk()).mapToUnit();
 }
 
 final class LazyBoxManager<T, I extends Object> extends BaseBoxManager<T, I> {
@@ -141,6 +144,9 @@ final class LazyBoxManager<T, I extends Object> extends BaseBoxManager<T, I> {
   ).mapToUnit();
 
   Task<Unit> clear() => Task(() => _lazyBox.clear()).mapToUnit();
+
+  @override
+  Task<Unit> deleteFromDisk() => Task(() => _lazyBox.deleteFromDisk()).mapToUnit();
 
   String _defaultLogCallback(String key, I index, T value) =>
       "Wrote to LazyBox[$key] at '$index' with $value";

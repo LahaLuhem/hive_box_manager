@@ -64,4 +64,7 @@ final class SingleIndexLazyBoxManager<T> extends BaseBoxManager<T, int> {
   ).mapToUnit();
 
   Task<Unit> clear() => Task(() => _lazyBox.clear()).mapToUnit();
+
+  @override
+  Task<Unit> deleteFromDisk() => Task(() => _lazyBox.deleteFromDisk()).mapToUnit();
 }
