@@ -36,13 +36,11 @@ final class SingleIndexBoxManager<T> extends BaseBoxManager<T, int> {
         );
   }).mapToUnit();
 
-  Task<Unit> delete() => Task(
-    () => _box
-        .delete(_defaultSingleIndex)
-        .then((_) => assignedLogCallback?.call('Deleted from SingleIndexBox[$boxKey]')),
+  /// Functionally equal to `delete` for a single-index box.
+  Task<Unit> clear() => Task(
+    () =>
+        _box.clear().then((_) => assignedLogCallback?.call('Deleted from SingleIndexBox[$boxKey]')),
   ).mapToUnit();
-
-  Task<Unit> clear() => Task(() => _box.clear()).mapToUnit();
 
   @override
   Task<Unit> deleteFromDisk() => Task(() => _box.deleteFromDisk()).mapToUnit();
