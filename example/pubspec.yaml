@@ -1,0 +1,28 @@
+name: hive_box_manager_example
+description: "Example project for hive_box_manager."
+publish_to: 'none'
+version: 0.0.1
+
+
+
+
+environment:
+  flutter: ">=3.38.0 <4.0.0"
+  sdk: '>=3.10.0 <4.0.0'
+
+
+
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+
+
+
+flutter:
+  uses-material-design: true
