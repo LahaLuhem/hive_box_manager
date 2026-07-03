@@ -5,7 +5,7 @@ import '../base_box_manager.dart';
 import '../extensions.dart';
 import '../typedefs.dart';
 
-final class SingleIndexLazyBoxManager<T> extends BaseBoxManager<T, int> {
+interface class SingleIndexLazyBoxManager<T> extends BaseBoxManager<T, int> {
   late final LazyBox<T> _lazyBox;
   static const _defaultSingleIndex = 0;
 

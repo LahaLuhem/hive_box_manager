@@ -3,18 +3,8 @@
 
 part of 'queryable_test.dart';
 
-final class _FakeBitShiftQueryDualIntIndexLazyBoxManager<T extends Object>
-    extends BitShiftQueryDualIntIndexLazyBoxManager<T> {
-  _FakeBitShiftQueryDualIntIndexLazyBoxManager({required super.defaultValue})
-    : super(boxKey: 'fake');
-
-  @override
-  Future<void> init({HiveCipher? encryptionCipher}) async => lazyBox = _FakeIntLazyBox<T>();
-
-  @visibleForTesting
-  void addAllEntries(Map<int, T> entries) => (lazyBox as _FakeIntLazyBox<T>).addAllEntries(entries);
-}
-
+/// In-memory stand-in for a [LazyBox], keyed by the encoded int index. Lets the
+/// bit-shift query logic run against known data without opening a real Hive box.
 class _FakeIntLazyBox<E> extends Fake implements LazyBox<E> {
   final Map<int, E> _mockBox = {};
 

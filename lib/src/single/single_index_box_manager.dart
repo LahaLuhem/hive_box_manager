@@ -5,7 +5,7 @@ import '../base_box_manager.dart';
 import '../extensions.dart';
 import '../typedefs.dart';
 
-final class SingleIndexBoxManager<T> extends BaseBoxManager<T, int> {
+interface class SingleIndexBoxManager<T> extends BaseBoxManager<T, int> {
   late final Box<T> _box;
   static const _defaultSingleIndex = 0;
 

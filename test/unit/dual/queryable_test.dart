@@ -13,7 +13,11 @@ part 'fakes.dart';
 void main() {
   group('Bit-shift query tests', () {
     const maxIndex = 10;
-    final sut = _FakeBitShiftQueryDualIntIndexLazyBoxManager(defaultValue: '');
+    // A real bit-shift manager exercising the real query logic, backed by an
+    // in-memory fake box injected through the `lazyBox` test seam.
+    final fakeBox = _FakeIntLazyBox<String>();
+    final sut = QueryDualIntIndexLazyBoxManager<String>.bitShift(boxKey: 'fake', defaultValue: '')
+      ..lazyBox = fakeBox;
 
     final random = math.Random(42);
     final existingBoxEntries = Iterable.generate(
@@ -25,9 +29,8 @@ void main() {
       existingBoxEntries.map((e) => '(${e.$1},${e.$2})'),
     );
 
-    setUpAll(() async {
-      await sut.init();
-      sut.addAllEntries(
+    setUpAll(() {
+      fakeBox.addAllEntries(
         Map.fromIterables(
           testData.keys.map((e) => BitShiftQueryDualIntIndexLazyBoxManager.encoder(e.$1, e.$2)),
           testData.values,

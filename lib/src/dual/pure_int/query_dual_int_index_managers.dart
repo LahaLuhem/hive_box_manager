@@ -1,6 +1,6 @@
 part of '../base_dual_index_managers.dart';
 
-abstract class QueryDualIntIndexLazyBoxManager<T extends Object>
+abstract interface class QueryDualIntIndexLazyBoxManager<T extends Object>
     extends _BaseQueryDualIndexLazyBoxManager<T, int, int, int> {
   QueryDualIntIndexLazyBoxManager._({
     required super.boxKey,
@@ -26,10 +26,11 @@ abstract class QueryDualIntIndexLazyBoxManager<T extends Object>
 }
 
 /// Uses Hive.keys for O(K) decomposition instead of O(65536)
-/// Made not final just for testing.
+/// `interface` so consumers can mock it in tests, not subclass it. Reach it via
+/// [QueryDualIntIndexLazyBoxManager.bitShift].
 @protected
 @visibleForTesting
-class BitShiftQueryDualIntIndexLazyBoxManager<T extends Object>
+interface class BitShiftQueryDualIntIndexLazyBoxManager<T extends Object>
     extends QueryDualIntIndexLazyBoxManager<T> {
   @protected
   @override
@@ -52,7 +53,7 @@ class BitShiftQueryDualIntIndexLazyBoxManager<T extends Object>
     : super._(encoder: encoder);
 }
 
-abstract class QueryDualIntIndexBoxManager<T extends Object>
+abstract interface class QueryDualIntIndexBoxManager<T extends Object>
     extends _BaseQueryDualIndexBoxManager<T, int, int, int> {
   QueryDualIntIndexBoxManager._({
     required super.boxKey,
@@ -76,10 +77,12 @@ abstract class QueryDualIntIndexBoxManager<T extends Object>
 }
 
 /// Uses Hive.keys for O(K) decomposition instead of O(65536)
-/// Made not final just for testing.
+/// `interface` so consumers can mock it in tests, not subclass it. Reach it via
+/// [QueryDualIntIndexBoxManager.bitShift].
 @protected
 @visibleForTesting
-class BitShiftQueryDualIntIndexBoxManager<T extends Object> extends QueryDualIntIndexBoxManager<T> {
+interface class BitShiftQueryDualIntIndexBoxManager<T extends Object>
+    extends QueryDualIntIndexBoxManager<T> {
   @protected
   @override
   Iterable<int> primariesDecomposer(int secondaryIndex) =>

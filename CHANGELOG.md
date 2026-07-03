@@ -1,3 +1,7 @@
+## [0.0.8] - 2026-07-05
+### Changed
+- Loosen final classes for tesing mockability
+
 ## [0.0.7] - 2026-01-23
 ### Added
 - delete from disk
@@ -41,6 +45,7 @@
 - Collection BoxManagers
 - (Lazy) Dual Int Index LazyBoxManager
 
+[0.0.8]: https://github.com/LahaLuhem/hive_box_manager/compare/0.0.7...0.0.8
 [0.0.7]: https://github.com/LahaLuhem/hive_box_manager/compare/0.0.6...0.0.7
 [0.0.6]: https://github.com/LahaLuhem/hive_box_manager/compare/0.0.5...0.0.6
 [0.0.5]: https://github.com/LahaLuhem/hive_box_manager/compare/0.0.4...0.0.5

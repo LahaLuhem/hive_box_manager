@@ -1,6 +1,6 @@
 part of '../base_dual_index_managers.dart';
 
-final class DualIntIndexLazyBoxManager<T> extends _BaseDualIndexLazyBoxManager<T, int, int, int> {
+interface class DualIntIndexLazyBoxManager<T> extends _BaseDualIndexLazyBoxManager<T, int, int, int> {
   /// ### ✅ Pros:
   /// + Maximum performance - Bit operations are the fastest CPU operations
   /// + Perfect distribution - Uses all 32 bits efficiently (16 bits each)
@@ -37,7 +37,7 @@ final class DualIntIndexLazyBoxManager<T> extends _BaseDualIndexLazyBoxManager<T
   });
 }
 
-final class DualIntIndexBoxManager<T> extends _BaseDualIndexBoxManager<T, int, int, int> {
+interface class DualIntIndexBoxManager<T> extends _BaseDualIndexBoxManager<T, int, int, int> {
   /// ### ✅ Pros:
   /// + Maximum performance - Bit operations are the fastest CPU operations
   /// + Perfect distribution - Uses all 32 bits efficiently (16 bits each)
