@@ -1,6 +1,10 @@
 ## Custom
 .idea/AugmentWebviewStateStore.xml
 
+# AI symlinks point into adjacent .ai/ folders; targets are committed, symlinks are not.
+/AGENTS.md
+/CLAUDE.md
+
 # Created by https://www.toptal.com/developers/gitignore/api/dart,androidstudio,visualstudiocode,macos
 # Edit at https://www.toptal.com/developers/gitignore?templates=dart,androidstudio,visualstudiocode,macos
 
