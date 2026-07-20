@@ -1,11 +1,24 @@
 formatter:
   page_width: 100
 
+#plugins:
+#  prefer_shorthands: ^0.4.7
+#prefer_shorthands:
+#  convert_implicit_declaration: false
+
 
 
 
 
 analyzer:
+  exclude:
+    - "bin/cache/**"
+    - "**/*.chopper.dart"
+    - "**/*.g.dart"
+    - "**/*.gr.dart"
+    - "**/*.gform.dart"
+    - "**/generated/**"
+    - "**/*.freezed.dart"
   language:
     strict-casts: true
     strict-inference: true
@@ -61,22 +74,23 @@ analyzer:
     unused_local_variable: warning
     use_key_in_widget_constructors: warning
 
-    # linter infos
-    todo: info  # allow having TODOs in the code
-
     # linter ignores
+    # `todo` is `ignore` (not `info`) so CI's `flutter analyze --fatal-infos` does not fail on TODO
+    # comments - TODOs stay allowed in the code; --fatal-infos still fails on
+    # every other info-level lint.
+    todo: ignore
     lines_longer_than_80_chars: ignore
     always_use_package_imports: ignore
     avoid_setters_without_getters: ignore
     sort_constructors_first: ignore
-    public_member_api_docs: ignore
     require_trailing_commas: ignore
     type_annotate_public_apis: ignore
 
 linter:
   rules:
     always_declare_return_types: true
-    always_put_control_body_on_new_line: false  # Opinionated: trade-off for conciseness is acceptable here
+    # Opinionated: trade-off for conciseness is acceptable here
+    always_put_control_body_on_new_line: false
     always_put_required_named_parameters_first: true
     always_specify_types: false # Conflicts with avoid_types_on_closure_parameters
     always_use_package_imports: false # Conflicts with prefer_relative_imports
@@ -86,7 +100,7 @@ linter:
     avoid_bool_literals_in_conditional_expressions: true
     avoid_catches_without_on_clauses: true
     avoid_catching_errors: true
-    avoid_classes_with_only_static_members: true
+    avoid_classes_with_only_static_members: false # We do this a lot
     avoid_double_and_int_checks: true
     avoid_dynamic_calls: true
     avoid_empty_else: true
@@ -100,9 +114,8 @@ linter:
     avoid_init_to_null: true
     avoid_js_rounded_ints: true
     avoid_multiple_declarations_per_line: true
-    avoid_null_checks_in_equality_operators: true
     avoid_positional_boolean_parameters: true
-    avoid_print: false
+    avoid_print: true
     avoid_private_typedef_functions: true
     avoid_redundant_argument_values: true
     avoid_relative_lib_imports: true
@@ -139,7 +152,8 @@ linter:
     depend_on_referenced_packages: true
     deprecated_consistency: true
     deprecated_member_use_from_same_package: true
-    diagnostic_describe_all_properties: false # Opinionated: a bit much for now. Better used at a package-level
+    # Opinionated: a bit much for now. Better used at a package-level
+    diagnostic_describe_all_properties: false
     directives_ordering: true
     discarded_futures: true
     do_not_use_environment: true
@@ -207,7 +221,6 @@ linter:
     prefer_final_fields: true
     prefer_final_in_for_each: true
     prefer_final_locals: true
-    prefer_final_parameters: false  # Conflicts with avoid_final_parameters. Covered by parameter_assignments.
     prefer_for_elements_to_map_fromIterable: true
     prefer_foreach: true
     prefer_function_declarations_over_variables: true
@@ -233,6 +246,7 @@ linter:
     provide_deprecation_message: true
     public_member_api_docs: true
     recursive_getters: true
+    remove_deprecations_in_breaking_versions: true
     require_trailing_commas: false  # Made obsolete due to the new Dart formatter in 3.7
     secure_pubspec_urls: true
     sized_box_for_whitespace: true
@@ -240,16 +254,18 @@ linter:
     slash_for_doc_comments: true
     sort_child_properties_last: true
     sort_constructors_first: true
-    sort_pub_dependencies: true
+    sort_pub_dependencies: false
     sort_unnamed_constructors_first: true
     specify_nonobvious_local_variable_types: false  # Conflicts with omit_local_variable_types
-    specify_nonobvious_property_types: false  # Type inference by the plugin + IDE makes this obsolete
+    # Type inference by the plugin + IDE makes this obsolete
+    specify_nonobvious_property_types: false
     strict_top_level_inference: true
     switch_on_type: true
     test_types_in_equals: true
     throw_in_finally: true
     tighten_type_of_initializing_formals: true
-    type_annotate_public_apis: false  # Conflicts with omit_obvious_property_types. Type is inferred is usually correctly done
+    # Conflicts with omit_obvious_property_types. Type is inferred is usually correctly done
+    type_annotate_public_apis: false
     type_init_formals: true
     type_literal_in_constant_pattern: true
     unawaited_futures: true
@@ -292,7 +308,6 @@ linter:
     use_enums: true
     use_full_hex_values_for_flutter_colors: true
     use_function_type_syntax_for_parameters: true
-    use_if_null_to_convert_nulls_to_bools: true
     use_is_even_rather_than_modulo: true
     use_key_in_widget_constructors: true
     use_late_for_private_fields_and_variables: true
@@ -309,6 +324,7 @@ linter:
     use_truncating_division: true
     valid_regexps: true
     void_checks: true
+
 
 
 
@@ -377,7 +393,7 @@ dart_code_metrics:
     - prefer-immediate-return: true
     - prefer-iterable-of: true
     - prefer-last: true
-    - prefer-match-file-name: false   # exported libraries
+    - prefer-match-file-name: true
     - prefer-moving-to-variable: false    # Config doesn't work
     #        allowed-duplicated-chains: 3
     #        ignored-invocations:
@@ -411,4 +427,3 @@ dart_code_metrics:
     - prefer-text-rich: true
     - prefer-using-list-view: true
     - use-setstate-synchronously: true
-
