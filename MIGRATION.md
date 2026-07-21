@@ -1,7 +1,8 @@
 # Migrating from 0.0.x to 1.0
 
-> 🚧 **Draft.** 1.0 is a from-scratch rewrite and a hard break from `0.0.x`. This guide is being
-> assembled alongside the rewrite and is completed with the release docs pass.
+1.0 is a from-scratch rewrite and a hard break from `0.0.x`: the manager classes are gone, the
+new box façades carry a different contract, and this guide is the bridge. The good news sits in
+the first table: your data almost always reads in place.
 
 ## Your data: almost always compatible in place
 
@@ -89,3 +90,8 @@ Run it once at startup behind a "migrated" flag (a `SingleValueBox<bool>` works 
   `ArgumentError` at the call site instead of silently corrupting the box in release builds.
 - **`close()` / `deleteFromDisk()` are terminal.** Reacquire a new instance instead of reusing
   the handle.
+- **Queries return plain lists.** The 0.0.x reverse queries answered "no matches" with `None`;
+  the 1.0 `queryByPrimary` / `queryBySecondary` answer with an empty list, and `Option` is
+  reserved for genuine key absence.
+- **Collections come back unmodifiable.** `IterableBox` reads hand you a view; build a new list
+  (or use the `add` / `addAll` / `remove` sugar) instead of mutating in place.
