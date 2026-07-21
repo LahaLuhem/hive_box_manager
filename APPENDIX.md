@@ -103,12 +103,13 @@ packages.
 <a id="sdk-floor"></a>
 ## SDK floor
 
-The floor is currently **Dart ≥ 3.10 for consumers** (`pubspec.yaml`), raised from 3.9 for the 1.0
-rewrite: static dot shorthands are a CODESTYLE idiom and land in 3.10. **Contributing (running the
-test suite) needs Dart ≥ 3.11**, where `test` and `build_runner` floor; dev dependencies stay out of
-downstream resolution, so this never binds consumers. Since a floor can only be raised without a
-breaking change, any further bump is recorded here (it is breaking for anyone on the older SDK).
-The full 1.0 rationale lands with the release docs pass.
+The floor is currently **Dart ≥ 3.12** (`pubspec.yaml`), raised from 3.9 for the 1.0 rewrite in two
+steps: 3.10 for static dot shorthands (a CODESTYLE idiom), then 3.12 for private named parameters
+(`Foo({required this._bar})`), now used across the internal constructors. One floor serves consumers
+and contributors alike: the test toolchain (`test`, `build_runner`) floors at 3.11, inside the
+package floor. Since a floor can only be raised without a breaking change, any further bump is
+recorded here (it is breaking for anyone on the older SDK). The full 1.0 rationale lands with the
+release docs pass.
 
 ---
 

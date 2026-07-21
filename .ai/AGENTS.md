@@ -29,10 +29,9 @@ engine; `fpdart` is the paradigm. Rationale:
 
 ## Stack
 
-- **Dart ≥ 3.10 for consumers** (constraint in `pubspec.yaml`; SDK channel pinned in `.fvmrc`).
-  **Contributing needs Dart ≥ 3.11**: the test toolchain (`test`, `build_runner`) floors there, and
-  dev dependencies never bind consumers. Rationale and history:
-  [`APPENDIX.md#sdk-floor`](./APPENDIX.md#sdk-floor).
+- **Dart ≥ 3.12** (constraint in `pubspec.yaml`; SDK channel pinned in `.fvmrc`), one floor for
+  consumers and contributors alike (the test toolchain floors at 3.11, inside the package floor).
+  Rationale and history: [`APPENDIX.md#sdk-floor`](./APPENDIX.md#sdk-floor).
 - **`dart test`** for tests; **`dart --no-version-check analyze .`** for pedantic static analysis
   (pedantic mode is intentional). No Flutter dependency in the package, no platform channels. The
   `example/` app is Flutter and carries its own pubspec; its CI is wired separately once it lands.
