@@ -3,9 +3,22 @@
 Typed, fpdart-first façades over [hive_ce](https://pub.dev/packages/hive_ce) boxes: no `null`s,
 lazy effects, ready-made CRUD, and purpose-built box variants.
 
-> 🚧 **1.0 rewrite in progress.** This is a from-scratch rewrite and a hard break from `0.0.x`.
-> The surface lands phase by phase; the `KeyedBox`, `SingleValueBox`, and `IterableBox` families
-> below are live, with the dual-key family following. A migration guide ships with the release.
+> 🚧 **1.0 (pre-release).** A from-scratch rewrite and a hard break from `0.0.x`: all four box
+> families are live below while the release is prepared. Coming from `0.0.x`? Your data almost
+> always reads in place: see [MIGRATION.md](MIGRATION.md).
+
+## 🧭 Which box?
+
+| You're storing | Reach for | Demo scenario |
+|---|---|---|
+| Many values, one key each | `KeyedBox<T, K>` | users, todos, cache entries |
+| Exactly one value | `SingleValueBox<T>` | a session token, the theme, one config blob |
+| A list of values per key | `IterableBox<T, K>` | tags per post, history per day |
+| Values addressed by two parts | `DualKeyBox<T, K1, K2>` | (user, day) events, (row, column) grids |
+
+Every family comes in an eager and a `Lazy...` variant; the
+[measured guidance below](#-eager-or-lazy-measured) picks the axis. Reverse queries ("everything
+for this user") live on the dual-key family.
 
 ## 🚀 Quickstart
 
@@ -153,6 +166,23 @@ values isolating key cost); web is unmeasured, its ordering assumed to follow th
 part types implement `DualKeyCodec<K1, K2>`; keep the encoding bijective, or reverse queries
 will lie.
 
+### 📏 Eager or lazy? (measured)
+
+Folklore says "lazy opens instantly and saves all the memory". The maintainer benchmark
+(macOS Apple Silicon, AOT, hive_ce 2.19.3) says:
+
+- **Opening costs the same on both axes**, and it's O(file size): ~70 ms at 100K int-keyed
+  entries, ~3 s at 1M. Hive parses every frame to build the keystore on any open; what lazy
+  skips is retaining the *values*.
+- **Keys always live in RAM on both axes**: ~21–33 MB at 100K entries, ~200–270 MB at 1M
+  (String keys cost 20–80% more than int keys).
+- **Reads are where the axes split**: an eager get is ~0.5–0.8 µs from memory; a lazy get pays
+  a disk read, ~22–25 µs per access.
+
+So: pick the **eager** variant for hot, value-heavy-*read* boxes that fit comfortably in RAM,
+and the **lazy** variant for value-heavy boxes you read sparsely. Neither opens "instantly" at
+scale, and keys are a RAM cost you pay either way.
+
 ### The contract in 30 seconds
 
 |                                                     | `KeyedBox<T, K>`             | `LazyKeyedBox<T, K>`             |
@@ -196,12 +226,16 @@ final byDay = await KeyedBox.open<Todo, DateTime>(
 `encode` must produce an `int` within `0..0xFFFFFFFF` or a `String` of at most 255 UTF-8 bytes:
 that's hive's raw key domain.
 
-### Safer than raw hive
+### Safer than raw hive, at raw-hive speed
 
 Release-mode `hive_ce` accepts out-of-range int keys and oversized String keys, then corrupts
 silently (keys wrap into other slots; an oversized String key makes the whole box file
 unreadable on the next open). The write path here rejects exactly those keys with an
 `ArgumentError` at the call site, before anything reaches disk.
+
+The safety is measured, not traded: the wrapper-overhead benchmark (AOT, façade vs raw hive_ce)
+puts the typed surface at **~2.5% on eager gets, ~1.5% on lazy gets, ~3% on puts**: within
+noise of raw, with the whole no-null contract on top.
 
 ### Observability
 
@@ -216,12 +250,34 @@ final todos = await KeyedBox.open<Todo, int>(
 ```
 
 Extend `BoxObserver` and override only the events you care about; `PrintingBoxObserver` is the
-ready-made sink.
+ready-made sink. Two pointers on the engine side: hive_ce's own warnings stay on *its* global
+logging channel (see its
+[logging options](https://docs.hive.isar.community) if you want them filtered), and the
+[Hive Inspector DevTools extension](https://pub.dev/packages/hive_ce) is handy for eyeballing
+box contents while the observer tells you what your code did to them.
 
-## 📚 Landing with 1.0
+## 🗺️ Roadmap
 
-The dual-key box family with its reverse-query surface, measured eager-vs-lazy guidance, the
-decision guide, and the `0.0.x` migration table all land as the rewrite progresses.
+Additive candidates for 1.x, in no committed order:
+
+- **Indexed reverse queries** for very large (>100K) datasets: an inverted-index strategy on
+  `LazyDualKeyBox`, replacing the O(K) scan behind the same query methods.
+- **IsolatedHive support** behind the box-acquisition seam (hive_ce itself recommends it for
+  multi-isolate apps), and `BoxCollection` wrapping if demand shows.
+- **A migration helper API** (1.0 documents recipes in [MIGRATION.md](MIGRATION.md) instead).
+- **Sets, maps, and nested collections** on the value-codec seam (`IterableBox` is list-only by
+  design today).
+- **A consumer fakes package** (in-memory façade implementations for app tests) and Flutter
+  companions (a `ValueListenable` adapter) as separate packages, keeping core pure Dart.
+
+Deliberately **never** wrapped, because they fight the typed, codec-addressed key model:
+auto-increment `add`/`addAll`, index-based `getAt`/`putAt`/`deleteAt`/`keyAt`, `toMap`, and
+`valuesBetween`. Reach for raw `hive_ce` boxes where those fit your problem.
+
+## 🕹️ Example app
+
+[`example/`](example/) is a runnable Flutter demo hub: one screen per box family (including an
+encrypted single-value box) with a live `BoxObserver` event panel docked under every demo.
 
 ## 📄 License
 

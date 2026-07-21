@@ -3,11 +3,6 @@
 Tool-agnostic brief for any coding agent (Copilot, Cursor, Codex, Claude Code, …) working in
 this package. Claude-Code-specific guidance lives in [CLAUDE.md](./CLAUDE.md).
 
-> **Setup phase.** This package is being rewritten from scratch for a breaking `1.0` on cleaner,
-> more modular ground; the internal design is not settled yet. Sections that depend on the redo's
-> decisions are marked **TODO (design pass)**. The *conventions* here are binding now; the
-> *specifics* they defer are pending. Full background: `~/Desktop/manager-revamp/`.
-
 ## Project goal
 
 A developer-experience wrapper over [`hive_ce`](https://pub.dev/packages/hive_ce) (the community
@@ -16,11 +11,13 @@ functional surface. It adds no storage engine of its own. Four aims:
 
 - **fpdart-first surface.** Reads and writes hand back lazy [`fpdart`](https://pub.dev/packages/fpdart)
   `Task` / `TaskOption` / `Option`, never a bare `Future` or `null`. Absence is an `Option`.
-- **CRUD for free.** The per-box get / put / upsert / delete / clear boilerplate consumers usually
-  hand-write ships as ready-made "Manager" types.
-- **Purpose-built box variants.** Managers for specific shapes (single-value, collection-valued,
-  dual-index, reverse-queryable), each adding semantic ergonomics over raw Hive.
-- **Hive's performance, kept.** Raw speed is `hive_ce`'s headline; the wrapper must not trade it away.
+- **CRUD for free.** The per-box get / put / update / delete / clear boilerplate consumers usually
+  hand-write ships as ready-made box façades.
+- **Purpose-built box variants.** Four façade families, each in an eager and a lazy variant:
+  `KeyedBox`, `SingleValueBox`, `IterableBox`, and `DualKeyBox` (with reverse queries folded in),
+  each adding semantic ergonomics over raw Hive.
+- **Hive's performance, kept.** Raw speed is `hive_ce`'s headline; the wrapper must not trade it
+  away (held by the wrapper-overhead benchmark lane in `benchmark/`).
 
 Pure Dart, so it works in Flutter apps, Dart servers, and CLIs alike. `hive_ce` is the storage
 engine; `fpdart` is the paradigm. Rationale:
@@ -55,10 +52,19 @@ engine; `fpdart` is the paradigm. Rationale:
 ```text
 hive_box_manager/
 ├── lib/
-│   ├── hive_box_manager.dart       Public entry; `export 'src/…'` only
-│   └── src/                        Manager implementations (internal grouping: TODO design pass)
-├── test/                           `dart test` units; mirrors lib/src/
-├── example/                        Flutter demo app (own pubspec; CI wired when it lands)
+│   ├── hive_box_manager.dart       Public entry; `show`-scoped `export 'src/…'` lines only
+│   └── src/
+│       ├── box/                    The eight public façades + their hidden testing seams
+│       ├── codec/{key,dual}/       KeyCodec / DualKeyCodec seams + shipped codecs + resolution
+│       ├── core/                   box_provider, raw_key_gate, engine/, value_codec/,
+│       │                           constants/, utils/  (all internal)
+│       ├── event/                  TypedBoxEvent / LazyTypedBoxEvent
+│       ├── observer/               BoxObserver + sinks/
+│       └── query/                  Internal query-index strategy + the scan implementation
+├── test/                           unit/ mirrors lib/src/; integration/ (incl. hive_ce_pins/);
+│                                   support/ (bdd vocabulary, fakes, mocks)
+├── benchmark/                      Maintainer tooling: key-codec matrix + wrapper-overhead lane
+├── example/                        Flutter demo app (own pubspec; CI wiring is a tracked follow-up)
 ├── analysis_options.yaml           Strict-mode + opinionated lints
 ├── dart_dependency_validator.yaml  Scopes dependency_validator (excludes example/)
 ├── pubspec.yaml                    Deps + cider config + topics
@@ -66,24 +72,23 @@ hive_box_manager/
 ├── .fvmrc / .editorconfig          Local SDK pin / text-file formatting
 ├── CHANGELOG.md                    Pipeline-owned; appears on pub.dev
 ├── README.md                       pub.dev landing page
+├── MIGRATION.md                    The 0.0.x → 1.0 bridge
 ├── APPENDIX.md                     Design rationale (anchor-keyed)
 ├── CODESTYLE.md                    Library-package code style
 └── .ai/                            This file + CLAUDE.md (symlinked to repo root)
 ```
 
-The public API stays flat: `hive_box_manager.dart` re-exports every Manager, so moving code inside
-`lib/src/` is never a breaking change as long as the re-exports hold. The internal grouping under
-`lib/src/` is being reworked in the redo, so it is deliberately left unspecified here (**TODO
-design pass**).
+The public API stays flat: `hive_box_manager.dart` re-exports every public symbol with `show`
+clauses, so moving code inside `lib/src/` is never a breaking change as long as the re-exports
+hold, and nothing internal can leak by accident.
 
 ## Hard rules
 
-1. **The Manager contract is the package's identity.** Every Manager wraps a Hive box behind the
+1. **The box-façade contract is the package's identity.** Every façade wraps a Hive box behind the
    same functional surface: reads return `Task` / `TaskOption` / `Option` (never a bare `Future` or
-   `null`), writes return `Task<Unit>`, and genuine absence is an `Option`, never a null or a magic
-   sentinel. The precise contract (the method set, the eager-vs-lazy split, how `defaultValue` and
-   the `tryGet` family relate) is settled in the redo. Full spec:
-   [`CODESTYLE.md#manager-contract`](./CODESTYLE.md#manager-contract). **TODO design pass.**
+   `null`), writes return `Task<Unit>`, genuine absence is an `Option` (never a null or a magic
+   sentinel), acquisition encodes openness, and `close` / `deleteFromDisk` are terminal. Full spec:
+   [`CODESTYLE.md#manager-contract`](./CODESTYLE.md#manager-contract).
 2. **The public API lives only in `lib/hive_box_manager.dart`**, which re-exports from `lib/src/`.
    Don't make users import `package:hive_box_manager/src/…`. Shared internals stay in `lib/src/`.
 3. **No `null` in the public surface.** Absence is `Option` / `TaskOption`; laziness is `Task` over

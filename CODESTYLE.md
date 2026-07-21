@@ -8,10 +8,6 @@ public surface, and one consistent shape across every Manager in the package.
 Each heading below carries an explicit `<a id="…">` anchor. Link by anchor, not by heading text, so
 renames don't break callers.
 
-> **Setup phase.** The package is being rewritten from scratch for a breaking `1.0`. The generic
-> style rules here are binding now; sections tied to the not-yet-settled public API are marked
-> **TODO (design pass)**.
-
 <!-- TOC start -->
 
 - [Type safety & nullability](#type-safety)
@@ -19,7 +15,7 @@ renames don't break callers.
 - [Formatting](#formatting)
 - [Constants & magic numbers](#constants)
 - [Class structure](#class-structure)
-- [The Manager contract](#manager-contract)
+- [The box-façade contract](#manager-contract)
 - [Idioms](#idioms)
 - [Comments & dartdoc](#dartdoc)
 - [DCM rules (applied by hand)](#dcm-rules)
@@ -167,31 +163,43 @@ under [*Hard rules* in `.ai/AGENTS.md`](./.ai/AGENTS.md#hard-rules).
 ---
 
 <a id="manager-contract"></a>
-## The Manager contract
+## The box-façade contract
 
-The headline convention: every Manager presents the **same** functional surface, so a consumer
-learns one shape and applies it across every box variant. Rationale:
-[`APPENDIX.md#fpdart-surface`](./APPENDIX.md#fpdart-surface).
+The headline convention: every box façade presents the **same** functional surface, so a consumer
+learns one shape and applies it across every variant. Rationale:
+[`APPENDIX.md#fpdart-surface`](./APPENDIX.md#fpdart-surface) and the surrounding 1.0 sections.
 
-**Committed invariants** (binding now):
+**The invariants, as shipped:**
 
-- **Reads return fpdart types, never a bare `Future` or `null`.** An eager read (box already in
-  memory) returns the value directly; a lazy read returns a `Task<T>`. A read that can legitimately
-  find nothing returns `Option<T>` (eager) or `TaskOption<T>` (lazy). `Task` is lazy: nothing runs
-  until `.run()` at the call boundary.
-- **Absence is `Option`, not `null` or a sentinel.** The `tryGet` family expresses "the key isn't
-  there". A plain `get` backed by a `defaultValue` is a convenience for "give me something usable",
-  never a way to smuggle a `null` back in.
-- **Writes return `Task<Unit>`.** They are lazy and composable; `Unit` (not `void`) so they chain in
-  fpdart pipelines.
-- **`<T extends Object>` on every value / key generic.** A stored value is a real object; `null` is
-  never a valid stored value. See [type safety](#type-safety).
+- **Reads return fpdart types, never a bare `Future` or `null`.** An eager read is synchronous off
+  the box cache; a lazy read is a `Task` / `TaskOption` that hits disk when run. A read that can
+  legitimately find nothing returns `Option<T>` (eager) or `TaskOption<T>` (lazy); `getOr` is the
+  fallback sugar over it. There is no `tryGet` twin and no box-level `defaultValue`: the primary
+  read *is* the absence-shaped one.
+- **Writes and lifecycle effects return `Task<Unit>`** (`update` returns `Task<T>`, mirroring
+  `Map.update`, absent-without-`ifAbsent` failing inside the task). Lazy and composable; `Unit`
+  (not `void`) so they chain in fpdart pipelines.
+- **Acquisition encodes openness.** Eager façades have no public constructor: the static
+  `open(...)` factory returns a `Task`, so holding one implies its box is open. Lazy façades
+  construct synchronously and auto-open single-flight on the first effect, with
+  `ensureInitialised()` as the warm-up; their sync inspectors (`length` / `isEmpty` /
+  `isNotEmpty` / `keys` / `contains`) throw a `StateError` before the first open — the one
+  deliberate carve-out.
+- **The throw taxonomy is fixed.** Key-gate violations and missing codecs fail synchronously at
+  the call site (an `ArgumentError` / a wiring assert); everything the engine itself throws for
+  surfaces unwrapped inside the task at run time; `close()` / `deleteFromDisk()` are terminal on
+  both axes.
+- **Codec defaulting at construction.** `int` / `String` keys (and `(int, int)` dual parts)
+  resolve to shipped codecs; any other key type without an explicit codec fails a wiring assert.
+- **The one blessed nullable is `watch({key})`'s filter**: a toggle the consumer passes, never a
+  value they receive. Eager watch events carry non-null values even on deletes; lazy events carry
+  `Option` (the engine holds no values to attach).
+- **`<T extends Object>` on every value / key generic.** A stored value is a real object; `null`
+  is never a valid stored value. See [type safety](#type-safety).
 
-**TODO (design pass).** The precise contract is settled during the redo and recorded here as it
-lands: the exact method set per variant, the eager-vs-lazy split, how `defaultValue` relates to the
-`tryGet` family, the box-variant taxonomy (single-value, collection, dual-index, reverse-query), and
-the key-handling / encoding strategy. Until then, the invariants above are fixed and everything more
-specific is pending. Background and the open questions: `~/Desktop/manager-revamp/`.
+The per-family member sets live in the dartdoc of the eight façades (`KeyedBox`,
+`SingleValueBox`, `IterableBox`, `DualKeyBox`, and their `Lazy` twins); the design reasoning per
+axis lives in `APPENDIX.md`'s 1.0 sections.
 
 ---
 
