@@ -4,6 +4,10 @@
 // collection box guard (typedMapOrIterableCheck) is assert-gated: asserts on (dart test, debug builds)
 // refuse the open outright; asserts off (release, probed via subprocess) let it open and blow up at
 // the first get, which is the actual #150 trap.
+//
+// The pinned subject is `dynamic` itself (what hive reifies for collections), so the DCM ban is
+// lifted for this file.
+// ignore_for_file: avoid-dynamic
 @TestOn('vm')
 @Tags(['integration'])
 library;

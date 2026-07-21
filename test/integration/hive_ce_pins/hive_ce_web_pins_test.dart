@@ -3,6 +3,9 @@
 // collection shapes as the VM binary format. Per the 2026-07-21 ratification rider these reads
 // happen after close + reopen, so they assert IndexedDB truth, not write-cache truth. A full process
 // restart is not reachable from `dart test`, which stays the documented residual.
+// The pinned subject includes `dynamic` itself (the post-reopen List<dynamic> shape on web), so
+// the DCM ban is lifted for this file.
+// ignore_for_file: avoid-dynamic
 @TestOn('browser')
 @Tags(['browser'])
 library;

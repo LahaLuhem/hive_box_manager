@@ -3,6 +3,10 @@
 // open guard (typedMapOrIterableCheck) are assert-gated: active under `dart test` and in debug builds,
 // stripped in release, where the silent behaviours live. This probe reports what release-mode hive_ce
 // actually does, one flat JSON map on stdout; the pin suites assert its verdicts via `runReleaseModeProbe`.
+//
+// Deliberately NOT named *_test.dart: there are no test() calls, the runner must never load it,
+// and it lives beside the pins it serves.
+// ignore_for_file: prefer-correct-test-file-name
 import 'dart:convert';
 import 'dart:io';
 
