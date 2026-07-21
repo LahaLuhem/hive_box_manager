@@ -1,0 +1,9 @@
+# Suite tags (see CODESTYLE #test-style): `unit` is the fast default, `integration` runs real
+# hive_ce against temp dirs, `browser` runs the web pins on chrome under dart2js and dart2wasm
+# (each its own CI lane in package.yml).
+tags:
+  unit:
+  integration:
+  browser:
+    # One retry absorbs headless-chrome startup flakes without masking real failures.
+    retry: 1
