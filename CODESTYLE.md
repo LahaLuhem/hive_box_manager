@@ -109,6 +109,15 @@ under [*Hard rules* in `.ai/AGENTS.md`](./.ai/AGENTS.md#hard-rules).
 - **No magic numbers in `lib/` code.** Pull constants to named `static const`s with a descriptive
   identifier. (The pre-1.0 dual-index encoder kept its `bitShift` / `bitMask` on a dedicated
   constants holder; that instinct is right, the encoding strategy itself is under review.)
+- **Name "magical" values everywhere intent matters, tests and tooling included.** A value with a
+  real-world name (an engine limit, a bit width, a precision boundary) gets that name; naming also
+  guards the value against accidental edits. Hyper-parameters (iteration counts, sampling caps,
+  seeds) get names too.
+- **Derive related constants from one another** instead of repeating baked results, so they cannot
+  drift apart: `partMask = partCeiling - 1` and `'b' * (hiveMaxStringKeyBytes + 1)`, not parallel
+  literals.
+- **Peg to a predefined constant when a fitting one exists**:
+  `Duration.microsecondsPerMillisecond` over `1000`, `double.maxFinite` over its digits.
 - **Keep a type's own constants on that type**, close to where they are read. Genuinely
   cross-cutting constants go in a shared internal under `lib/src/`. Before introducing a new
   constant, check whether a shared one already exists.
@@ -204,10 +213,16 @@ purely defensive preference when neither matters:
   place (a box cache on a hot read path) locks the consumer out without paying a copy per read.
 
 <a id="idioms-collection-literals"></a>
-### Collection-`for` / collection-`if` over `Iterable.map(…).toList()`
+### Data pipelines over collection-`for` comprehensions
 
-When building a literal collection, a literal with embedded control flow reads as data and drops the
-`<T>` annotations the literal context already infers. Keep `.map(…)` for genuine pipelines.
+Prefer `iterable.map(…)` (and kin) over `[for (final a in iterable) …]`: the pipeline reads as a
+clear step-by-step transformation of the data, chains naturally, and stays a *lazy* `Iterable`.
+Keep it lazy when the result feeds another loop or transformation later; materialise (`toList()`,
+a collection literal) only at the point where evaluation is immediately needed, with a `//` reason
+when it isn't obvious (a timed window, a stateful generator, reuse across consumers). Set and map
+comprehensions (`{for (…) key: value}`) stay acceptable exactly where a materialised set/map is
+immediately consumed (a `putAll` batch, a set-shaped compare); anything longer-lived goes through
+the pipeline. (Replaces the earlier comprehension-first guidance; maintainer call, 2026-07-21.)
 
 <a id="idioms-functional-pipelines"></a>
 ### Functional pipelines over imperative loops for lookup and transform
@@ -218,7 +233,8 @@ pipeline (`firstWhereOrNull`, `where`, `map`, `fold`, `any` / `every`, several f
 pipeline reads as the data's journey; the loop hides it in accumulate-and-return bookkeeping. Stay
 lazy: don't end a chain with a reflexive `.toList()`; leave it an `Iterable` and let the terminal
 consumer drive evaluation. Do side effects with a plain `for` loop, never `forEach` with a closure
-(`avoid_function_literals_in_foreach_calls`).
+(`avoid_function_literals_in_foreach_calls`). `package:collection` is not a runtime dependency
+(dropped for 1.0); add it as a dev dependency when tests or tooling genuinely need its utilities.
 
 <a id="idioms-observers"></a>
 ### Observability: semantic event observers, not level-based loggers

@@ -9,11 +9,14 @@ library;
 // digits + ':', so the rule's UTF-16 concern is void.
 // ignore_for_file: avoid-substring
 
-/// Parts are 16-bit because Hive int keys are unsigned 32-bit.
-const int partCeiling = 1 << 16;
+/// Each packed part gets half a hive int key: hive int keys are unsigned 32-bit.
+const bitsPerPart = 16;
 
-/// Mask selecting one 16-bit part.
-const partMask = 0xFFFF;
+/// Exclusive ceiling of one packed part.
+const int partCeiling = 1 << bitsPerPart;
+
+/// Mask selecting one packed part.
+const partMask = partCeiling - 1;
 
 /// Arithmetic packing: no bitwise ops, so exact under JS number semantics.
 int arithPack(int primary, int secondary) => primary * partCeiling + secondary;
@@ -22,10 +25,10 @@ int arithPack(int primary, int secondary) => primary * partCeiling + secondary;
 (int, int) arithUnpack(int key) => (key ~/ partCeiling, key % partCeiling);
 
 /// The 0.0.x bit-shift packing, kept as the byte-compatibility reference lane.
-int bitShiftPack(int primary, int secondary) => (primary << 16) | secondary;
+int bitShiftPack(int primary, int secondary) => (primary << bitsPerPart) | secondary;
 
 /// Inverse of [bitShiftPack].
-(int, int) bitShiftUnpack(int key) => (key >> 16, key & partMask);
+(int, int) bitShiftUnpack(int key) => (key >> bitsPerPart, key & partMask);
 
 /// String composite packing (the 1.0 safe default's scheme).
 String stringPack(int primary, int secondary) => '$primary:$secondary';
