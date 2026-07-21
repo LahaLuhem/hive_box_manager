@@ -1,14 +1,16 @@
 /// Typed, fpdart-first façades over `hive_ce` boxes: no `null`s, lazy effects,
 /// ready-made CRUD, purpose-built box variants.
 ///
-/// The 1.0 surface lands phase by phase. Live today: the `KeyedBox`,
-/// `SingleValueBox`, and `IterableBox` families, the key-codec seam with its
-/// four shipped codecs, the box observer pair, and the typed watch events. The
-/// dual-key family follows.
+/// All four box families are live: `KeyedBox`, `SingleValueBox`,
+/// `IterableBox`, and `DualKeyBox` (with reverse queries folded in), each in
+/// an eager and a lazy variant, alongside the key-codec seam with its four
+/// shipped codecs, the box observer pair, and the typed watch events.
 library;
 
+export 'src/box/dual_key_box.dart' show DualKeyBox;
 export 'src/box/iterable_box.dart' show IterableBox;
 export 'src/box/keyed_box.dart' show KeyedBox;
+export 'src/box/lazy_dual_key_box.dart' show LazyDualKeyBox;
 export 'src/box/lazy_iterable_box.dart' show LazyIterableBox;
 export 'src/box/lazy_keyed_box.dart' show LazyKeyedBox;
 export 'src/box/lazy_single_value_box.dart' show LazySingleValueBox;
