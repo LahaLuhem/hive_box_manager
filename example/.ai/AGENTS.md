@@ -4,10 +4,6 @@ Tool-agnostic brief for the runnable demo app under `example/`. Package (library
 in the parent [`AGENTS.md`](../AGENTS.md); example-specific code style lives in
 [`CODESTYLE.md`](CODESTYLE.md). Read both before working in this subdirectory.
 
-> **Setup phase.** The example was just scaffolded (`flutter create --template=app`); the demos are
-> built out as the `1.0` redo lands. The conventions below are the target shape. The concrete demo
-> list and the package wiring (`hive_box_manager: { path: ../ }`, the stack deps) are **TODO**.
-
 ## Scope
 
 - Runnable demo of `hive_box_manager`, wired to the parent package via
@@ -15,8 +11,9 @@ in the parent [`AGENTS.md`](../AGENTS.md); example-specific code style lives in
 - Not published to pub.dev (`publish_to: 'none'` in `pubspec.yaml`). No semver discipline; it may
   freely depend on Flutter and ecosystem packages.
 - Local only, no publish impact. Keep it building and analysing clean on the strict lint set (the
-  example inherits the package's `analysis_options.yaml` via `include`). Its CI (a `flutter analyze`
-  + `dependency_validator` job) is wired when the example is fleshed out.
+  example inherits the package's `analysis_options.yaml` via `include`, relaxing only
+  `public_member_api_docs`). Its CI (a `flutter analyze` + `dependency_validator` job) is a
+  tracked maintainer follow-up.
 
 ## Architecture
 
@@ -27,15 +24,26 @@ Feature-first MVVM on the maintainer's standard example stack, mirroring the sib
   reactivity rule (scoped `ValueNotifier` vs `notifyListeners`) and the view / view-model shape.
 - **Surfaces**: `platform_adaptive_widgets` (Material on Android, Cupertino on iOS), with
   `material_ui` / `cupertino_ui` for the design libraries and `platform_icons` for icons.
-- **Layout**: `lib/main.dart` (app shell) + `lib/app/` (scopes) + `lib/features/` (one folder per
-  demo, plus `features/core/` for shared pieces). Full layout in [`CODESTYLE.md`](CODESTYLE.md).
+- **Layout**: `lib/main.dart` (app shell: `Hive.initFlutter()` + `PlatformApp`) + `lib/features/`
+  (one folder per demo, plus `features/core/` for shared pieces). Full layout in
+  [`CODESTYLE.md`](CODESTYLE.md).
 
-**TODO (as the redo lands):** the concrete demo hub. The plan is one demo per Manager kind (a simple
-box, a single-value box, a collection box, a dual-index / reverse-query box), each showing the
-fpdart read/write surface, over a shared `DemoScaffold` and fake data sources under `features/core/`.
+**The demo hub**, one feature per box family, every screen docking the live `BoxObserver` event
+panel from `features/core/`:
+
+| Feature | Box | Shows |
+|---|---|---|
+| `keyed` | eager `KeyedBox<String, int>` | CRUD listing, sync `Option` reads, `Task` writes |
+| `single_value` | lazy `LazySingleValueBox<String>` + `HiveAesCipher` | one encrypted token, state fed by `watch()` |
+| `iterable` | eager `IterableBox<String, int>` | tag lists per key, `add` / `remove` sugar, unmodifiable views |
+| `dual_query` | lazy `LazyDualKeyBox<String, int, int>` | (user, day) composite keys, reverse queries by either part |
+
+Demo values are primitives (`String`) on purpose, so the example needs no `TypeAdapter` and no
+codegen; the package README points real apps at `hive_ce_generator`.
 
 **Adding a demo:** create `lib/features/<name>/<name>_view.dart` + `_view_model.dart`, add a tile to
-the home hub, and a smoke scenario to the widget tests. Reuse `DemoScaffold` and the `core` helpers.
+the home hub, and a BDD suite under `test/features/<name>/`. Reuse `DemoScaffold` and the `core`
+helpers.
 
 ## Mobile-targeted
 

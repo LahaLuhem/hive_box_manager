@@ -48,16 +48,16 @@ state that rebuilds a **small** part of a view. Only call `notifyListeners()` on
 
 Feature-first MVVM, mirroring the sibling examples:
 
-- `lib/main.dart`: the app shell (`PlatformApp` + the app-wide theme-mode notifier).
-- `lib/app/`: app-wide scopes (e.g. `theme_scope.dart`).
+- `lib/main.dart`: the app shell (`Hive.initFlutter()` + `PlatformApp` with the per-platform theme
+  data).
 - `lib/features/<feature>/`: one folder per demo, holding `<feature>_view.dart` +
-  `<feature>_view_model.dart`, plus a `widgets/` subfolder for widgets used only by that feature.
-- `lib/features/core/`: shared building blocks: `data/models/` (immutable models), `data/constants/`
-  (theme), `repos/` (fake data sources), `views/` (the home hub), `widgets/` (`DemoScaffold`,
-  `DemoIntro`).
+  `<feature>_view_model.dart` (plus a `widgets/` subfolder when a widget serves only that feature).
+- `lib/features/core/`: shared building blocks: `data/constants/` (theme), `observers/` (the
+  `LogPanelObserver` feeding the live event panel), `views/` (the home hub), `widgets/`
+  (`DemoScaffold`, `DemoIntro`, `LogPanel`).
 
-One primary public class per file, file name matching (as in the package). Cross-feature imports use
-the package-root form (`/features/...`); same-feature imports stay relative.
+One primary public class per file, file name matching (as in the package). Imports inside `lib/`
+stay relative (`prefer_relative_imports` is on); tests reach `lib/` through the package URI.
 
 ### Views and view-models
 
@@ -84,8 +84,17 @@ mobile-adaptive: `platformValue` throws on desktop/web, so the example targets A
 
 ### Tests
 
-Widget tests use the local Gherkin helper (`test/support/bdd.dart`: `feature`, `scenarioWidgets`,
-`scenarioOutlineWidgets`) with `checks` for assertions. `checks` has no finder API, so bridge a
+BDD suites use [`bdd_framework`](https://pub.dev/packages/bdd_framework) (`BddFeature`, `Bdd(...)
+.scenario().given().when().then().run(...)`) with `checks` for assertions, and they target the
+**view-models** against real hive on a temp dir: `bdd_framework`'s `run` wraps plain `test()`, not
+`testWidgets`, so widget pumping stays out of the Gherkin suites by design.
+
+**Input values live in `.example(val('name', value))` rows, read back in `run` through the context
+(`ctx.example.val('name') as T`), never scattered as literals through the run body.** This is the
+example-app twin of the package rule that parameters live in one place as named tables; `run`
+executes once per example row, so same-shaped scenarios collapse into one scenario with rows (the
+dual-query demo's two axes and its no-match case are one scenario, four rows). Rendering is
+covered by plain `testWidgets` smokes (the hub tile check); `checks` has no finder API, so bridge a
 `flutter_test` finder by evaluating it: `check(find.text('...').evaluate()).length.equals(1)`. When
 something animates indefinitely (a spinner), drive fixed `pump()`s, never `pumpAndSettle`. Rationale
 in the package [`CODESTYLE.md`](../CODESTYLE.md#test-style).
