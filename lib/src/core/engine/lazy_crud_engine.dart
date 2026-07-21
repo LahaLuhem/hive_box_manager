@@ -70,6 +70,10 @@ final class LazyCrudEngine<T extends Object, K extends Object> {
   /// The stored keys, decoded lazily.
   Iterable<K> get keys => _requireOpened.keys.map((rawKey) => _keyCodec.decode(rawKey as Object));
 
+  /// The raw keys exactly as hive stores them, undecoded: the query strategies' scan surface.
+  /// Same carve-out as [keys]; the dual façades warm the box up before scanning.
+  Iterable<Object> get rawKeys => _requireOpened.keys.map((rawKey) => rawKey as Object);
+
   /// Whether [key] is stored right now.
   bool contains(K key) => _requireOpened.containsKey(_keyCodec.encode(key));
 

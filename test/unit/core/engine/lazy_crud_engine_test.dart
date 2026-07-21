@@ -111,6 +111,7 @@ void main() {
 
       check(() => engine.length).throws<StateError>();
       check(() => engine.keys).throws<StateError>();
+      check(() => engine.rawKeys).throws<StateError>();
       check(() => engine.contains(7)).throws<StateError>();
 
       await engine.ensureInitialised().run();
@@ -120,6 +121,7 @@ void main() {
       check(engine.isEmpty).isFalse();
       check(engine.isNotEmpty).isTrue();
       check(engine.keys).deepEquals([7]);
+      check(engine.rawKeys).deepEquals([7]);
       check(engine.contains(7)).isTrue();
       check(engine.name).equals('logs');
     });

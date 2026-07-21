@@ -33,5 +33,10 @@ void main() {
     scenario('any other K without a codec fails the wiring assert', () {
       check(() => resolveKeyCodec<DateTime>(null)).throws<AssertionError>();
     });
+
+    scenario('a covariant supertype K cannot silently fit an identity codec', () {
+      check(() => resolveKeyCodec<Object>(null)).throws<AssertionError>();
+      check(() => resolveKeyCodec<Comparable<Object>>(null)).throws<AssertionError>();
+    });
   });
 }

@@ -7,7 +7,9 @@ library;
 /// index needs to maintain side state.
 ///
 /// 1.0 ships only [ScanQueryIndex]; the interface stays internal until a second implementation earns
-/// making it public.
+/// making it public. `clear()` deliberately has no hook yet: the scan needs none, and being
+/// internal, the seam gains one for free when the 1.x index arrives. Hooks fire per requested
+/// key (an absent-key delete still dispatches; hive no-ops it and so does the scan).
 abstract interface class QueryIndexStrategy<K1 extends Object, K2 extends Object> {
   /// Observes one written raw key with its decoded parts (index maintenance hook).
   void afterWrite(Object rawKey, K1 primary, K2 secondary);

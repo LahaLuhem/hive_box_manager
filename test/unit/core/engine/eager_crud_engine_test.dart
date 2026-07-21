@@ -70,6 +70,7 @@ void main() {
       await engine.putAll({1: 'a', 2: 'b'}).run();
 
       check(engine.keys).deepEquals([1, 2]);
+      check(engine.rawKeys).deepEquals([1, 2]);
       check(engine.contains(1)).isTrue();
       check(engine.contains(9)).isFalse();
       check(engine.length).equals(2);
