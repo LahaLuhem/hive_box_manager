@@ -88,9 +88,12 @@ under [*Hard rules* in `.ai/AGENTS.md`](./.ai/AGENTS.md#hard-rules).
 
 - **Wrap text-file content at 100 columns.** [`.editorconfig`](./.editorconfig) is authoritative;
   Markdown, Dart, and YAML share the cap. The formatter's `page_width: 100` in
-  `analysis_options.yaml` matches it; keep them aligned if either moves. Dartdoc `///` prose is the
-  exception: the formatter never reflows comments, so soft-wrap it for smooth reading rather than
-  hard-capping.
+  `analysis_options.yaml` matches it; keep them aligned if either moves.
+- **Comments and docstrings wrap *roughly* around 100, never at 80.** The Dart formatter doesn't
+  reflow `//` / `///` prose, so break lines near the 100 mark wherever the sentence reads best; a
+  few characters over beats an awkward mid-phrase break. The "roughly" does **not** apply to
+  filetypes a linter hard-caps (linterpol's `ryl` for YAML, `rumdl` for Markdown): there 100 is a
+  real limit and lines must stay under it.
 - **Blank lines separate logical chunks within a method.** Group the guard checks, the box
   operation, and the return with one blank line between groups, so a reader can scan past chunks
   they don't need.

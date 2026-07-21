@@ -4,6 +4,11 @@
 /// `KeyCodec` implementations once Phase 1 lands them.
 library;
 
+// Decode sits inside measured lanes (micro + scan): `substring` keeps the implementation
+// identical to what the preserved results/ data measured, and the key domain is ASCII decimal
+// digits + ':', so the rule's UTF-16 concern is void.
+// ignore_for_file: avoid-substring
+
 /// Parts are 16-bit because Hive int keys are unsigned 32-bit.
 const int partCeiling = 1 << 16;
 

@@ -26,10 +26,7 @@ String stringPack(int primary, int secondary) => '$primary:$secondary';
 
 /// Inverse of [stringPack].
 (int, int) stringUnpack(String key) {
-  final separatorIndex = key.indexOf(':');
+  final parts = key.split(':');
 
-  return (
-    int.parse(key.substring(0, separatorIndex)),
-    int.parse(key.substring(separatorIndex + 1)),
-  );
+  return (int.parse(parts.first), int.parse(parts.last));
 }

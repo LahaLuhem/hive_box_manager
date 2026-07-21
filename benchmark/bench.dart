@@ -21,7 +21,7 @@ import 'key_codecs.dart';
 const boxName = 'bench';
 
 Future<void> main(List<String> args) async {
-  final mode = args[0];
+  final mode = args.first;
   final keyKind = args[1];
   final n = int.parse(args[2]);
   final boxKind = args.length > 3 ? args[3] : 'eager';
@@ -208,6 +208,9 @@ Future<void> runScan(String keyKind, int n, String workDir) async {
   });
 }
 
+// This file is the worker entrypoint (`bench`, per driver.sh); the class is an internal harness
+// detail, not the file's subject.
+// ignore: prefer-match-file-name
 class _PackUnpackBenchmark extends BenchmarkBase {
   _PackUnpackBenchmark(this.keyKind) : super('micro-$keyKind');
 
