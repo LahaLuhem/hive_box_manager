@@ -1,13 +1,22 @@
 # Benchmarks
 
-Maintainer tooling, excluded from the published tarball. Two lanes live (or will live) here:
+Maintainer tooling, excluded from the published tarball. Two lanes live here:
 
 - **Key-codec matrix** (`bench.dart` + `driver.sh`): the P1/P7 harness from the 1.0 planning
   session, kept for regression runs. It measures put / putAll / open / get / scan / RSS / file
   size per key-encoding scheme (arithmetic packed int, String composite, 0.0.x bit-shift
   reference) at 1K/10K/100K, plus a 1M open-only pass.
-- **Wrapper-overhead lane**: arrives with build Phase 4 (façade vs raw hive_ce; target within
-  noise, under 5%).
+- **Wrapper-overhead lane** (`overhead_bench.dart` + `overhead_driver.sh`): façade vs raw
+  hive_ce on eager get (100K random gets), lazy get (10K ops over 100K entries), and single
+  puts (10K); the aim-#4 proof with its under-5% target. The eager read path carries
+  `vm:prefer-inline` pragmas exactly because this lane holds it to raw speed.
+
+## Running the overhead lane
+
+```sh
+dart compile exe benchmark/overhead_bench.dart -o /tmp/hbm_overhead
+benchmark/overhead_driver.sh /tmp/hbm_overhead /tmp/overhead.jsonl
+```
 
 ## Running the matrix
 
