@@ -12,15 +12,18 @@ import 'string_key_codec.dart';
 KeyCodec<K> resolveKeyCodec<K extends Object>(KeyCodec<K>? explicitCodec) {
   if (explicitCodec != null) return explicitCodec;
 
-  // Only the type parameter exists to inspect (there is no value to pattern-match), so pick the
-  // int identity for int keys and fall through to the String identity for everything else: the
-  // `is` check below promotes the fit (no `as` launder) and rejects every non-String misfit.
-  final identityCodec = K == int ? const IntKeyCodec() : const StringKeyCodec();
   assert(
-    identityCodec is KeyCodec<K>,
+    K == int || K == String,
     'No KeyCodec<$K> given: only int and String keys default to identity codecs. Pass codec:.',
   );
-  if (identityCodec is KeyCodec<K>) return identityCodec;
+
+  // Exact type equality first: a bare `is` check would let a covariant supertype K (say,
+  // Object) silently fit an identity codec and blow up at the first put instead of at wiring.
+  // Inside the guard, the `is` check promotes without an `as` launder.
+  if (K == int || K == String) {
+    final identityCodec = K == int ? const IntKeyCodec() : const StringKeyCodec();
+    if (identityCodec is KeyCodec<K>) return identityCodec;
+  }
 
   throw ArgumentError.value(K, 'codec', 'no KeyCodec given, and $K has no identity default');
 }

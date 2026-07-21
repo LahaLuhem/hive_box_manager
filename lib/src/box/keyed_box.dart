@@ -60,6 +60,8 @@ interface class KeyedBox<T extends Object, K extends Object> {
   Iterable<T> get values => _engine.values;
 
   /// Reads [key] synchronously from memory: `Some` when present, `None` when absent.
+  // Inlined into callers; see the engine's get for why.
+  @pragma('vm:prefer-inline')
   Option<T> get(K key) => _engine.get(key);
 
   /// Reads [key], falling back to [fallback] when absent. Sugar over [get].

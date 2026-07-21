@@ -46,6 +46,9 @@ final class EagerCrudEngine<T extends Object, K extends Object> {
   /// The stored keys, decoded lazily.
   Iterable<K> get keys => _box.keys.map((rawKey) => _keyCodec.decode(rawKey as Object));
 
+  /// The raw keys exactly as hive stores them, undecoded: the query strategies' scan surface.
+  Iterable<Object> get rawKeys => _box.keys.map((rawKey) => rawKey as Object);
+
   /// The stored values, decoded lazily; dispatches one read-all event at call time.
   Iterable<T> get values {
     _observer?.onReadAll(name, _box.length);
@@ -54,6 +57,9 @@ final class EagerCrudEngine<T extends Object, K extends Object> {
   }
 
   /// Reads [key], `None` when absent.
+  // Inlined into callers: the wrapper-overhead lane holds the eager read to raw-hive speed, and
+  // call frames are the one cost the compiler can erase here (the Some allocation is contract).
+  @pragma('vm:prefer-inline')
   Option<T> get(K key) {
     final storedValue = _box.get(_keyCodec.encode(key));
     _observer?.onRead(name, key, storedValue);
