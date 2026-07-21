@@ -17,7 +17,7 @@ import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
 import '../../support/bdd.dart';
-import '../../support/hive_key_limits.dart';
+import '../../support/probe_key_limits.dart';
 import '../../support/release_probe_runner.dart';
 
 void main() {
@@ -38,10 +38,10 @@ void main() {
       'out-of-range keys are rejected at put while asserts are on (Frame.assertKey)',
       examples: {
         'int -1': -1,
-        'int one past the u32 ceiling': hiveMaxIntKey + 1,
-        'int past double precision (2^53 + 1)': firstWebImpreciseInt,
-        'String one byte over the limit': 'b' * (hiveMaxStringKeyBytes + 1),
-        'String far over the limit': 'c' * farOversizedKeyLength,
+        'int one past the u32 ceiling': HiveKeyLimits.maxIntKey + 1,
+        'int past double precision (2^53 + 1)': ProbeKeyLimits.firstWebImpreciseInt,
+        'String one byte over the limit': 'b' * (HiveKeyLimits.maxStringKeyBytes + 1),
+        'String far over the limit': 'c' * ProbeKeyLimits.farOversizedKeyLength,
       },
       outline: (writeKey) async {
         final box = await Hive.openBox<String>('keys');
@@ -53,17 +53,17 @@ void main() {
 
     scenario('the u32-max int key round-trips exactly', () async {
       var box = await Hive.openBox<String>('keys');
-      await box.put(hiveMaxIntKey, 'stored-value');
+      await box.put(HiveKeyLimits.maxIntKey, 'stored-value');
       await box.close();
 
       box = await Hive.openBox<String>('keys');
-      check(box.get(hiveMaxIntKey)).equals('stored-value');
+      check(box.get(HiveKeyLimits.maxIntKey)).equals('stored-value');
     });
 
     scenarioOutline<String>(
       'in-range String keys round-trip, including non-ASCII and separators',
       examples: {
-        'exactly the byte-length limit (ASCII)': 'a' * hiveMaxStringKeyBytes,
+        'exactly the byte-length limit (ASCII)': 'a' * HiveKeyLimits.maxStringKeyBytes,
         'non-ASCII (héllo)': 'héllo',
         'composite-looking separator (12:34)': '12:34',
       },
@@ -103,7 +103,7 @@ void main() {
     scenarioOutline<({String label, int storedKey})>(
       'out-of-range int keys wrap silently into u32 and become unreachable',
       examples: {
-        'int -1 wraps to u32 max': (label: 'minus1', storedKey: hiveMaxIntKey),
+        'int -1 wraps to u32 max': (label: 'minus1', storedKey: HiveKeyLimits.maxIntKey),
         'int 2^32 wraps to 0': (label: 'pow32', storedKey: 0),
         'int 2^53 + 1 wraps to 1': (label: 'pow53plus1', storedKey: 1),
       },

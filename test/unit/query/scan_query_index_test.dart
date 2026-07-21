@@ -3,7 +3,7 @@
 library;
 
 import 'package:checks/checks.dart';
-import 'package:hive_box_manager/src/codec/string_composite_dual_codec.dart';
+import 'package:hive_box_manager/src/codec/dual/string_composite_dual_codec.dart';
 import 'package:hive_box_manager/src/query/scan_query_index.dart';
 import 'package:test/test.dart';
 

@@ -1,23 +1,28 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:hive_ce/hive.dart';
 
-import '../codec/key_codec.dart';
-import '../event/typed_box_event.dart';
-import '../observer/box_observer.dart';
-import 'raw_key_gate.dart';
-import 'value_codec.dart';
+import '../../codec/key/key_codec.dart';
+import '../../event/typed_box_event.dart';
+import '../../observer/box_observer.dart';
+import '../raw_key_gate.dart';
+import '../value_codec/value_codec.dart';
 
 /// The eager CRUD engine: every eager façade delegates here, so CRUD is written exactly once.
 ///
-/// Policies enter by injection (key codec, value codec, observer); the engine owns the
-/// mechanics: encode, gate, hive, decode, dispatch. Sync reads are legal by construction: an
-/// eager engine only ever exists around an already-open box (the façades' async openers
-/// guarantee it), and `close()` / `deleteFromDisk()` are terminal, after which operations
-/// surface the engine's own already-closed error (tier 3: no wrapper pre-check).
+/// Policies enter by injection (key codec, value codec, observer); the engine owns the mechanics:
+/// encode, gate, hive, decode, dispatch. Sync reads are legal by construction: an eager engine only
+/// ever exists around an already-open box (the façades' async openers guarantee it), and `close()`
+/// / `deleteFromDisk()` are terminal, after which operations surface the engine's own already-closed error
+/// (tier 3: no wrapper pre-check).
 ///
-/// Precondition violations (a codec emitting a non-storable raw key) throw synchronously at the
-/// call site, before any [Task] is built: fail at the site, not at `.run()`.
+/// Precondition violations (a codec emitting a non-storable raw key) throw synchronously at the call
+/// site, before any [Task] is built: fail at the site, not at `.run()`.
 final class EagerCrudEngine<T extends Object, K extends Object> {
+  final Box<Object?> _box;
+  final KeyCodec<K> _keyCodec;
+  final ValueCodec<T> _valueCodec;
+  final BoxObserver? _observer;
+
   /// Wires the engine around an open [box].
   EagerCrudEngine({
     required Box<Object?> box,
@@ -28,11 +33,6 @@ final class EagerCrudEngine<T extends Object, K extends Object> {
        _keyCodec = keyCodec,
        _valueCodec = valueCodec,
        _observer = observer;
-
-  final Box<Object?> _box;
-  final KeyCodec<K> _keyCodec;
-  final ValueCodec<T> _valueCodec;
-  final BoxObserver? _observer;
 
   /// The underlying box name: the observer correlation handle.
   String get name => _box.name;
@@ -85,8 +85,8 @@ final class EagerCrudEngine<T extends Object, K extends Object> {
 
   /// Writes every entry of [entries] in one batch.
   Task<Unit> putAll(Map<K, T> entries) {
-    // Encoded and gated at call time (fail fast, before the Task exists), so a bad key means
-    // nothing gets written.
+    // Encoded and gated at call time (fail fast, before the Task exists), so a bad key means nothing
+    // gets written.
     final rawEntries = entries.map((key, value) {
       final rawKey = _keyCodec.encode(key);
       ensureStorableRawKey(rawKey);

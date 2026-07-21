@@ -11,14 +11,13 @@ import 'package:hive_ce/src/box/default_key_comparator.dart';
 /// Internal lifecycle core: the one place boxes are acquired.
 ///
 /// Wraps the global [Hive] by default and is injectable for tests; at 1.x this is also the seam
-/// where an IsolatedHive-backed provider plugs in (lazy-only, since isolated boxes are
-/// all-async). Boxes open `Object?`-parameterised: the engines' value codecs own typing at the
-/// read/write boundary, and collections could not open typed anyway (hive refuses or traps on
-/// typed collection boxes; pinned).
+/// where an IsolatedHive-backed provider plugs in (lazy-only, since isolated boxes are all-async).
+/// Boxes open `Object?`-parameterised: the engines' value codecs own typing at the read/write boundary,
+/// and collections could not open typed anyway (hive refuses or traps on typed collection boxes; pinned).
 ///
-/// hive_ce's own pluggables pass through untouched: cipher, key comparator, compaction
-/// strategy, crash recovery. No wrapper preconditions here: whatever `openBox` throws for
-/// (wrong-kind reopen, unknown types) surfaces as the engine's own error (tier 3).
+/// hive_ce's own pluggables pass through untouched: cipher, key comparator, compaction strategy,
+/// crash recovery. No wrapper preconditions here: whatever `openBox` throws for (wrong-kind reopen, unknown types)
+/// surfaces as the engine's own error (tier 3).
 final class BoxProvider {
   /// Wires the provider to [hive], defaulting to the global instance.
   BoxProvider({HiveInterface? hive}) : _hive = hive ?? Hive;

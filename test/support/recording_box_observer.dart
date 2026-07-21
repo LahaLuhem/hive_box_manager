@@ -1,14 +1,13 @@
 import 'package:hive_box_manager/src/observer/box_observer.dart';
 
 /// Records every dispatch as one readable line, so suites assert order and payloads in a single
-/// `deepEquals` (the siblings' recording-observer pattern; the second sanctioned hand-written
-/// double).
+/// `deepEquals` (the siblings' recording-observer pattern; the second sanctioned hand-written double).
 final class RecordingBoxObserver extends BoxObserver {
-  /// Non-const: [calls] is per-instance mutable state.
-  RecordingBoxObserver();
-
   /// One line per dispatch, in dispatch order.
   final calls = <String>[];
+
+  /// Non-const: [calls] is per-instance mutable state.
+  RecordingBoxObserver();
 
   @override
   void onOpened(String boxName) => calls.add('opened:$boxName');

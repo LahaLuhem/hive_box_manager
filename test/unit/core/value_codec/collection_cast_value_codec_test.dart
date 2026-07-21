@@ -1,5 +1,4 @@
-// The internal read/write-boundary seam: identity pass-through, and the #150 collection cast
-// with its unmodifiable zero-copy view.
+// The #150 collection cast with its unmodifiable zero-copy view.
 //
 // The cast codec's whole subject is hive's `List<dynamic>` reification, so the DCM ban is
 // lifted for this file.
@@ -8,21 +7,12 @@
 library;
 
 import 'package:checks/checks.dart';
-import 'package:hive_box_manager/src/core/value_codec.dart';
+import 'package:hive_box_manager/src/core/value_codec/collection_cast_value_codec.dart';
 import 'package:test/test.dart';
 
-import '../../support/bdd.dart';
+import '../../../support/bdd.dart';
 
 void main() {
-  feature('IdentityValueCodec', () {
-    scenario('passes values through untouched, both directions', () {
-      const codec = IdentityValueCodec<String>();
-
-      check(codec.toStorable('v')).equals('v');
-      check(codec.fromStored('v')).equals('v');
-    });
-  });
-
   feature('CollectionCastValueCodec', () {
     scenario('restores element typing from a List<dynamic> disk shape', () {
       const codec = CollectionCastValueCodec<String>();
