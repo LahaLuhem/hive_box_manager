@@ -1,11 +1,11 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:hive_ce/hive.dart';
 
-import '../codec/key_codec.dart';
-import '../event/lazy_typed_box_event.dart';
-import '../observer/box_observer.dart';
-import 'raw_key_gate.dart';
-import 'value_codec.dart';
+import '../../codec/key/key_codec.dart';
+import '../../event/lazy_typed_box_event.dart';
+import '../../observer/box_observer.dart';
+import '../raw_key_gate.dart';
+import '../value_codec/value_codec.dart';
 
 /// The lazy CRUD engine: every lazy façade delegates here, so CRUD is written exactly once.
 ///

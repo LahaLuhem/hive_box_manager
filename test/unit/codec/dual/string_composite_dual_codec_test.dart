@@ -3,10 +3,10 @@
 library;
 
 import 'package:checks/checks.dart';
-import 'package:hive_box_manager/src/codec/string_composite_dual_codec.dart';
+import 'package:hive_box_manager/src/codec/dual/string_composite_dual_codec.dart';
 import 'package:test/test.dart';
 
-import '../../support/bdd.dart';
+import '../../../support/bdd.dart';
 
 // The i64 extremes, as expressions: literals this large would trip avoid_js_rounded_ints. These
 // rows only ever run on the VM (the unit suite's browser lane selects browser-tagged files).

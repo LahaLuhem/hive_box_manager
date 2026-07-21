@@ -8,7 +8,7 @@ import 'package:hive_box_manager/src/core/raw_key_gate.dart';
 import 'package:test/test.dart';
 
 import '../../support/bdd.dart';
-import '../../support/hive_key_limits.dart';
+import '../../support/probe_key_limits.dart';
 
 /// A 3-UTF-8-byte character (hiragana "a"): stresses the byte-vs-character distinction.
 const threeByteChar = 'あ';
@@ -23,10 +23,10 @@ void main() {
       'admits every storable raw key',
       examples: {
         'int zero': 0,
-        'u32 max': hiveMaxIntKey,
+        'u32 max': HiveKeyLimits.maxIntKey,
         'short ASCII (fast path)': 'user-7',
-        'exactly the byte limit, ASCII': 'a' * hiveMaxStringKeyBytes,
-        'exactly the byte limit, multibyte': threeByteChar * (hiveMaxStringKeyBytes ~/ 3),
+        'exactly the byte limit, ASCII': 'a' * HiveKeyLimits.maxStringKeyBytes,
+        'exactly the byte limit, multibyte': threeByteChar * (HiveKeyLimits.maxStringKeyBytes ~/ 3),
       },
       outline: (rawKey) {
         check(() => ensureStorableRawKey(rawKey)).returnsNormally();
@@ -37,12 +37,12 @@ void main() {
       'rejects every corrupting raw key with an ArgumentError at the call site',
       examples: {
         'int -1': -1,
-        'int one past u32': hiveMaxIntKey + 1,
-        'one byte over, ASCII': 'b' * (hiveMaxStringKeyBytes + 1),
+        'int one past u32': HiveKeyLimits.maxIntKey + 1,
+        'one byte over, ASCII': 'b' * (HiveKeyLimits.maxStringKeyBytes + 1),
         // 128 chars pass a naive length check but encode to 256 bytes: the byte-count path
         // must engage even though the string is "short".
         'one byte over, multibyte': twoByteChar * 128,
-        'far over': 'c' * farOversizedKeyLength,
+        'far over': 'c' * ProbeKeyLimits.farOversizedKeyLength,
       },
       outline: (rawKey) {
         check(() => ensureStorableRawKey(rawKey)).throws<ArgumentError>();

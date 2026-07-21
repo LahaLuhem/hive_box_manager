@@ -4,18 +4,18 @@
 library;
 
 import 'package:checks/checks.dart';
-import 'package:hive_box_manager/src/codec/int_key_codec.dart';
-import 'package:hive_box_manager/src/core/eager_crud_engine.dart';
-import 'package:hive_box_manager/src/core/value_codec.dart';
+import 'package:hive_box_manager/src/codec/key/int_key_codec.dart';
+import 'package:hive_box_manager/src/core/engine/eager_crud_engine.dart';
+import 'package:hive_box_manager/src/core/value_codec/identity_value_codec.dart';
 import 'package:hive_box_manager/src/event/typed_box_event.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
-import '../../support/bdd.dart';
-import '../../support/fake_boxes.dart';
-import '../../support/mocks.dart';
-import '../../support/recording_box_observer.dart';
+import '../../../support/bdd.dart';
+import '../../../support/fake_boxes.dart';
+import '../../../support/mocks.dart';
+import '../../../support/recording_box_observer.dart';
 
 void main() {
   late FakeEagerBox box;

@@ -5,6 +5,7 @@
 /// reads element annotations, not library metadata.
 library;
 
+import 'package:hive_box_manager/src/core/utils/no_op.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:mockito/annotations.dart';
 
@@ -16,7 +17,6 @@ export 'mocks.mocks.dart';
   MockSpec<Box<Object?>>(),
   MockSpec<LazyBox<Object?>>(),
 ])
-// The annotation above is this function's whole purpose; DCM's TODO-or-code rule doesn't fit a
-// deliberately empty anchor.
-// ignore: no-empty-block
-void mocksCodegenAnchor() {}
+// deliberately empty anchor
+//ignore: unused_element
+void _() => noop();

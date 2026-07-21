@@ -10,9 +10,9 @@ library;
 /// typed watch events, and both reverse-query directions, so the round-trip must be exact.
 ///
 /// Two implementations ship: [StringCompositeDualCodec] (the safe default: full-range parts, no
-/// ceilings) and [PackedIntDualCodec] (the measured perf opt-in with a 16-bit-per-part
-/// ceiling). Implement this interface for other part types; keep the separator or packing
-/// discipline bijective, or reverse queries will lie.
+/// ceilings) and [PackedIntDualCodec] (the measured perf opt-in with a 16-bit-per-part ceiling).
+/// Implement this interface for other part types; keep the separator or packing discipline bijective,
+/// or reverse queries will lie.
 abstract interface class DualKeyCodec<K1 extends Object, K2 extends Object> {
   /// Encodes the ([primary], [secondary]) pair into hive's raw key domain.
   Object encode(K1 primary, K2 secondary);

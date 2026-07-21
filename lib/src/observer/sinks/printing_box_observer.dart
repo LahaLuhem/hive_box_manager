@@ -4,18 +4,18 @@ import 'dart:developer' as developer;
 
 import '../box_observer.dart';
 
-/// Ready-made sink forwarding every box event to `dart:developer`'s log under a configurable
-/// logger [name], so DevTools can filter the package's diagnostics as one channel.
+/// Ready-made sink forwarding every box event to `dart:developer`'s log under a configurable logger
+/// [name], so DevTools can filter the package's diagnostics as one channel.
 ///
 /// Pure-Dart-safe (`debugPrint` is Flutter-only), `avoid_print`-compliant, and dependency-free.
-/// Errors log at level 900 (SEVERE on `package:logging`'s scale, without the dependency);
-/// everything else logs at the default level.
+/// Errors log at level 900 (SEVERE on `package:logging`'s scale, without the dependency).
+/// Everything else logs at the default level.
 final class PrintingBoxObserver extends BoxObserver {
-  /// Creates a sink logging under [name].
-  const PrintingBoxObserver({this.name = 'hive_box_manager'});
-
   /// The DevTools-filterable logger name.
   final String name;
+
+  /// Creates a sink logging under [name].
+  const PrintingBoxObserver({this.name = 'hive_box_manager'});
 
   /// SEVERE on `package:logging`'s level scale, minus the dependency.
   static const _errorLevel = 900;
