@@ -4,8 +4,8 @@ Typed, fpdart-first façades over [hive_ce](https://pub.dev/packages/hive_ce) bo
 lazy effects, ready-made CRUD, and purpose-built box variants.
 
 > 🚧 **1.0 rewrite in progress.** This is a from-scratch rewrite and a hard break from `0.0.x`.
-> The surface lands phase by phase; the `KeyedBox` family below is live, with the single-value,
-> iterable, and dual-key families following. A migration guide ships with the release.
+> The surface lands phase by phase; the `KeyedBox`, `SingleValueBox`, and `IterableBox` families
+> below are live, with the dual-key family following. A migration guide ships with the release.
 
 ## 🚀 Quickstart
 
@@ -60,6 +60,56 @@ await archive.put('2025-w1', Todo('ship 1.0')).run(); // first effect auto-opens
 final found = await archive.get('2025-w1').run(); // Option<Todo>
 await archive.ensureInitialised().run(); // optional explicit warm-up
 ```
+
+### One value, no keys: `SingleValueBox`
+
+The lone-setting scenario: a token, a theme, one config blob. No keys on the surface; internally
+the value sits under a fixed slot, the same one `0.0.x` single boxes used, so that data reads in
+place.
+
+```dart
+final session = await SingleValueBox.open<String>('session_token').run();
+
+await session.set('abc123').run();
+
+final token = session.get(); // Option<String>
+await session.clear().run(); // the one unset; the next get() is None
+
+session.watch().listen((token) => print(token)); // Some on set, None on clear
+```
+
+`LazySingleValueBox` is the same surface on the lazy axis (`get()` returns a `TaskOption`,
+construction is sync with auto-open). `update` mirrors `Map.update`; `getOr(fallback)` reads
+with a default.
+
+### Collections per key: `IterableBox`
+
+Hive reads collections back from disk as `List<dynamic>` whatever you wrote
+([issue #150](https://github.com/IO-Design-Team/hive_ce/issues/150)), so a naive
+`Box<List<Person>>` opens fine and throws on the first read after a restart. `IterableBox`
+restores the element type at the read boundary instead, and adds list ergonomics on top:
+
+```dart
+final tags = await IterableBox.open<String, int>('post_tags').run();
+
+await tags.put(1, ['flutter', 'dart']).run(); // any Iterable; stored as a private copy
+await tags.add(1, 'hive').run(); // append; an absent key becomes [value]
+await tags.remove(1, 'dart').run(); // first occurrence; an absent key is a no-op
+
+final postTags = tags.getOr(1); // List<String>: unmodifiable view, empty when absent
+final maybe = tags.get(1); // Option<List<String>>: None = absent, Some([]) = stored empty
+```
+
+Worth knowing:
+
+- **Lists you get out are unmodifiable views; lists you put in are copied**, so mutating your
+  original afterwards never reaches the box. `add` / `addAll` / `remove` are read-modify-writes,
+  O(n) in the stored list.
+- **Absent ≠ empty.** `get` keeps them apart; `getOr` folds both to `[]` by design.
+- **List semantics only**: order kept, duplicates allowed. Sets, maps, and nested collections of
+  custom types are deliberately unsupported (the read-boundary cast can't fix inner
+  reification); model richer shapes as adapter-registered value types.
+- `LazyIterableBox` is the same surface on the lazy axis.
 
 ### The contract in 30 seconds
 
@@ -128,9 +178,8 @@ ready-made sink.
 
 ## 📚 Landing with 1.0
 
-The single-value, iterable, and dual-key box families, the reverse-query surface, measured
-eager-vs-lazy guidance, the decision guide, and the `0.0.x` migration table all land as the
-rewrite progresses.
+The dual-key box family with its reverse-query surface, measured eager-vs-lazy guidance, the
+decision guide, and the `0.0.x` migration table all land as the rewrite progresses.
 
 ## 📄 License
 
