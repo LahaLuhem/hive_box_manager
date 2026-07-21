@@ -12,6 +12,7 @@ import 'dart:io';
 
 import 'package:hive_ce/hive.dart';
 
+import 'hive_key_limits.dart';
 import 'person.dart';
 
 /// Stable labels for caught errors: `runtimeType` names are VM-internal (`_TypeError`), so classify
@@ -26,10 +27,10 @@ Future<void> main(List<String> args) async {
   final workDir = args.first;
   final verdicts = <String, Object?>{
     ...await probeIntWrap('minus1', -1, workDir),
-    ...await probeIntWrap('pow32', 4294967296, workDir),
-    ...await probeIntWrap('pow53plus1', (1 << 53) + 1, workDir),
-    ...await probeOversizedString('oversized256', 'b' * 256, workDir),
-    ...await probeOversizedString('oversized300', 'c' * 300, workDir),
+    ...await probeIntWrap('pow32', hiveMaxIntKey + 1, workDir),
+    ...await probeIntWrap('pow53plus1', firstWebImpreciseInt, workDir),
+    ...await probeOversizedString('oversizedByOne', 'b' * (hiveMaxStringKeyBytes + 1), workDir),
+    ...await probeOversizedString('oversizedFar', 'c' * farOversizedKeyLength, workDir),
     ...await probeTypedBox(workDir),
   };
 

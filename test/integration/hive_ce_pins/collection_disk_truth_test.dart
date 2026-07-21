@@ -52,7 +52,7 @@ void main() {
   feature('hive_ce disk truth for collections of a custom type', () {
     scenario('same-session reads return the written instance (write cache flatters)', () async {
       final box = await Hive.openBox<Object>('collections');
-      final written = <Person>[alice, bob];
+      const written = [alice, bob];
       await box.put('list', written);
 
       check(identical(box.get('list'), written)).isTrue();

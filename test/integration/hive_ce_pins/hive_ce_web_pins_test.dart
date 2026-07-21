@@ -19,7 +19,7 @@ import '../../support/person.dart';
 import '../../support/probe_codecs.dart';
 
 /// Part values at the edges of the 16-bit domain, where JS semantics would break first.
-const boundaryParts = [0, 1, 42, 65534, 65535];
+const boundaryParts = [0, 1, 42, partMask - 1, partMask];
 
 void main() {
   feature('composite-key packing under web number semantics', () {
@@ -63,7 +63,7 @@ void main() {
       final boxName = 'pins_${DateTime.now().millisecondsSinceEpoch}';
       var box = await Hive.openBox<Object>(boxName);
       await box.put(7, 'int-key');
-      await box.put(arithPack(65535, 65535), 'packed-key');
+      await box.put(arithPack(partMask, partMask), 'packed-key');
       await box.put('12:34', 'string-key');
       await box.put('person', const Person('web', 1));
       await box.put('list', <Person>[const Person('web-a', 2), const Person('web-b', 3)]);
@@ -71,7 +71,7 @@ void main() {
 
       box = await Hive.openBox<Object>(boxName);
       check(box.get(7)).equals('int-key');
-      check(box.get(arithPack(65535, 65535))).equals('packed-key');
+      check(box.get(arithPack(partMask, partMask))).equals('packed-key');
       check(box.get('12:34')).equals('string-key');
       check(box.get('person')).equals(const Person('web', 1));
 

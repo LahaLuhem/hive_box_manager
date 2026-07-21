@@ -63,7 +63,7 @@ void main() {
 
       check(events).length.equals(2);
       check(events.map((event) => event.deleted).toSet()).deepEquals({true});
-      check(events.map((event) => event.value).toList()).deepEquals(['1', '2']);
+      check(events.map((event) => event.value)).deepEquals(['1', '2']);
     });
   });
 
@@ -103,7 +103,7 @@ void main() {
 
       check(events).length.equals(2);
       check(events.map((event) => event.deleted).toSet()).deepEquals({true});
-      check(events.map((event) => event.value).toList()).deepEquals([null, null]);
+      check(events.map((event) => event.value)).deepEquals([null, null]);
     });
   });
 }
