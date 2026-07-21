@@ -111,6 +111,48 @@ Worth knowing:
   reification); model richer shapes as adapter-registered value types.
 - `LazyIterableBox` is the same surface on the lazy axis.
 
+### Two-part keys and reverse queries: `DualKeyBox`
+
+When data has two natural dimensions (user + day, row + column), address it by both parts and
+query by either:
+
+```dart
+final events = await DualKeyBox.open<Event, int, int>('user_events').run();
+
+await events.put(userId, dayIndex, event).run();
+
+final one = events.get(userId, dayIndex); // Option<Event>: exact lookups stay O(1)
+final usersWeek = events.queryByPrimary(userId); // List<Event>: everything for this user
+final everyoneToday = events.queryBySecondary(dayIndex); // List<Event>: everyone, this day
+```
+
+Queries return a plain (possibly empty) list, and they're an honest **O(K) scan** over the live
+key set in 1.0: free until called, exact when called, documented rather than hidden. Keys
+travel as `(primary, secondary)` records where a whole key is needed (`keys`, `putAll`, watch
+events). `LazyDualKeyBox` is the same surface on the lazy axis (queries return `Task<List<T>>`
+and auto-open).
+
+Both parts round-trip through one `DualKeyCodec`, and `(int, int)` defaults to the safe
+`StringCompositeDualCodec`: full-range parts, negatives included, zero ceilings. When both
+parts fit 16 bits and the measured wins matter, opt into `PackedIntDualCodec`
+(`codec: const PackedIntDualCodec()`), which packs both parts into one u32 int key,
+**bit-identical to the 0.0.x `.bitShift` scheme**, so those boxes read in place:
+
+| Path (int-keyed, VM/AOT-measured) | packed int | String composite |
+|---|---|---|
+| eager get, 100K entries | 51 ms | 81 ms |
+| box open (eager), 100K | 70 ms | 133 ms |
+| putAll, 100K | 78 ms | 145 ms |
+| full key scan (a query), 100K | 5.0 ms | 18.9 ms |
+| keystore RSS after open, 100K | 33 MB | 61 MB |
+| box file size, 100K | 1.9 MB | 2.6 MB |
+| lazy get / single put | codec-indifferent (disk dominates) |  |
+
+Numbers are medians from the maintainer benchmark (macOS Apple Silicon, AOT, constant 1-byte
+values isolating key cost); web is unmeasured, its ordering assumed to follow the VM. Custom
+part types implement `DualKeyCodec<K1, K2>`; keep the encoding bijective, or reverse queries
+will lie.
+
 ### The contract in 30 seconds
 
 |                                                     | `KeyedBox<T, K>`             | `LazyKeyedBox<T, K>`             |
