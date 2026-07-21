@@ -1,11 +1,7 @@
-import 'src/base_box_manager.dart';
-import 'src/typedefs.dart';
-
-export 'src/dual/base_dual_index_managers.dart';
-export 'src/models.dart';
-export 'src/simple/simple_box_managers.dart';
-export 'src/single/single_index_box_manager.dart';
-export 'src/single/single_index_lazy_box_manager.dart';
-
-void assignManagerLogCallback(LogCallback? logCallback) =>
-    BaseBoxManager.assignCallback(logCallback);
+/// Typed, fpdart-first façades over `hive_ce` boxes: no `null`s, lazy effects,
+/// ready-made CRUD, purpose-built box variants.
+///
+/// Being rebuilt from scratch for 1.0. The public surface returns phase by
+/// phase (the `KeyedBox` family lands first); until then this library
+/// deliberately exports nothing.
+library;
