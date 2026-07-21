@@ -3,14 +3,3 @@
 # its dependencies aren't judged against the root package's.
 exclude:
   - "example/**"
-
-# Rewrite Phase 0: lib/ is intentionally empty (0.0.x sources dropped ahead of the 1.0
-# rebuild), so the ratified runtime set (hive_ce / fpdart / meta) is declared but not yet
-# imported from lib/, and the mock toolchain has no mocks to generate yet. Remove each
-# ignore as the phase that consumes it lands (all of them: Phase 1).
-ignore:
-  - build_runner
-  - fpdart
-  - hive_ce
-  - meta
-  - mockito
