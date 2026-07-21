@@ -1,8 +1,9 @@
 name: hive_box_manager
-description: "Type-safe, FP-style abstraction layers for Hive's boxes. Provides Managers for almost all conceivable use-cases and scenarios."
+description: >-
+  Type-safe, FP-style abstraction layers for Hive's boxes. Provides Managers for almost all
+  conceivable use-cases and scenarios.
 version: 0.0.8
 repository: https://github.com/LahaLuhem/hive_box_manager
-
 
 
 
@@ -15,24 +16,21 @@ environment:
 
 
 
-
 dependencies:
-  collection: ^1.19.1
   fpdart: ^1.2.0
-  hive_ce: ^2.15.1
-  meta: ^1.16.0
-
+  hive_ce: ^2.19.3
+  meta: ^1.19.0
 
 
 
 
 
 dev_dependencies:
-  dart_bloom_filter: ^1.0.0
-  mockito: ^5.5.1
-  shouldly: ^0.5.0+1
-  test: ^1.26.3
-
+  benchmark_harness: ^2.4.0
+  build_runner: ^2.15.2
+  checks: ^0.3.1
+  mockito: ^5.7.0
+  test: ^1.31.2
 
 
 

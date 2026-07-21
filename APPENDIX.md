@@ -103,9 +103,12 @@ packages.
 <a id="sdk-floor"></a>
 ## SDK floor
 
-The floor is currently **Dart ≥ 3.9** (`pubspec.yaml`), pinned locally in `.fvmrc`. Since a floor can
-only be raised without a breaking change, the redo revisits it once it knows which language features
-it actually consumes, and records any bump here (it is breaking for anyone on the older SDK).
+The floor is currently **Dart ≥ 3.10 for consumers** (`pubspec.yaml`), raised from 3.9 for the 1.0
+rewrite: static dot shorthands are a CODESTYLE idiom and land in 3.10. **Contributing (running the
+test suite) needs Dart ≥ 3.11**, where `test` and `build_runner` floor; dev dependencies stay out of
+downstream resolution, so this never binds consumers. Since a floor can only be raised without a
+breaking change, any further bump is recorded here (it is breaking for anyone on the older SDK).
+The full 1.0 rationale lands with the release docs pass.
 
 ---
 

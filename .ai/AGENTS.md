@@ -29,8 +29,9 @@ engine; `fpdart` is the paradigm. Rationale:
 
 ## Stack
 
-- **Dart ≥ 3.9** (constraint in `pubspec.yaml`, version pinned in `.fvmrc`). The floor is revisited
-  as the redo settles the language features it consumes; record any bump in APPENDIX. See
+- **Dart ≥ 3.10 for consumers** (constraint in `pubspec.yaml`; SDK channel pinned in `.fvmrc`).
+  **Contributing needs Dart ≥ 3.11**: the test toolchain (`test`, `build_runner`) floors there, and
+  dev dependencies never bind consumers. Rationale and history:
   [`APPENDIX.md#sdk-floor`](./APPENDIX.md#sdk-floor).
 - **`dart test`** for tests; **`dart --no-version-check analyze .`** for pedantic static analysis
   (pedantic mode is intentional). No Flutter dependency in the package, no platform channels. The
