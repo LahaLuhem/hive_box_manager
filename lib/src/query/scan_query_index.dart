@@ -12,12 +12,8 @@ final class ScanQueryIndex<K1 extends Object, K2 extends Object>
   final Iterable<Object> Function() _rawKeys;
   final DualKeyCodec<K1, K2> _codec;
 
-  /// Wires the scan over [rawKeys] (the live key set) decoded by [codec].
-  ScanQueryIndex({
-    required Iterable<Object> Function() rawKeys,
-    required DualKeyCodec<K1, K2> codec,
-  }) : _rawKeys = rawKeys,
-       _codec = codec;
+  /// Wires the scan over [_rawKeys] (the live key set) decoded by [_codec].
+  ScanQueryIndex({required this._rawKeys, required this._codec});
 
   /// Scan maintains no side state; queries decode the live key set instead.
   @override

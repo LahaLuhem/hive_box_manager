@@ -59,6 +59,14 @@ renames don't break callers.
   Exception: when `T` flows directly into an external API that itself uses unbounded `<T>` and
   relies on `null` as a sentinel. Don't reach for it speculatively; bind by default, loosen only
   when a real call site demands it.
+- **Write type arguments out in generic wiring code; never let a `const` argument infer them.**
+  A `const` constructor argument cannot mention an enclosing type parameter, so in generic
+  context (`valueCodec: const IdentityValueCodec()` inside a `<T>`-parameterised factory)
+  inference quietly instantiates it at `Never`. Covariance then accepts that `Never`-typed value
+  for every `T`, every strict analyzer mode stays silent, and the first real call throws a
+  runtime `TypeError`. Drop the `const` and name the argument's type (`IdentityValueCodec<T>()`),
+  and prefer explicit arguments down the whole wiring chain (`EagerCrudEngine<T, K>(…)`): the
+  façade wiring in `lib/src/box/` shows the shape.
 - **No Java ceremony.** No getter-only abstract base classes, no `AbstractFooFactory`, no
   interface-per-class. Use mixins, sealed classes, records, extension types, and enums where they
   add clarity, not weight.
@@ -130,6 +138,13 @@ under [*Hard rules* in `.ai/AGENTS.md`](./.ai/AGENTS.md#hard-rules).
 - **Fields, then constructors, then other members.** A reader scans the state shape first, then how
   to construct it, then how to use it. Unnamed constructor first, then named / factory (matches
   `sort_unnamed_constructors_first`); static members after the instance members.
+- **Initialise private fields with private named parameters** (`Foo({required this._bar})`,
+  Dart 3.12), not public-parameter-to-initialiser-list plumbing (`Foo({required Bar bar}) :
+  _bar = bar`). Less ceremony, no name duplication to drift, and the field's privacy stays visible
+  at the constructor.
+- **Deliberate no-op bodies call `noop()`** (the `lib/src/core/utils/` helper) instead of sitting
+  empty: `void onOpened(String boxName) => noop();`. Intent reads explicitly and DCM's
+  `no-empty-block` stays satisfied without per-site ignores.
 - **`assert` for dev-time errors; surface runtime failure functionally.** A constraint a caller can
   only violate during development (a private helper handed a bad index) belongs in `assert`:
   stripped in release, zero runtime cost. A genuine runtime outcome (a key isn't present, a box

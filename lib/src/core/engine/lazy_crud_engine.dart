@@ -21,18 +21,14 @@ import '../value_codec/value_codec.dart';
 /// Precondition violations (a codec emitting a non-storable raw key) throw synchronously at the
 /// call site, before any [Task] is built.
 final class LazyCrudEngine<T extends Object, K extends Object> {
-  /// Wires the engine around [openBox], which is invoked at most once (single-flight).
+  /// Wires the engine around [_openBox], which is invoked at most once (single-flight).
   LazyCrudEngine({
-    required String boxName,
-    required Future<LazyBox<Object?>> Function() openBox,
-    required KeyCodec<K> keyCodec,
-    required ValueCodec<T> valueCodec,
-    BoxObserver? observer,
-  }) : _boxName = boxName,
-       _openBox = openBox,
-       _keyCodec = keyCodec,
-       _valueCodec = valueCodec,
-       _observer = observer;
+    required this._boxName,
+    required this._openBox,
+    required this._keyCodec,
+    required this._valueCodec,
+    this._observer,
+  });
 
   final String _boxName;
   final Future<LazyBox<Object?>> Function() _openBox;
