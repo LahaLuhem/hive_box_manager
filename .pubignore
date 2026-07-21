@@ -23,6 +23,8 @@ scripts/
 .editorconfig
 .rumdl.toml
 .yamllint.yaml
+benchmark/
+dart_test.yaml
 
 # Context7 doc-indexer config; repo metadata for context7.com, not a consumer file.
 context7.json
