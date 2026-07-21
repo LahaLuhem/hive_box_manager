@@ -19,7 +19,8 @@ environment:
 dependencies:
   fpdart: ^1.2.0
   hive_ce: ^2.19.3
-  meta: ^1.19.0
+  # Blocked by hive_ce
+  meta: ^1.14.0
 
 
 
