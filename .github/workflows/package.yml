@@ -36,6 +36,18 @@ jobs:
       - run: dart pub global activate dependency_validator
       - run: dart pub global run dependency_validator
 
+  browser-test:
+    name: Browser tests (dart2js + dart2wasm)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-dart
+      # Browser flakiness gets its own job so it never blocks the VM lanes; the
+      # `browser` tag carries a retry in dart_test.yaml because headless-chrome
+      # startup, not the tests, is the flaky part.
+      - run: dart test -p chrome --tags browser
+      - run: dart test -p chrome -c dart2wasm --tags browser
+
   test:
     name: Unit tests + coverage
     runs-on: ubuntu-latest
