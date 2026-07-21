@@ -11,16 +11,26 @@ import '../value_codec/value_codec.dart';
 ///
 /// Constructs synchronously and auto-opens **single-flight** on first use: the first operation
 /// triggers the open, every concurrent caller awaits the same future, and a failed open resets
-/// the memo so a later operation can retry. `ensureInitialised()` exposes the warm-up
-/// compositionally. The 0.0.x init-forgotten crash is unrepresentable for effects; the sync
+/// the memo so a later operation can retry. `ensureInitialised()` exposes the warm-up compositionally.
+/// The 0.0.x init-forgotten crash is unrepresentable for effects; the sync
 /// inspectors ([length], [isEmpty], [isNotEmpty], [keys], [contains]) are the one carve-out:
 /// they need the keystore, so before the first open they throw a [StateError] naming the fix.
 ///
-/// `close()` / `deleteFromDisk()` are terminal: the memo stays resolved on purpose, and later
-/// operations surface the engine's own already-closed error (tier 3: no wrapper pre-check).
-/// Precondition violations (a codec emitting a non-storable raw key) throw synchronously at the
-/// call site, before any [Task] is built.
+/// `close()` / `deleteFromDisk()` are terminal: after a real close the memo stays resolved on purpose,
+/// so later operations surface the engine's own already-closed error (tier 3: no wrapper pre-check).
+/// `close()` before first use is a no-op (ratified rider): nothing opens just to be closed, `onClosed`
+/// still dispatches, and later operations surface the same already-closed error, synthesised by the
+/// wrapper only because the engine was never engaged, so tier 3 has nothing to surface. `deleteFromDisk()`
+/// before first use still opens then deletes: it must reach storage.
+/// Precondition violations (a codec emitting a non-storable raw key) throw synchronously at the call site,
+/// before any [Task] is built.
 final class LazyCrudEngine<T extends Object, K extends Object> {
+  final String _boxName;
+  final Future<LazyBox<Object?>> Function() _openBox;
+  final KeyCodec<K> _keyCodec;
+  final ValueCodec<T> _valueCodec;
+  final BoxObserver? _observer;
+
   /// Wires the engine around [_openBox], which is invoked at most once (single-flight).
   LazyCrudEngine({
     required this._boxName,
@@ -30,14 +40,13 @@ final class LazyCrudEngine<T extends Object, K extends Object> {
     this._observer,
   });
 
-  final String _boxName;
-  final Future<LazyBox<Object?>> Function() _openBox;
-  final KeyCodec<K> _keyCodec;
-  final ValueCodec<T> _valueCodec;
-  final BoxObserver? _observer;
-
   Future<LazyBox<Object?>>? _boxFuture;
   LazyBox<Object?>? _box;
+  var _closedBeforeFirstUse = false;
+
+  /// hive_ce's own post-close message (`BoxBaseImpl.checkOpen`), reused verbatim so a
+  /// pre-first-use close surfaces indistinguishably from a real one.
+  static const _alreadyClosedMessage = 'Box has already been closed.';
 
   /// The box name: the observer correlation handle (available before the box opens).
   String get name => _boxName;
@@ -242,9 +251,18 @@ final class LazyCrudEngine<T extends Object, K extends Object> {
     }),
   );
 
-  /// Closes the box; terminal for this handle.
+  /// Closes the box; terminal for this handle. Before first use nothing ever opened, so nothing
+  /// closes and no open is paid (the ratified no-op): `onClosed` still dispatches, and the
+  /// handle still turns terminal.
   Task<Unit> close() => Task(
     () => _guarded('close', () async {
+      if (_boxFuture == null) {
+        _closedBeforeFirstUse = true;
+        _observer?.onClosed(name);
+
+        return unit;
+      }
+
       await (await _obtainBox()).close();
       _observer?.onClosed(name);
 
@@ -263,27 +281,35 @@ final class LazyCrudEngine<T extends Object, K extends Object> {
   );
 
   /// Single-flight auto-open: assigns the memo synchronously so every concurrent first caller
-  /// shares one open; a failed open clears it so retry is possible.
-  Future<LazyBox<Object?>> _obtainBox() => _boxFuture ??= _openBox()
-      .then((box) {
-        _box = box;
-        _observer?.onOpened(name);
+  /// shares one open; a failed open clears it so retry is possible. After a pre-first-use close
+  /// it surfaces the engine-shaped already-closed error instead of opening.
+  Future<LazyBox<Object?>> _obtainBox() {
+    if (_closedBeforeFirstUse) throw HiveError(_alreadyClosedMessage);
 
-        return box;
-      })
-      .onError<Object>((error, stackTrace) {
-        _boxFuture = null;
-        _observer?.onOperationError(name, 'open', error, stackTrace);
-        Error.throwWithStackTrace(error, stackTrace);
-      });
+    return _boxFuture ??= _openBox()
+        .then((box) {
+          _box = box;
+          _observer?.onOpened(name);
 
-  LazyBox<Object?> get _requireOpened =>
-      _box ??
-      (throw StateError(
-        'LazyBox "$_boxName" is not open yet: the sync inspectors (length / isEmpty / '
-        'isNotEmpty / keys / contains) need the keystore in memory. Run any effect or '
-        'ensureInitialised() first.',
-      ));
+          return box;
+        })
+        .onError<Object>((error, stackTrace) {
+          _boxFuture = null;
+          _observer?.onOperationError(name, 'open', error, stackTrace);
+          Error.throwWithStackTrace(error, stackTrace);
+        });
+  }
+
+  LazyBox<Object?> get _requireOpened {
+    if (_closedBeforeFirstUse) throw HiveError(_alreadyClosedMessage);
+
+    return _box ??
+        (throw StateError(
+          'LazyBox "$_boxName" is not open yet: the sync inspectors (length / isEmpty / '
+          'isNotEmpty / keys / contains) need the keystore in memory. Run any effect or '
+          'ensureInitialised() first.',
+        ));
+  }
 
   /// Runs an effect, reporting failures to the observer before rethrowing.
   Future<R> _guarded<R>(String operation, Future<R> Function() effect) async {

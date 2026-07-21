@@ -253,14 +253,40 @@ void main() {
       check(box.compactCount).equals(1);
     });
 
-    scenario('close is terminal: later effects surface the engine error (tier 3)', () async {
+    scenario('close before first use never opens, yet turns the handle terminal', () async {
       final engine = makeEngine();
 
       await engine.close().run();
 
+      check(openCalls).equals(0);
+      check(observer.calls).deepEquals(['closed:logs']);
+
       await check(engine.put(7, 'v').run()).throws<HiveError>();
-      check(observer.calls.first).equals('opened:logs');
-      check(observer.calls).contains('closed:logs');
+      check(() => engine.length).throws<HiveError>();
+      check(observer.calls.last).equals('error:logs:put:HiveError');
+    });
+
+    scenario('a second close before first use stays benign', () async {
+      final engine = makeEngine();
+
+      await engine.close().run();
+      await engine.close().run();
+
+      check(openCalls).equals(0);
+      check(observer.calls).deepEquals(['closed:logs', 'closed:logs']);
+    });
+
+    scenario('close after use closes the real box and is terminal (tier 3)', () async {
+      final engine = makeEngine();
+      await engine.put(7, 'v').run();
+
+      await engine.close().run();
+
+      check(box.closed).isTrue();
+      await check(engine.get(7).run()).throws<HiveError>();
+      check(
+        observer.calls,
+      ).deepEquals(['opened:logs', 'written:logs:7:v', 'closed:logs', 'error:logs:get:HiveError']);
     });
 
     scenario('deleteFromDisk dispatches and empties the store', () async {
