@@ -82,7 +82,7 @@ jobs:
       # installed on the repo. `fail_ci_if_error` makes a broken upload a red
       # job instead of a silently lost report.
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           use_oidc: true
           files: coverage/lcov.info
