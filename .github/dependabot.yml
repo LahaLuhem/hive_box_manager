@@ -40,3 +40,15 @@ updates:
       actions:
         patterns: ["*"]
         update-types: ["minor", "patch"]
+
+  # --- Python: benchmark chart tooling (uv-managed) ---
+  # Bumps pyproject.toml constraints + uv.lock under benchmark/python. Same grouping as the
+  # others: minor/patch grouped into one PR, majors individual for isolated review.
+  - package-ecosystem: "uv"
+    directory: "/benchmark/python"
+    schedule:
+      interval: "weekly"
+    groups:
+      uv:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]

@@ -9,8 +9,6 @@
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/LahaLuhem/hive_box_manager.svg)](https://github.com/LahaLuhem/hive_box_manager/pulls)
 [![GitHub closed pull requests](https://img.shields.io/github/issues-pr-closed/LahaLuhem/hive_box_manager.svg)](https://github.com/LahaLuhem/hive_box_manager/pulls?q=is%3Apr+is%3Aclosed)
 
-# 📦 Hive Box Manager
-
 Typed, fpdart-first façades over [hive_ce](https://pub.dev/packages/hive_ce) boxes. No `null`s,
 no bare `Future`s, no hand-written CRUD. Pick the box that fits your data and get on with it.
 
@@ -31,16 +29,36 @@ that's the gap this fills:
 
 Pure Dart, so it runs anywhere Hive does: Flutter apps, Dart servers, CLIs, and the web.
 
+<!-- TOC start (generated with https://github.com/derlin/bitdowntoc) -->
+
+- [🧭 Which box?](#-which-box)
+- [🚀 Quickstart](#-quickstart)
+    * [1. Install](#1-install)
+    * [2. Wire up Hive once](#2-wire-up-hive-once)
+    * [3. Open a box and use it](#3-open-a-box-and-use-it)
+- [🧰 The box families](#-the-box-families)
+    * [🔑 KeyedBox](#-keyedbox)
+    * [📍 SingleValueBox](#-singlevaluebox)
+    * [🗂️ IterableBox](#-iterablebox)
+    * [🔗 DualKeyBox](#-dualkeybox)
+- [🎛️ Make it yours](#-make-it-yours)
+- [📏 Eager or lazy? (measured)](#-eager-or-lazy-measured)
+- [🛡️ Safer than raw hive, at raw-hive speed](#-safer-than-raw-hive-at-raw-hive-speed)
+    * [⚡ Performance](#-performance)
+- [🗺️ Roadmap](#-roadmap)
+
+<!-- TOC end -->
+
 ## 🧭 Which box?
 
 Start here. Match what you're storing to a family, then grab its eager or lazy variant.
 
-| You're storing | Reach for | Real-world fit |
-|---|---|---|
-| Many values, one key each | `KeyedBox<T, K>` | users, todos, cache entries |
-| Exactly one value | `SingleValueBox<T>` | a session token, the theme, one config blob |
-| A list of values per key | `IterableBox<T, K>` | tags per post, history per day |
-| Values addressed by two parts | `DualKeyBox<T, K1, K2>` | (user, day) events, (row, column) grids |
+| You're storing                | Reach for               | Real-world fit                              |
+|-------------------------------|-------------------------|---------------------------------------------|
+| Many values, one key each     | `KeyedBox<T, K>`        | users, todos, cache entries                 |
+| Exactly one value             | `SingleValueBox<T>`     | a session token, the theme, one config blob |
+| A list of values per key      | `IterableBox<T, K>`     | tags per post, history per day              |
+| Values addressed by two parts | `DualKeyBox<T, K1, K2>` | (user, day) events, (row, column) grids     |
 
 Every family has an eager and a `Lazy...` twin; [Eager or lazy?](#-eager-or-lazy-measured) picks
 the axis with measured numbers. Reverse queries ("everything for this user") live on the
@@ -99,16 +117,16 @@ carries everywhere. The shape, in short:
 <details>
 <summary>📋 <b>The full method table</b> (KeyedBox shown; the others mirror it)</summary>
 
-|                                                     | `KeyedBox<T, K>`             | `LazyKeyedBox<T, K>`             |
-|-----------------------------------------------------|------------------------------|----------------------------------|
-| `get(key)`                                          | `Option<T>`                  | `TaskOption<T>`                  |
-| `getOr(key, fallback)`                              | `T`                          | `Task<T>`                        |
-| `values`                                            | `Iterable<T>`                | `Task<List<T>>`                  |
-| `keys` / `contains` / `length`                      | sync                         | sync, after first open           |
-| `put` / `putAll` / `delete` / `deleteAll` / `clear` | `Task<Unit>`                 | `Task<Unit>`                     |
-| `update(key, fn, {ifAbsent})`                       | `Task<T>`                    | `Task<T>`                        |
-| `watch({key})`                                      | `Stream<TypedBoxEvent<T, K>>`| `Stream<LazyTypedBoxEvent<T, K>>`|
-| `flush` / `compact` / `close` / `deleteFromDisk`    | `Task<Unit>`                 | `Task<Unit>`                     |
+|                                                     | `KeyedBox<T, K>`              | `LazyKeyedBox<T, K>`              |
+|-----------------------------------------------------|-------------------------------|-----------------------------------|
+| `get(key)`                                          | `Option<T>`                   | `TaskOption<T>`                   |
+| `getOr(key, fallback)`                              | `T`                           | `Task<T>`                         |
+| `values`                                            | `Iterable<T>`                 | `Task<List<T>>`                   |
+| `keys` / `contains` / `length`                      | sync                          | sync, after first open            |
+| `put` / `putAll` / `delete` / `deleteAll` / `clear` | `Task<Unit>`                  | `Task<Unit>`                      |
+| `update(key, fn, {ifAbsent})`                       | `Task<T>`                     | `Task<T>`                         |
+| `watch({key})`                                      | `Stream<TypedBoxEvent<T, K>>` | `Stream<LazyTypedBoxEvent<T, K>>` |
+| `flush` / `compact` / `close` / `deleteFromDisk`    | `Task<Unit>`                  | `Task<Unit>`                      |
 
 Watch is typed on both axes: an eager delete event still carries the value that was removed; a
 lazy event carries an `Option<T>` that's `None` on deletes, because a lazy box holds no value to
@@ -311,6 +329,13 @@ Apple Silicon, AOT, hive_ce 2.19.3) disagrees:
 - **Reads are where they split.** An eager get is ~0.5 to 0.8 µs from memory; a lazy get pays for
   a disk read at ~22 to 25 µs.
 
+Open cost tracks file size on both axes (the two lines sit right on top of each other), while
+reads are where they part ways:
+
+![Box open time by box size: eager and lazy overlap, both rising with size](https://raw.githubusercontent.com/LahaLuhem/hive_box_manager/master/benchmark/reports/open_eager_vs_lazy.png)
+
+![Per-read latency by box size on a log scale: eager reads from memory sit far below lazy reads from disk](https://raw.githubusercontent.com/LahaLuhem/hive_box_manager/master/benchmark/reports/read_eager_vs_lazy.png)
+
 So reach for **eager** on hot, value-heavy-*read* boxes that fit comfortably in RAM, and **lazy**
 on value-heavy boxes you read only now and then. Neither opens "instantly" at scale, and keys are
 a RAM cost you pay regardless.
@@ -330,20 +355,26 @@ puts**. Within noise of raw, with the whole no-null contract sitting on top.
 
 Two dual-key codecs ship, and they trade off like this:
 
-| Operation | packed int | String composite |
-|---|---|---|
-| eager get, 100K entries | 51 ms | 81 ms |
-| box open (eager), 100K | 70 ms | 133 ms |
-| putAll, 100K | 78 ms | 145 ms |
-| full key scan (a query), 100K | 5.0 ms | 18.9 ms |
-| keystore RSS after open, 100K | 33 MB | 61 MB |
-| box file size, 100K | 1.9 MB | 2.6 MB |
-| lazy get / single put | codec-indifferent (disk dominates) |  |
+| Operation                     | packed int                         | String composite |
+|-------------------------------|------------------------------------|------------------|
+| eager get, 100K entries       | 51 ms                              | 81 ms            |
+| box open (eager), 100K        | 70 ms                              | 133 ms           |
+| putAll, 100K                  | 78 ms                              | 145 ms           |
+| full key scan (a query), 100K | 5.0 ms                             | 18.9 ms          |
+| keystore RSS after open, 100K | 33 MB                              | 61 MB            |
+| box file size, 100K           | 1.9 MB                             | 2.6 MB           |
+| lazy get / single put         | codec-indifferent (disk dominates) |                  |
 
 Medians from the maintainer benchmark (macOS Apple Silicon, AOT, constant 1-byte values to
 isolate key cost). Web is unmeasured; its ordering is assumed to follow the VM.
 `StringCompositeDualCodec` is the safe default; reach for `PackedIntDualCodec` when these wins
 matter and both parts fit in 16 bits.
+
+The table rows are the 100K slice of these curves; the gap widens as boxes grow:
+
+![Eager get time by box size: packed-int stays below String composite, the gap widening with scale](https://raw.githubusercontent.com/LahaLuhem/hive_box_manager/master/benchmark/reports/codec_get_scaling.png)
+
+![Keystore RAM after open by box size: packed-int stays below String composite](https://raw.githubusercontent.com/LahaLuhem/hive_box_manager/master/benchmark/reports/codec_rss_scaling.png)
 
 ## 🗺️ Roadmap
 

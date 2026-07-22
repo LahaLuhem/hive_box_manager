@@ -38,3 +38,22 @@ README's codec-crossover guidance: `results_aot.jsonl` (deciding lane), `results
 (sanity), `results_1m.jsonl` (1M open-only). Environment: macOS Apple Silicon, Dart 3.12.2,
 hive_ce 2.19.3, 2026-07-20. Values were a constant 1 byte by design, isolating key cost; web
 performance is unmeasured (ordering assumed to follow the VM).
+
+## `reports/`
+
+Charts rendered from `results/` by [`python/plot.py`](python/plot.py) and committed as PNGs. The
+top-level README references them by absolute raw GitHub URL, so they render on pub.dev without
+shipping in the tarball (`benchmark/` is `.pubignore`d). Four charts: codec get + keystore-RSS
+scaling (packed vs String), and open time + per-read latency (eager vs lazy). Built with seaborn
+over matplotlib, data in polars (seaborn reads polars frames directly via the dataframe
+interchange protocol), matching the sibling packages' chart style. Colours are the Okabe-Ito
+CVD-safe pair, with line style and marker as a second cue so identity never rests on colour alone.
+
+The Python lives in [`python/`](python/) as a [`uv`](https://docs.astral.sh/uv/) project
+(`pyproject.toml` + committed `uv.lock` + `.python-version`), so nothing installs onto your machine
+globally. Regenerate whenever the results change:
+
+```sh
+uv sync --project benchmark/python                # create .venv, install the pinned stack
+uv run --project benchmark/python python plot.py  # rewrite reports/*.png
+```
