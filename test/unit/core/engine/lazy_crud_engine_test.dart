@@ -16,8 +16,8 @@ import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
 import '../../../support/bdd.dart';
-import '../../../support/fake_boxes.dart';
-import '../../../support/recording_box_observer.dart';
+import '../../../support/doubles/fake_boxes.dart';
+import '../../../support/doubles/recording_box_observer.dart';
 
 void main() {
   late FakeLazyBox box;
@@ -284,7 +284,7 @@ void main() {
 
       await engine.close().run();
 
-      check(box.closed).isTrue();
+      check(box.isClosed).isTrue();
       await check(engine.get(7).run()).throws<HiveError>();
       check(
         observer.calls,
@@ -298,7 +298,7 @@ void main() {
 
       await engine.deleteFromDisk().run();
 
-      check(box.deletedFromDisk).isTrue();
+      check(box.wasDeletedFromDisk).isTrue();
       check(observer.calls).deepEquals(['deletedFromDisk:logs']);
     });
   });

@@ -19,10 +19,10 @@ import 'package:hive_ce/src/box/default_key_comparator.dart';
 /// crash recovery. No wrapper preconditions here: whatever `openBox` throws for (wrong-kind reopen, unknown types)
 /// surfaces as the engine's own error (tier 3).
 final class BoxProvider {
+  final HiveInterface _hive;
+
   /// Wires the provider to [hive], defaulting to the global instance.
   BoxProvider({HiveInterface? hive}) : _hive = hive ?? Hive;
-
-  final HiveInterface _hive;
 
   /// Opens (or returns the already-open instance of) the eager box named [name].
   Future<Box<Object?>> openEagerBox(

@@ -1,17 +1,17 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/widgets.dart';
 import 'package:platform_adaptive_widgets/platform_adaptive_widgets.dart';
 import 'package:platform_icons/platform_icons.dart';
 import 'package:pmvvm/pmvvm.dart';
 
-import '../core/widgets/demo_intro.dart';
-import '../core/widgets/demo_scaffold.dart';
+import '/features/core/widgets/demo_intro.dart';
+import '/features/core/widgets/demo_scaffold.dart';
 import 'dual_query_view_model.dart';
 
 class DualQueryView extends StatelessWidget {
   const DualQueryView({super.key});
 
   @override
-  Widget build(BuildContext context) => MVVM<DualQueryViewModel>.builder(
+  Widget build(BuildContext context) => MVVM.builder(
     viewModel: DualQueryViewModel(),
     viewBuilder: (context, vm) => DemoScaffold(
       title: 'DualKeyBox (lazy)',
@@ -24,8 +24,9 @@ class DualQueryView extends StatelessWidget {
                 'part: an honest O(K) scan, plain empty list when nothing matches.',
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const .symmetric(horizontal: 16, vertical: 8),
             child: Row(
+              spacing: 8,
               children: [
                 PlatformButton.icon(
                   onPressed: vm.onSeedPressed,
@@ -34,7 +35,6 @@ class DualQueryView extends StatelessWidget {
                     'Seed ${DualQueryViewModel.gridSide}x${DualQueryViewModel.gridSide} grid',
                   ),
                 ),
-                const SizedBox(width: 8),
                 Expanded(
                   child: PlatformTextField(
                     controller: vm.partController,
@@ -46,15 +46,15 @@ class DualQueryView extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const .symmetric(horizontal: 16),
             child: Row(
+              spacing: 8,
               children: [
                 PlatformButton.icon(
                   onPressed: vm.onQueryByUserPressed,
                   icon: const PlatformIcon(PlatformIcons.search, size: 18),
                   label: const Text('By user'),
                 ),
-                const SizedBox(width: 8),
                 PlatformButton.icon(
                   onPressed: vm.onQueryByDayPressed,
                   icon: const PlatformIcon(PlatformIcons.search, size: 18),
@@ -63,24 +63,17 @@ class DualQueryView extends StatelessWidget {
               ],
             ),
           ),
-          Expanded(child: _ResultList(vm: vm)),
+          Expanded(
+            child: ValueListenableBuilder(
+              valueListenable: vm.results,
+              builder: (_, results, _) => ListView.builder(
+                itemCount: results.length,
+                itemBuilder: (_, index) => PlatformListTile(title: Text(results[index])),
+              ),
+            ),
+          ),
         ],
       ),
-    ),
-  );
-}
-
-class _ResultList extends StatelessWidget {
-  const _ResultList({required this.vm});
-
-  final DualQueryViewModel vm;
-
-  @override
-  Widget build(BuildContext context) => ValueListenableBuilder<List<String>>(
-    valueListenable: vm.results,
-    builder: (context, results, _) => ListView.builder(
-      itemCount: results.length,
-      itemBuilder: (context, index) => PlatformListTile(title: Text(results[index])),
     ),
   );
 }

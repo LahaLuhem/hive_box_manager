@@ -11,7 +11,7 @@ import 'package:hive_box_manager/src/codec/dual/string_composite_dual_codec.dart
 import 'package:test/test.dart';
 
 import '../../../support/bdd.dart';
-import '../../../support/date_int_dual_codec.dart';
+import '../../../support/codecs/date_int_dual_codec.dart';
 
 void main() {
   feature('dual-key-codec resolution at wiring time', () {

@@ -15,8 +15,8 @@ import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
 import '../../support/bdd.dart';
-import '../../support/person.dart';
-import '../../support/probe_codecs.dart';
+import '../../support/codecs/probe_codecs.dart';
+import '../../support/fixtures/person.dart';
 
 /// Part values at the edges of the 16-bit domain, where JS semantics would break first.
 const boundaryParts = [0, 1, 42, partMask - 1, partMask];

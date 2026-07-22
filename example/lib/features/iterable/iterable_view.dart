@@ -1,17 +1,18 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/widgets.dart';
+import 'package:material_ui/material_ui.dart' show IconButton;
 import 'package:platform_adaptive_widgets/platform_adaptive_widgets.dart';
 import 'package:platform_icons/platform_icons.dart';
 import 'package:pmvvm/pmvvm.dart';
 
-import '../core/widgets/demo_intro.dart';
-import '../core/widgets/demo_scaffold.dart';
+import '/features/core/widgets/demo_intro.dart';
+import '/features/core/widgets/demo_scaffold.dart';
 import 'iterable_view_model.dart';
 
 class IterableView extends StatelessWidget {
   const IterableView({super.key});
 
   @override
-  Widget build(BuildContext context) => MVVM<IterableViewModel>.builder(
+  Widget build(BuildContext context) => MVVM.builder(
     viewModel: IterableViewModel(),
     viewBuilder: (context, vm) => DemoScaffold(
       title: 'IterableBox (eager)',
@@ -24,12 +25,21 @@ class IterableView extends StatelessWidget {
                 'every list you read back is an unmodifiable view.',
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: _KeySelector(vm: vm),
+            padding: const .symmetric(horizontal: 16, vertical: 8),
+            child: ValueListenableBuilder(
+              valueListenable: vm.selectedKey,
+              builder: (_, selected, _) => PlatformSegmentButton(
+                choices: IterableViewModel.listKeys,
+                segmentBuilder: (key) => Text('List $key'),
+                selectedChoice: selected,
+                onSelectionChanged: vm.onKeySelected,
+              ),
+            ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const .symmetric(horizontal: 16),
             child: Row(
+              spacing: 8,
               children: [
                 Expanded(
                   child: PlatformTextField(
@@ -38,7 +48,6 @@ class IterableView extends StatelessWidget {
                     onSubmitted: (_) => vm.onAddPressed(),
                   ),
                 ),
-                const SizedBox(width: 8),
                 PlatformButton.icon(
                   onPressed: vm.onAddPressed,
                   icon: const PlatformIcon(PlatformIcons.add, size: 18),
@@ -47,46 +56,22 @@ class IterableView extends StatelessWidget {
               ],
             ),
           ),
-          Expanded(child: _TagList(vm: vm)),
+          Expanded(
+            child: ValueListenableBuilder(
+              valueListenable: vm.tags,
+              builder: (_, tags, _) => ListView.builder(
+                itemCount: tags.length,
+                itemBuilder: (_, index) => PlatformListTile(
+                  title: Text(tags[index]),
+                  trailing: IconButton(
+                    icon: const PlatformIcon(PlatformIcons.delete, size: 18),
+                    onPressed: () => vm.onRemovePressed(tags[index]),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
-      ),
-    ),
-  );
-}
-
-class _KeySelector extends StatelessWidget {
-  const _KeySelector({required this.vm});
-
-  final IterableViewModel vm;
-
-  @override
-  Widget build(BuildContext context) => ValueListenableBuilder<int>(
-    valueListenable: vm.selectedKey,
-    builder: (context, selected, _) => PlatformSegmentButton<int>(
-      choices: IterableViewModel.listKeys,
-      segmentBuilder: (key) => Text('List $key'),
-      selectedChoice: selected,
-      onSelectionChanged: vm.onKeySelected,
-    ),
-  );
-}
-
-class _TagList extends StatelessWidget {
-  const _TagList({required this.vm});
-
-  final IterableViewModel vm;
-
-  @override
-  Widget build(BuildContext context) => ValueListenableBuilder<List<String>>(
-    valueListenable: vm.tags,
-    builder: (context, tags, _) => ListView.builder(
-      itemCount: tags.length,
-      itemBuilder: (context, index) => PlatformListTile(
-        title: Text(tags[index]),
-        trailing: IconButton(
-          icon: const PlatformIcon(PlatformIcons.delete, size: 18),
-          onPressed: () => vm.onRemovePressed(tags[index]),
-        ),
       ),
     ),
   );

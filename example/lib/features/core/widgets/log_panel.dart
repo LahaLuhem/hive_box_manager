@@ -1,4 +1,5 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/widgets.dart';
+import 'package:material_ui/material_ui.dart' show IconButton, Theme;
 import 'package:platform_icons/platform_icons.dart';
 
 import '../observers/log_panel_observer.dart';
@@ -6,9 +7,9 @@ import '../observers/log_panel_observer.dart';
 /// The live box-event feed docked under every demo: one `ValueListenableBuilder` over the
 /// observer's `ListNotifier`, so each dispatched event repaints only this panel.
 class LogPanel extends StatelessWidget {
-  const LogPanel({required this.observer, super.key});
-
   final LogPanelObserver observer;
+
+  const LogPanel({required this.observer, super.key});
 
   static const _panelHeight = 180.0;
 
@@ -34,11 +35,11 @@ class LogPanel extends StatelessWidget {
             ],
           ),
           Expanded(
-            child: ValueListenableBuilder<List<String>>(
+            child: ValueListenableBuilder(
               valueListenable: observer.entries,
-              builder: (context, entries, _) => ListView.builder(
+              builder: (_, entries, _) => ListView.builder(
                 itemCount: entries.length,
-                itemBuilder: (context, index) => Text(
+                itemBuilder: (_, index) => Text(
                   entries[index],
                   style: theme.textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
                 ),

@@ -13,14 +13,14 @@ import 'package:meta/meta.dart';
 /// [TypedBoxEvent]'s non-null guarantee, mirroring how reads split across the axes (`Option` vs `TaskOption`).
 @immutable
 final class LazyTypedBoxEvent<T extends Object, K extends Object> {
-  /// Wraps one watch notification.
-  const LazyTypedBoxEvent({required this.key, required this.value});
-
   /// The consumer-facing key, decoded by the box's key codec.
   final K key;
 
   /// The written value, or `None` on a delete, where the engine has no value to hand over.
   final Option<T> value;
+
+  /// Wraps one watch notification.
+  const LazyTypedBoxEvent({required this.key, required this.value});
 
   /// Whether this change removed [key] from the box; equivalently, whether [value] is `None`.
   bool get deleted => value.isNone();

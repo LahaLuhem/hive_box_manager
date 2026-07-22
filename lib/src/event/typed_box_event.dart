@@ -11,9 +11,6 @@ import 'package:meta/meta.dart';
 /// unrepresentable. The lazy axis cannot make the same promise; its stream carries [LazyTypedBoxEvent] instead.
 @immutable
 final class TypedBoxEvent<T extends Object, K extends Object> {
-  /// Wraps one watch notification.
-  const TypedBoxEvent({required this.key, required this.value, required this.deleted});
-
   /// The consumer-facing key, decoded by the box's key codec.
   final K key;
 
@@ -22,6 +19,9 @@ final class TypedBoxEvent<T extends Object, K extends Object> {
 
   /// Whether this change removed [key] from the box.
   final bool deleted;
+
+  /// Wraps one watch notification.
+  const TypedBoxEvent({required this.key, required this.value, required this.deleted});
 
   @override
   bool operator ==(Object other) =>

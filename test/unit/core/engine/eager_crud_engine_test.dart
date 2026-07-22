@@ -13,9 +13,9 @@ import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
 import '../../../support/bdd.dart';
-import '../../../support/fake_boxes.dart';
+import '../../../support/doubles/fake_boxes.dart';
+import '../../../support/doubles/recording_box_observer.dart';
 import '../../../support/mocks.dart';
-import '../../../support/recording_box_observer.dart';
 
 void main() {
   late FakeEagerBox box;
@@ -221,7 +221,7 @@ void main() {
 
       await engine.deleteFromDisk().run();
 
-      check(box.deletedFromDisk).isTrue();
+      check(box.wasDeletedFromDisk).isTrue();
       check(observer.calls).deepEquals(['deletedFromDisk:users']);
     });
 

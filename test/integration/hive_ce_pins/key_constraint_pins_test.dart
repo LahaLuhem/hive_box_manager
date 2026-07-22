@@ -17,8 +17,8 @@ import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
 import '../../support/bdd.dart';
-import '../../support/probe_key_limits.dart';
-import '../../support/release_probe_runner.dart';
+import '../../support/pins/probe_key_limits.dart';
+import '../../support/pins/release_probe_runner.dart';
 
 void main() {
   late Directory tempDir;

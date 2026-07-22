@@ -1,9 +1,9 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:hive_ce/hive.dart';
 
-import '../../codec/key/key_codec.dart';
-import '../../event/lazy_typed_box_event.dart';
-import '../../observer/box_observer.dart';
+import '/src/codec/key/key_codec.dart';
+import '/src/event/lazy_typed_box_event.dart';
+import '/src/observer/box_observer.dart';
 import '../raw_key_gate.dart';
 import '../value_codec/value_codec.dart';
 
@@ -42,7 +42,7 @@ final class LazyCrudEngine<T extends Object, K extends Object> {
 
   Future<LazyBox<Object?>>? _boxFuture;
   LazyBox<Object?>? _box;
-  var _closedBeforeFirstUse = false;
+  var _wasClosedBeforeFirstUse = false;
 
   /// hive_ce's own post-close message (`BoxBaseImpl.checkOpen`), reused verbatim so a
   /// pre-first-use close surfaces indistinguishably from a real one.
@@ -50,13 +50,6 @@ final class LazyCrudEngine<T extends Object, K extends Object> {
 
   /// The box name: the observer correlation handle (available before the box opens).
   String get name => _boxName;
-
-  /// Warms the box up compositionally; any effect does the same implicitly.
-  Task<Unit> ensureInitialised() => Task(() async {
-    await _obtainBox();
-
-    return unit;
-  });
 
   /// Number of stored entries (the keystore lives in memory once open).
   int get length => _requireOpened.length;
@@ -73,6 +66,13 @@ final class LazyCrudEngine<T extends Object, K extends Object> {
   /// The raw keys exactly as hive stores them, undecoded: the query strategies' scan surface.
   /// Same carve-out as [keys]; the dual façades warm the box up before scanning.
   Iterable<Object> get rawKeys => _requireOpened.keys.map((rawKey) => rawKey as Object);
+
+  /// Warms the box up compositionally; any effect does the same implicitly.
+  Task<Unit> ensureInitialised() => Task(() async {
+    await _obtainBox();
+
+    return unit;
+  });
 
   /// Whether [key] is stored right now.
   bool contains(K key) => _requireOpened.containsKey(_keyCodec.encode(key));
@@ -261,7 +261,7 @@ final class LazyCrudEngine<T extends Object, K extends Object> {
   Task<Unit> close() => Task(
     () => _guarded('close', () async {
       if (_boxFuture == null) {
-        _closedBeforeFirstUse = true;
+        _wasClosedBeforeFirstUse = true;
         _observer?.onClosed(name);
 
         return unit;
@@ -288,7 +288,7 @@ final class LazyCrudEngine<T extends Object, K extends Object> {
   /// shares one open; a failed open clears it so retry is possible. After a pre-first-use close
   /// it surfaces the engine-shaped already-closed error instead of opening.
   Future<LazyBox<Object?>> _obtainBox() {
-    if (_closedBeforeFirstUse) throw HiveError(_alreadyClosedMessage);
+    if (_wasClosedBeforeFirstUse) throw HiveError(_alreadyClosedMessage);
 
     return _boxFuture ??= _openBox()
         .then((box) {
@@ -305,7 +305,7 @@ final class LazyCrudEngine<T extends Object, K extends Object> {
   }
 
   LazyBox<Object?> get _requireOpened {
-    if (_closedBeforeFirstUse) throw HiveError(_alreadyClosedMessage);
+    if (_wasClosedBeforeFirstUse) throw HiveError(_alreadyClosedMessage);
 
     return _box ??
         (throw StateError(

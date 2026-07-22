@@ -84,6 +84,18 @@ under [*Hard rules* in `.ai/AGENTS.md`](./.ai/AGENTS.md#hard-rules).
   inferred type; the name does that work. When a domain type exists, the suffix is the type name
   (`storedValue`, not `v`; `encodedKey`, not `k`). Callback and comparator parameters are exempt and
   stay single-word (`value`, `index`, `(a, b)`); the call site already pins the type.
+- **Suffix an `Option`-typed variable with `orNone`** (`storedOrNone`, `currentOrNone`): the suffix
+  puts the absence-shape at the use site, so the `.match(...)` / fold that follows reads as handling
+  a real `None`. This refines the type-suffix rule above for the one case where the *shape* matters
+  more than the wrapped type's name.
+- **Name a boolean as a yes/no predicate.** A bool-valued name (local, field, getter, or parameter)
+  leads with a predicate word (`is`, `are`, `was`, `has`, `can`, `should`, `will`, `would`, `must`,
+  `needs`) or a plain verb, so it reads as a question at the use site (`if (isEmpty)`,
+  `emitsValueOnDelete ? old : null`), never a noun or bare adjective (`empty`, `single`). A method
+  that's already a verb (`contains`, `deleteAll`) is a predicate by construction and needs no prefix.
+  Two carve-outs: a name fixed by a dependency keeps its spelling (`crashRecovery`, `deleted` mirror
+  `hive_ce`), and a setter / handler parameter stays the conventional `value` (per the
+  callback-parameter exemption above).
 
 ---
 
@@ -131,9 +143,14 @@ under [*Hard rules* in `.ai/AGENTS.md`](./.ai/AGENTS.md#hard-rules).
 <a id="class-structure"></a>
 ## Class structure
 
-- **Fields, then constructors, then other members.** A reader scans the state shape first, then how
-  to construct it, then how to use it. Unnamed constructor first, then named / factory (matches
-  `sort_unnamed_constructors_first`); static members after the instance members.
+- **Member order.** State first, then construction, then use. The sequence is: constructor-assigned
+  fields (the constructor initialises them) → constructor(s) (unnamed before named / factory, per
+  `sort_unnamed_constructors_first`) → other internal fields the class sets up itself (lazy caches,
+  derived state; *internal* means not-constructor-assigned, not private, so a public such field
+  still sits here) → getters and setters → getter-/setter-like methods → other methods → private
+  helpers (a private getter is a private helper, not a public-surface getter, so it belongs here
+  too). Static *methods and factories* follow the instance members; a named `static const` may
+  instead sit near where it is read, per [Constants & magic numbers](#constants).
 - **Initialise private fields with private named parameters** (`Foo({required this._bar})`,
   Dart 3.12), not public-parameter-to-initialiser-list plumbing (`Foo({required Bar bar}) :
   _bar = bar`). Less ceremony, no name duplication to drift, and the field's privacy stays visible
@@ -242,10 +259,18 @@ Prefer `iterable.map(…)` (and kin) over `[for (final a in iterable) …]`: the
 clear step-by-step transformation of the data, chains naturally, and stays a *lazy* `Iterable`.
 Keep it lazy when the result feeds another loop or transformation later; materialise (`toList()`,
 a collection literal) only at the point where evaluation is immediately needed, with a `//` reason
-when it isn't obvious (a timed window, a stateful generator, reuse across consumers). Set and map
-comprehensions (`{for (…) key: value}`) stay acceptable exactly where a materialised set/map is
-immediately consumed (a `putAll` batch, a set-shaped compare); anything longer-lived goes through
-the pipeline. (Replaces the earlier comprehension-first guidance; maintainer call, 2026-07-21.)
+when it isn't obvious (a timed window, a stateful generator, reuse across consumers).
+
+Set and map comprehensions (`{for (…) key: value}`) stay acceptable for a **flat**,
+immediately-consumed set/map with a trivial or no value transform (a set-shaped compare, a small
+fixed batch). Beyond that, keep the pipeline: build a cross-product with
+`outer.expand((a) => inner.map((b) => (a, b)))` rather than a nested `for`, and when a map's
+**values are a function of its keys** prefer `Map.fromIterables(keys, keys.map(transform))` over
+`{for (…) key: transform(key)}`, so enumerating the keys and transforming them into values read as
+two visible steps instead of one opaque comprehension body. Derive the values from the **same**
+keys iterable, never an independent parallel list, or the two desync. (Replaces the earlier
+comprehension-first guidance; maintainer call, 2026-07-21. Carve-out narrowed to flat
+comprehensions 2026-07-22.)
 
 <a id="idioms-functional-pipelines"></a>
 ### Functional pipelines over imperative loops for lookup and transform
@@ -292,6 +317,24 @@ Where the context type is known, drop the leading type name; the analyzer resolv
 the parameter, return, or variable type. Covers enum values in patterns and argument slots, and
 named constructors / static factories in a return or context slot. Skip it where the context type
 isn't obvious without re-reading.
+
+<a id="idioms-imports"></a>
+### Import paths: relative within an area, root-relative across areas
+
+Within `lib/src/`, an import to the **same top-level area** (`box/`, `codec/`, `core/`, `event/`,
+`observer/`, `query/`) uses the **relative-from-file** path (bare `sibling.dart`, or `../sub/x.dart`
+inside the area); an import to a **different area** uses the **root-relative** path
+(`/src/<area>/...`, which resolves against the package's `lib/`). Both are relative imports, so
+`prefer_relative_imports` stays satisfied, and the split makes cross-area dependencies legible at a
+glance: a leading `/src/` is always a jump to another area. When a file mixes both, the
+root-relative group sorts first (`directives_ordering`), so the cross-area imports read as a block
+above the in-area ones.
+
+Test files are the exception: they resolve via `file://`, not `package:`, so a leading `/` anchors
+at the **filesystem** root (verified `uri_does_not_exist`), not the package root. They keep
+**relative-from-file** imports to `test/support/...` (`../../support/...`, deepening as the test
+dir nests); there is no root-relative form for them, and the fixtures can't move under `lib/` for a
+`package:` import because they depend on dev-only packages (`test`, `mockito`, `checks`).
 
 ---
 

@@ -11,16 +11,16 @@ import 'package:hive_ce/hive.dart';
 
 void main() {
   late Directory tempDir;
-  late DualQueryViewModel vm;
+  late DualQueryViewModel sut;
 
   setUp(() {
     tempDir = Directory.systemTemp.createTempSync('hbm_example_dual_');
     Hive.init(tempDir.path);
-    vm = DualQueryViewModel()..init();
+    sut = DualQueryViewModel()..init();
   });
 
   tearDown(() async {
-    vm.onUnmount();
+    sut.onUnmount();
     await Hive.close();
     tempDir.deleteSync(recursive: true);
   });
@@ -48,11 +48,11 @@ void main() {
         final axis = ctx.example.val('axis') as String;
         final part = ctx.example.val('part') as int;
         final matches = ctx.example.val('matches') as List<String>;
-        await vm.onSeedPressed();
+        await sut.onSeedPressed();
 
-        vm.partController.text = '$part';
-        await (axis == 'user' ? vm.onQueryByUserPressed() : vm.onQueryByDayPressed());
+        sut.partController.text = '$part';
+        await (axis == 'user' ? sut.onQueryByUserPressed() : sut.onQueryByDayPressed());
 
-        check(vm.results.value).deepEquals(matches);
+        check(sut.results.value).deepEquals(matches);
       });
 }
