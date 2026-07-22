@@ -1,6 +1,9 @@
 ## Custom
 .idea/AugmentWebviewStateStore.xml
 
+# Local runs of the CI coverage recipe (dart test --coverage + format_coverage).
+coverage/
+
 # FVM Version Cache
 .fvm/
 
