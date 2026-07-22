@@ -23,7 +23,6 @@ scripts/
 .editorconfig
 .rumdl.toml
 .yamllint.yaml
-codecov.yml
 benchmark/
 dart_test.yaml
 

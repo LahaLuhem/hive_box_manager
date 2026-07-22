@@ -51,12 +51,6 @@ jobs:
   test:
     name: Unit tests + coverage
     runs-on: ubuntu-latest
-    # OIDC upload to Codecov needs id-token:write. The workflow's top-level
-    # permissions are contents:read; this job opts into the extra scope only
-    # where it's used, so every other job stays least-privilege.
-    permissions:
-      contents: read
-      id-token: write
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-dart
@@ -75,16 +69,23 @@ jobs:
             --report-on=lib \
             --packages=.dart_tool/package_config.json \
             -o coverage/lcov.info
-      # Upload to Codecov. Project + patch coverage are enforced as PR status
-      # checks configured in codecov.yml, so there's no in-CI threshold step
-      # here (mark those checks required on master to actually block merges).
-      # Token auth via the CODECOV_TOKEN secret (the repo upload token from
-      # Codecov's settings). The OIDC path left uploads accepted-but-unprocessed
-      # (0 recorded, "missing head report"). `fail_ci_if_error` makes a broken
-      # upload a red job, not a silent loss — so add the secret before merging.
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v7
+      # Upload BEFORE the gate so the coverage badge updates and PR comments
+      # land even when the gate would fail. Coveralls auto-routes based on
+      # event context (PR vs. push to master).
+      #
+      # `continue-on-error: true` keeps a Coveralls outage from failing the
+      # whole job: Coveralls is observability, not a correctness gate; the
+      # actual threshold check is the next step. The step still shows RED in
+      # the CI UI on failure so broken uploads don't go unnoticed for long.
+      - name: Upload coverage to Coveralls
+        uses: coverallsapp/github-action@v2
+        continue-on-error: true
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: coverage/lcov.info
-          fail_ci_if_error: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: coverage/lcov.info
+          format: lcov
+      - name: Enforce min coverage (95%)
+        uses: VeryGoodOpenSource/very_good_coverage@v3
+        with:
+          path: coverage/lcov.info
+          min_coverage: 95

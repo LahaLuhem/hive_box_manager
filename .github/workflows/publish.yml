@@ -6,9 +6,11 @@ on:
       - '[0-9]+.[0-9]+.[0-9]+' # tag-pattern on pub.dev: '{{version}}'
 
 # Inlined rather than reusing dart-lang/setup-dart/.github/workflows/publish.yml@v1
-# so the publish steps stay visible and easy to tweak. The example is a single
-# .dart file with no pubspec of its own, so a plain `dart pub get` at the root
-# resolves everything and leaves no example lockfile for the dry-run to trip on.
+# so the publish steps stay visible and easy to tweak. A plain `dart pub get` also
+# resolves example/, which fails on this Dart-only runner: the example is a Flutter
+# app (flutter_test from the Flutter SDK). `--no-example` scopes the resolve to the
+# root package; the example has its own Flutter workflow. `dart pub publish` itself
+# packages example/ without resolving it, so the dry-run + publish steps are fine.
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -17,8 +19,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: dart-lang/setup-dart@v1
-      - name: Install dependencies
-        run: dart pub get
+      - name: Install dependencies (root only, skip example/)
+        run: dart pub get --no-example
       - name: Publish dry-run
         run: dart pub publish --dry-run
       - name: Publish to pub.dev
