@@ -77,7 +77,7 @@ The script refuses to proceed unless every check passes:
 - `jq` on PATH (reads the lint manifest, `.github/lint-checks.json`).
 - `docker` on PATH, daemon running (runs the checks from `.github/lint-checks.json`
   via the linterpol image: `shellcheck`, `actionlint`, `rumdl`, `ryl`, no local installs).
-- Working tree clean, on `main`, in sync with `origin/main` (fetches first).
+- Working tree clean, on `master`, in sync with `origin/master` (fetches first).
 - `CHANGELOG.md` has a non-empty `## Unreleased` (or `## [Unreleased]`) section.
 - `dart format`, `dart analyze`, and `dart test` all clean.
 - The target tag does not already exist locally or on the remote.

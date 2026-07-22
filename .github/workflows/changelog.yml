@@ -3,17 +3,17 @@ name: Update changelog
 on:
   pull_request_target:
     types: [closed]
-    branches: [main]
+    branches: [master]
 
-# Serialize so back-to-back merges don't race on the push to main.
+# Serialize so back-to-back merges don't race on the push to master.
 # cancel-in-progress is OFF — every merged PR must actually get its line.
 concurrency:
-  group: changelog-main
+  group: changelog-master
   cancel-in-progress: false
 
 # pull_request_target runs in the base-repo context, so GITHUB_TOKEN write
 # scopes are honoured even when the PR comes from a fork. The workflow file
-# always loads from main (never from the PR), and we never check out PR code,
+# always loads from master (never from the PR), and we never check out PR code,
 # so the write token is not exposed to PR-controlled scripts.
 permissions:
   contents: write
@@ -59,7 +59,7 @@ jobs:
         run: echo 'sem-skip applied — no changelog entry.'
 
       # Mint a short-lived (~1 h) installation token for the GitHub App
-      # configured to bypass main's ruleset. We can't use the default
+      # configured to bypass master's ruleset. We can't use the default
       # GITHUB_TOKEN here because branch protection blocks
       # `github-actions[bot]` direct pushes, and the bot identity is not
       # surface-able in the ruleset's bypass list. The App is — via the
@@ -75,7 +75,7 @@ jobs:
       - uses: actions/checkout@v7
         if: steps.sem.outputs.type != 'skip'
         with:
-          ref: main
+          ref: master
           token: ${{ steps.app-token.outputs.token }}
 
       # No project deps needed — cider is installed via `pub global activate`.
@@ -107,6 +107,6 @@ jobs:
           git add CHANGELOG.md
           # [skip ci] now matters: App-token pushes DO trigger workflows
           # (unlike GITHUB_TOKEN pushes, which don't). The marker prevents
-          # this commit from re-triggering the package CI on main.
+          # this commit from re-triggering the package CI on master.
           git commit -m 'Changelog updated [skip ci]'
-          git push origin HEAD:main
+          git push origin HEAD:master
