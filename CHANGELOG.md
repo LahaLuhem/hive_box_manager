@@ -1,4 +1,4 @@
-## [Unreleased]
+## [1.0.0] - 2026-07-22
 ### Added
 - `KeyedBox` and `LazyKeyedBox`: typed key/value boxes with ready-made `get`, `put`, `update`, `delete`, `clear`, and `watch`.
 - `SingleValueBox` and `LazySingleValueBox`: single-slot boxes for one value (a token, one config blob, the theme), reading 0.0.x single-box data in place.
@@ -69,7 +69,7 @@
 - Collection BoxManagers
 - (Lazy) Dual Int Index LazyBoxManager
 
-[Unreleased]: https://github.com/LahaLuhem/hive_box_manager/compare/0.0.8...HEAD
+[1.0.0]: https://github.com/LahaLuhem/hive_box_manager/compare/0.0.8...1.0.0
 [0.0.8]: https://github.com/LahaLuhem/hive_box_manager/compare/0.0.7...0.0.8
 [0.0.7]: https://github.com/LahaLuhem/hive_box_manager/compare/0.0.6...0.0.7
 [0.0.6]: https://github.com/LahaLuhem/hive_box_manager/compare/0.0.5...0.0.6
