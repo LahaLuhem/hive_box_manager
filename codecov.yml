@@ -1,0 +1,15 @@
+# Codecov config for hive_box_manager. Coverage is uploaded from package.yml's
+# `test` job (lcov, OIDC auth). The gate lives here as project + patch status
+# checks rather than an in-CI threshold step, so both land on the PR.
+#
+# Maintainer-only file: excluded from the published tarball via .pubignore,
+# like the rest of the CI config. Linted as YAML by linterpol's `ryl`.
+coverage:
+  status:
+    project:
+      default:
+        target: 95%      # matches the pre-Codecov floor
+        threshold: 0%    # coverage may not drop below target
+    patch:
+      default:
+        target: 95%      # new or changed lines on a PR must be 95%+ covered
