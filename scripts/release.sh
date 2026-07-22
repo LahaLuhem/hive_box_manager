@@ -57,7 +57,7 @@ else
     exit 1
 fi
 
-MAIN_BRANCH="main"
+MAIN_BRANCH="master"
 
 # Container-based lint checks (tool + args) and the linterpol image tag live in
 # one manifest, shared with .github/workflows/repo.yml so this preflight and CI
@@ -93,7 +93,7 @@ Preflight (all must pass):
   - cider on PATH
   - jq on PATH (reads the lint manifest, .github/lint-checks.json)
   - docker on PATH + daemon running (runs the lint checks via linterpol)
-  - working tree clean, on `main`, in sync with origin/main (fetches first)
+  - working tree clean, on `master`, in sync with origin/master (fetches first)
   - CHANGELOG.md has a non-empty `## Unreleased` (or `## [Unreleased]`) section
   - every check in .github/lint-checks.json clean (via linterpol image)
   - `dart format --output=none --set-exit-if-changed .` clean
@@ -108,7 +108,7 @@ Sequence:
   git commit -m "Prep for release <new>"
   dart pub publish --dry-run                       (validates clean committed state; resets HEAD~1 on fail)
   git tag <new>                                    (lightweight by default; annotated when -m given)
-  git push --atomic origin HEAD:main <new>         (triggers publish.yml)
+  git push --atomic origin HEAD:master <new>       (triggers publish.yml)
 
 Non-interactive example:
   scripts/release.sh patch --yes

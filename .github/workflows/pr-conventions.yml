@@ -7,7 +7,7 @@ on:
     # (branch-name, commit-conventions) re-running on label events is a
     # harmless few seconds of bash.
     types: [opened, synchronize, reopened, labeled, unlabeled]
-    branches: [main]
+    branches: [master]
 
 concurrency:
   group: pr-${{ github.event.pull_request.number }}-conventions

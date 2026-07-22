@@ -2,7 +2,7 @@ name: Repo-wide checks
 
 on:
   pull_request:
-    branches: [main]
+    branches: [master]
 
 concurrency:
   group: pr-${{ github.event.pull_request.number }}-repo
