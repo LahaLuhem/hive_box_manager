@@ -1,0 +1,43 @@
+# Python tooling for the benchmark charts: renders benchmark/reports/*.png from
+# the committed benchmark/results/*.jsonl. Managed by uv (https://docs.astral.sh/uv/):
+#
+#     uv sync --project benchmark/python                 # create .venv, install the pinned stack
+#     uv run --project benchmark/python python plot.py   # regenerate the PNGs
+#     uv run --project benchmark/python ruff check .     # lint
+#     uv run --project benchmark/python ruff format .    # format
+#
+# uv.lock is committed so the charts are reproducible. Maintainer-only: benchmark/
+# is excluded from the pub.dev tarball, so none of this reaches downstream users.
+
+[project]
+name = "hive-box-manager-bench"
+version = "0.1.0"
+description = "Benchmark chart rendering for hive_box_manager."
+requires-python = ">=3.13"
+
+dependencies = [
+    "matplotlib>=3.8,<4.0",
+    # polars (Rust-backed) for the tidy frames; seaborn takes them directly via the dataframe
+    # interchange protocol (0.13+), converting to pandas only at its own boundary.
+    "polars>=1.0,<2.0",
+    # seaborn for the whitegrid theme + multi-series styling; pulls pandas transitively.
+    "seaborn>=0.13,<1.0",
+    # pyarrow backs the polars -> pandas interchange bridge seaborn uses internally.
+    "pyarrow>=25.0.0,<26.0",
+]
+
+[dependency-groups]
+# Maintainer-only linter / formatter. ruff replaces black + flake8 + isort.
+dev = ["ruff>=0.15,<1.0"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+# E pycodestyle, F pyflakes, I isort, B bugbear, UP pyupgrade, SIM simplify, N naming, RUF ruff.
+select = ["E", "F", "I", "B", "UP", "SIM", "N", "RUF"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
