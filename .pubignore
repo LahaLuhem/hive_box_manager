@@ -48,3 +48,7 @@ example/macos/
 example/linux/
 example/windows/
 example/web/
+
+# example/pubspec.lock can't be excluded here: pub always re-includes it in the tarball
+# (verified against the dry-run). It's committed for reproducible example CI + releases, and
+# leaving it in the tarball is harmless.

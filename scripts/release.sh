@@ -90,6 +90,7 @@ Options:
 
 Preflight (all must pass):
   - `dart` resolvable (via `.fvm/flutter_sdk/bin/` if FVM is set up, else PATH)
+  - `flutter` on PATH (regenerates example/pubspec.lock after the version bump)
   - cider on PATH
   - jq on PATH (reads the lint manifest, .github/lint-checks.json)
   - docker on PATH + daemon running (runs the lint checks via linterpol)
@@ -104,7 +105,8 @@ Preflight (all must pass):
 Sequence:
   cider bump <BUMP>                                (pubspec.yaml version → new)
   cider release                                    (CHANGELOG.md ## Unreleased → ## <new> dated today)
-  git add  pubspec.yaml CHANGELOG.md
+  (cd example && flutter pub get)                  (resync example/pubspec.lock to the new parent version)
+  git add  pubspec.yaml CHANGELOG.md example/pubspec.lock
   git commit -m "Prep for release <new>"
   dart pub publish --dry-run                       (validates clean committed state; resets HEAD~1 on fail)
   git tag <new>                                    (lightweight by default; annotated when -m given)
@@ -191,6 +193,17 @@ if ! docker info >/dev/null 2>&1; then
     exit 1
 fi
 log 'docker available (lint checks run via linterpol).'
+
+# example/pubspec.yaml uses `path: ../`, so example/pubspec.lock records the parent
+# version and must be regenerated after the bump; otherwise a later `flutter pub get`
+# (CI publish, pana, an IDE) rewrites the committed lock and trips a "modified
+# checked-in file" complaint during `dart pub publish`.
+if ! command -v flutter >/dev/null 2>&1; then
+    err 'flutter not on PATH (needed to regenerate example/pubspec.lock at release time).'
+    err "Install: brew install --cask flutter, or run 'fvm install' from the project root."
+    exit 1
+fi
+log 'flutter available.'
 
 # ---------------------------------------------------------------------------
 # Preflight: git state
@@ -352,11 +365,12 @@ cat <<PLAN
 Will execute, in order:
   1. cider bump ${BUMP}                                    (pubspec.yaml: ${current_version} → ${new_version})
   2. cider release                                         (CHANGELOG.md: ## Unreleased → ## ${new_version} [dated today])
-  3. git add  pubspec.yaml CHANGELOG.md
-  4. git commit -m "Prep for release ${new_version}"
-  5. dart pub publish --dry-run                            (validate clean committed state; reset HEAD~1 on failure)
-  6. git tag ${new_version}                                ${tag_kind_note}
-  7. git push --atomic origin HEAD:${MAIN_BRANCH} ${new_version}   (triggers .github/workflows/publish.yml)
+  3. (cd example && flutter pub get)                       (resync example/pubspec.lock to ${new_version})
+  4. git add  pubspec.yaml CHANGELOG.md example/pubspec.lock
+  5. git commit -m "Prep for release ${new_version}"
+  6. dart pub publish --dry-run                            (validate clean committed state; reset HEAD~1 on failure)
+  7. git tag ${new_version}                                ${tag_kind_note}
+  8. git push --atomic origin HEAD:${MAIN_BRANCH} ${new_version}   (triggers .github/workflows/publish.yml)
 
 publish.yml will then build & publish ${new_version} to pub.dev via OIDC.
 PLAN
@@ -404,8 +418,8 @@ trap '
     rc=$?
     case "$cider_phase" in
         1)
-            printf "[release] failure mid-release — restoring pubspec.yaml + CHANGELOG.md from HEAD\n" >&2
-            git checkout HEAD -- pubspec.yaml CHANGELOG.md 2>/dev/null || true
+            printf "[release] failure mid-release — restoring pubspec.yaml + CHANGELOG.md + example/pubspec.lock from HEAD\n" >&2
+            git checkout HEAD -- pubspec.yaml CHANGELOG.md example/pubspec.lock 2>/dev/null || true
             ;;
         2)
             printf "[release] failure post-commit — git reset --hard HEAD~1 to drop the prep commit\n" >&2
@@ -428,8 +442,17 @@ fi
 step 'cider release'
 cider release
 
-step 'git add pubspec.yaml CHANGELOG.md'
-git add pubspec.yaml CHANGELOG.md
+# Resync example/pubspec.lock to the freshly-bumped parent version. example/pubspec.yaml
+# uses `path: ../`, so the lockfile records the parent's version at resolve time. Without
+# this, the committed lock still references the previous version and the next `flutter pub
+# get` in the pipeline (CI publish, pana, an IDE) rewrites it, tripping a "modified
+# checked-in file" complaint during `dart pub publish`. Regenerating + staging it here
+# folds the resync into the same prep commit so the tree stays consistent.
+step 'flutter pub get (example/) — resync example/pubspec.lock to new parent version'
+(cd example && flutter pub get)
+
+step 'git add pubspec.yaml CHANGELOG.md example/pubspec.lock'
+git add pubspec.yaml CHANGELOG.md example/pubspec.lock
 
 step "git commit -m \"Prep for release ${new_version}\""
 git commit -m "Prep for release ${new_version}"
