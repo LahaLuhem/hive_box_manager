@@ -23,9 +23,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-dart
-      # `.` covers lib, test, and the single-file example — all pure Dart, all
-      # resolvable from the root package, so no `--no-example` scoping needed.
-      - run: dart --no-version-check analyze .
+      # Scope to the pure-Dart surface; the Flutter example is analysed in its own
+      # workflow (it needs the Flutter SDK, absent here).
+      - run: dart --no-version-check analyze lib test benchmark
 
   deps:
     name: Dependency validator
