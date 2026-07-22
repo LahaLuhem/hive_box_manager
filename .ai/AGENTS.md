@@ -61,8 +61,8 @@ hive_box_manager/
 │       ├── event/                  TypedBoxEvent / LazyTypedBoxEvent
 │       ├── observer/               BoxObserver + sinks/
 │       └── query/                  Internal query-index strategy + the scan implementation
-├── test/                           unit/ mirrors lib/src/; integration/ (incl. hive_ce_pins/);
-│                                   support/ (bdd vocabulary, fakes, mocks)
+├── test/                           unit/ + integration/ mirror lib/src/ (box/ by family; hive_ce_pins/);
+│                                   support/ (bdd + mocks at root; doubles/, codecs/, fixtures/, pins/)
 ├── benchmark/                      Maintainer tooling: key-codec matrix + wrapper-overhead lane
 ├── example/                        Flutter demo app (own pubspec; CI wiring is a tracked follow-up)
 ├── analysis_options.yaml           Strict-mode + opinionated lints

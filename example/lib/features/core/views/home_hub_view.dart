@@ -1,12 +1,13 @@
 import 'package:cupertino_ui/cupertino_ui.dart' show CupertinoPageRoute;
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/widgets.dart';
+import 'package:material_ui/material_ui.dart' show MaterialPageRoute;
 import 'package:platform_adaptive_widgets/platform_adaptive_widgets.dart';
 import 'package:platform_icons/platform_icons.dart';
 
-import '../../dual_query/dual_query_view.dart';
-import '../../iterable/iterable_view.dart';
-import '../../keyed/keyed_view.dart';
-import '../../single_value/single_value_view.dart';
+import '/features/dual_query/dual_query_view.dart';
+import '/features/iterable/iterable_view.dart';
+import '/features/keyed/keyed_view.dart';
+import '/features/single_value/single_value_view.dart';
 
 /// The demo hub: one tile per box family.
 class HomeHubView extends StatelessWidget {
@@ -49,17 +50,17 @@ class HomeHubView extends StatelessWidget {
 }
 
 class _DemoTile extends StatelessWidget {
+  final PlatformIcons icon;
+  final String title;
+  final String subtitle;
+  final WidgetBuilder builder;
+
   const _DemoTile({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.builder,
   });
-
-  final PlatformIcons icon;
-  final String title;
-  final String subtitle;
-  final WidgetBuilder builder;
 
   @override
   Widget build(BuildContext context) => PlatformListTile(

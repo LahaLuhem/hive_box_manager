@@ -11,16 +11,16 @@ import 'package:hive_ce/hive.dart';
 
 void main() {
   late Directory tempDir;
-  late SingleValueViewModel vm;
+  late SingleValueViewModel sut;
 
   setUp(() {
     tempDir = Directory.systemTemp.createTempSync('hbm_example_single_');
     Hive.init(tempDir.path);
-    vm = SingleValueViewModel();
+    sut = SingleValueViewModel();
   });
 
   tearDown(() async {
-    vm.onUnmount();
+    sut.onUnmount();
     await Hive.close();
     tempDir.deleteSync(recursive: true);
   });
@@ -36,13 +36,13 @@ void main() {
       .example(val('token', 'påss wörd 🔑'))
       .run((ctx) async {
         final token = ctx.example.val('token') as String;
-        vm.init();
+        sut.init();
 
-        vm.tokenController.text = token;
-        await vm.onSavePressed();
+        sut.tokenController.text = token;
+        await sut.onSavePressed();
         await pumpEventQueue();
 
-        check(vm.current.value.toNullable()).equals(token);
+        check(sut.current.value.toNullable()).equals(token);
       });
 
   Bdd(feature)
@@ -53,14 +53,14 @@ void main() {
       .example(val('token', 'secret-123'))
       .run((ctx) async {
         final token = ctx.example.val('token') as String;
-        vm.init();
-        vm.tokenController.text = token;
-        await vm.onSavePressed();
+        sut.init();
+        sut.tokenController.text = token;
+        await sut.onSavePressed();
         await pumpEventQueue();
 
-        await vm.onClearPressed();
+        await sut.onClearPressed();
         await pumpEventQueue();
 
-        check(vm.current.value.isNone()).isTrue();
+        check(sut.current.value.isNone()).isTrue();
       });
 }

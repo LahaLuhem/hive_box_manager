@@ -1,17 +1,18 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/widgets.dart';
+import 'package:material_ui/material_ui.dart' show IconButton;
 import 'package:platform_adaptive_widgets/platform_adaptive_widgets.dart';
 import 'package:platform_icons/platform_icons.dart';
 import 'package:pmvvm/pmvvm.dart';
 
-import '../core/widgets/demo_intro.dart';
-import '../core/widgets/demo_scaffold.dart';
+import '/features/core/widgets/demo_intro.dart';
+import '/features/core/widgets/demo_scaffold.dart';
 import 'keyed_view_model.dart';
 
 class KeyedView extends StatelessWidget {
   const KeyedView({super.key});
 
   @override
-  Widget build(BuildContext context) => MVVM<KeyedViewModel>.builder(
+  Widget build(BuildContext context) => MVVM.builder(
     viewModel: KeyedViewModel(),
     viewBuilder: (context, vm) => DemoScaffold(
       title: 'KeyedBox (eager)',
@@ -24,8 +25,9 @@ class KeyedView extends StatelessWidget {
                 'writes are Tasks run at the edge.',
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const .symmetric(horizontal: 16, vertical: 8),
             child: Row(
+              spacing: 8,
               children: [
                 Expanded(
                   child: PlatformTextField(
@@ -34,7 +36,6 @@ class KeyedView extends StatelessWidget {
                     onSubmitted: (_) => vm.onAddPressed(),
                   ),
                 ),
-                const SizedBox(width: 8),
                 PlatformButton.icon(
                   onPressed: vm.onAddPressed,
                   icon: const PlatformIcon(PlatformIcons.add, size: 18),
@@ -43,35 +44,28 @@ class KeyedView extends StatelessWidget {
               ],
             ),
           ),
-          Expanded(child: _EntryList(vm: vm)),
+          Expanded(
+            child: ValueListenableBuilder(
+              valueListenable: vm.entries,
+              builder: (_, entries, _) => ListView.builder(
+                itemCount: entries.length,
+                itemBuilder: (_, index) {
+                  final (key, value) = entries[index];
+
+                  return PlatformListTile(
+                    title: Text(value),
+                    subtitle: Text('key $key'),
+                    trailing: IconButton(
+                      icon: const PlatformIcon(PlatformIcons.delete, size: 18),
+                      onPressed: () => vm.onDeletePressed(key),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
         ],
       ),
-    ),
-  );
-}
-
-class _EntryList extends StatelessWidget {
-  const _EntryList({required this.vm});
-
-  final KeyedViewModel vm;
-
-  @override
-  Widget build(BuildContext context) => ValueListenableBuilder<List<(int, String)>>(
-    valueListenable: vm.entries,
-    builder: (context, entries, _) => ListView.builder(
-      itemCount: entries.length,
-      itemBuilder: (context, index) {
-        final (key, value) = entries[index];
-
-        return PlatformListTile(
-          title: Text(value),
-          subtitle: Text('key $key'),
-          trailing: IconButton(
-            icon: const PlatformIcon(PlatformIcons.delete, size: 18),
-            onPressed: () => vm.onDeletePressed(key),
-          ),
-        );
-      },
     ),
   );
 }

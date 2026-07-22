@@ -18,22 +18,15 @@ final class KeyedViewModel extends ViewModel {
 
   late final Future<void> _opened;
 
-  /// Completes once the box is open and the first listing is loaded; awaitable by tests (and
-  /// by anything that wants a splash gate).
-  Future<void> get ready => _opened;
-
   @override
   void init() {
     _opened = _open();
     unawaited(_opened);
   }
 
-  @override
-  void onUnmount() {
-    valueController.dispose();
-    entries.dispose();
-    super.onUnmount();
-  }
+  /// Completes once the box is open and the first listing is loaded; awaitable by tests (and
+  /// by anything that wants a splash gate).
+  Future<void> get ready => _opened;
 
   Future<void> onAddPressed() async {
     final box = _box;
@@ -70,5 +63,13 @@ final class KeyedViewModel extends ViewModel {
     entries
       ..clear()
       ..addAll(box.keys.map((key) => (key, box.getOr(key, '?'))));
+  }
+
+  @override
+  void onUnmount() {
+    valueController.dispose();
+    entries.dispose();
+
+    super.onUnmount();
   }
 }

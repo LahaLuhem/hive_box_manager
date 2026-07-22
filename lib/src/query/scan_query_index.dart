@@ -1,5 +1,5 @@
-import '../codec/dual/dual_key_codec.dart';
-import '../core/utils/no_op.dart';
+import '/src/codec/dual/dual_key_codec.dart';
+import '/src/core/utils/no_op.dart';
 import 'query_index_strategy.dart';
 
 /// The 1.0 reverse-query strategy: a full decode-and-filter scan over the live key set.

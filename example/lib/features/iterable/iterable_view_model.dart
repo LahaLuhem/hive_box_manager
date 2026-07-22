@@ -14,19 +14,13 @@ final class IterableViewModel extends ViewModel {
   final observer = LogPanelObserver();
   final tagController = TextEditingController();
   final tags = ListNotifier<String>();
-
-  static const listKeys = [1, 2, 3];
-
   final _selectedKey = ValueNotifier(listKeys.first);
-  ValueListenable<int> get selectedKey => _selectedKey;
 
   IterableBox<String, int>? _box;
 
   late final Future<void> _opened;
 
-  /// Completes once the box is open and the first listing is loaded; awaitable by tests (and
-  /// by anything that wants a splash gate).
-  Future<void> get ready => _opened;
+  static const listKeys = [1, 2, 3];
 
   @override
   void init() {
@@ -34,13 +28,11 @@ final class IterableViewModel extends ViewModel {
     unawaited(_opened);
   }
 
-  @override
-  void onUnmount() {
-    tagController.dispose();
-    tags.dispose();
-    _selectedKey.dispose();
-    super.onUnmount();
-  }
+  ValueListenable<int> get selectedKey => _selectedKey;
+
+  /// Completes once the box is open and the first listing is loaded; awaitable by tests (and
+  /// by anything that wants a splash gate).
+  Future<void> get ready => _opened;
 
   void onKeySelected(int? key) {
     if (key == null) return;
@@ -83,5 +75,14 @@ final class IterableViewModel extends ViewModel {
     tags
       ..clear()
       ..addAll(box.getOr(_selectedKey.value));
+  }
+
+  @override
+  void onUnmount() {
+    tagController.dispose();
+    tags.dispose();
+    _selectedKey.dispose();
+
+    super.onUnmount();
   }
 }

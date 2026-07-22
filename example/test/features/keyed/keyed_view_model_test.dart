@@ -10,16 +10,16 @@ import 'package:hive_ce/hive.dart';
 
 void main() {
   late Directory tempDir;
-  late KeyedViewModel vm;
+  late KeyedViewModel sut;
 
   setUp(() {
     tempDir = Directory.systemTemp.createTempSync('hbm_example_keyed_');
     Hive.init(tempDir.path);
-    vm = KeyedViewModel();
+    sut = KeyedViewModel();
   });
 
   tearDown(() async {
-    vm.onUnmount();
+    sut.onUnmount();
     await Hive.close();
     tempDir.deleteSync(recursive: true);
   });
@@ -35,14 +35,14 @@ void main() {
       .run((ctx) async {
         final typedValue = ctx.example.val('typed value') as String;
         final storedKey = ctx.example.val('stored key') as int;
-        vm.init();
-        await vm.ready;
+        sut.init();
+        await sut.ready;
 
-        vm.valueController.text = typedValue;
-        await vm.onAddPressed();
+        sut.valueController.text = typedValue;
+        await sut.onAddPressed();
 
-        check(vm.entries.value).deepEquals([(storedKey, typedValue)]);
-        check(vm.observer.entries.value.any((line) => line.contains('wrote'))).isTrue();
+        check(sut.entries.value).deepEquals([(storedKey, typedValue)]);
+        check(sut.observer.entries.value.any((line) => line.contains('wrote'))).isTrue();
       });
 
   Bdd(feature)
@@ -61,16 +61,16 @@ void main() {
         final secondValue = ctx.example.val('second value') as String;
         final deletedKey = ctx.example.val('deleted key') as int;
         final remainingKey = ctx.example.val('remaining key') as int;
-        vm.init();
-        await vm.ready;
-        vm.valueController.text = firstValue;
-        await vm.onAddPressed();
-        vm.valueController.text = secondValue;
-        await vm.onAddPressed();
+        sut.init();
+        await sut.ready;
+        sut.valueController.text = firstValue;
+        await sut.onAddPressed();
+        sut.valueController.text = secondValue;
+        await sut.onAddPressed();
 
-        await vm.onDeletePressed(deletedKey);
+        await sut.onDeletePressed(deletedKey);
 
-        check(vm.entries.value).deepEquals([(remainingKey, secondValue)]);
+        check(sut.entries.value).deepEquals([(remainingKey, secondValue)]);
       });
 
   Bdd(feature)
@@ -82,12 +82,12 @@ void main() {
       .example(val('typed value', ''))
       .run((ctx) async {
         final typedValue = ctx.example.val('typed value') as String;
-        vm.init();
-        await vm.ready;
+        sut.init();
+        await sut.ready;
 
-        vm.valueController.text = typedValue;
-        await vm.onAddPressed();
+        sut.valueController.text = typedValue;
+        await sut.onAddPressed();
 
-        check(vm.entries.value).isEmpty();
+        check(sut.entries.value).isEmpty();
       });
 }

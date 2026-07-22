@@ -1,9 +1,9 @@
+import 'package:flutter/widgets.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
-import 'package:material_ui/material_ui.dart';
 import 'package:platform_adaptive_widgets/platform_adaptive_widgets.dart';
 
-import 'features/core/data/constants/demo_theme.dart';
-import 'features/core/views/home_hub_view.dart';
+import '/features/core/data/constants/demo_theme.dart';
+import '/features/core/views/home_hub_view.dart';
 
 Future<void> main() async {
   // Engine setup stays hive_ce's one-liner; every box open below goes through the façades.

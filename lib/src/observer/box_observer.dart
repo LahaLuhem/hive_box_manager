@@ -1,4 +1,4 @@
-import '../core/utils/no_op.dart';
+import '/src/core/utils/no_op.dart';
 
 /// Semantic observer over one or many boxes: extend it and override only the events you care about.
 ///

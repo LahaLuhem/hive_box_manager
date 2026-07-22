@@ -5,7 +5,7 @@ import 'package:listenable_collections/listenable_collections.dart';
 import 'package:material_ui/material_ui.dart' show TextEditingController;
 import 'package:pmvvm/pmvvm.dart';
 
-import '../core/observers/log_panel_observer.dart';
+import '/features/core/observers/log_panel_observer.dart';
 
 /// Drives the dual-key demo: a lazy (user, day)-addressed box, seeded as a grid and reverse
 /// queried by either part through the folded O(K) scan.
@@ -14,26 +14,25 @@ final class DualQueryViewModel extends ViewModel {
   final partController = TextEditingController(text: '1');
   final results = ListNotifier<String>();
 
-  static const gridSide = 3;
-
   late final LazyDualKeyBox<String, int, int> _box;
+
+  static const gridSide = 3;
 
   @override
   void init() {
     _box = LazyDualKeyBox<String, int, int>('demo_grid', observer: observer);
   }
 
-  @override
-  void onUnmount() {
-    partController.dispose();
-    results.dispose();
-    super.onUnmount();
-  }
+  Future<void> onSeedPressed() {
+    final axis = Iterable.generate(gridSide, (i) => i + 1);
+    final coords = axis.expand((user) => axis.map((day) => (user, day)));
 
-  Future<void> onSeedPressed() => _box.putAll({
-    for (var user = 1; user <= gridSide; user++)
-      for (var day = 1; day <= gridSide; day++) (user, day): 'user $user / day $day',
-  }).run();
+    return _box
+        .putAll(
+          Map.fromIterables(coords, coords.map((coord) => 'user ${coord.$1} / day ${coord.$2}')),
+        )
+        .run();
+  }
 
   Future<void> onQueryByUserPressed() async {
     final matches = await _box.queryByPrimary(_enteredPart).run();
@@ -52,4 +51,12 @@ final class DualQueryViewModel extends ViewModel {
   void _showResults(List<String> matches) => results
     ..clear()
     ..addAll(matches);
+
+  @override
+  void onUnmount() {
+    partController.dispose();
+    results.dispose();
+
+    super.onUnmount();
+  }
 }

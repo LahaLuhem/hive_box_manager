@@ -48,9 +48,9 @@ Future<void> main(List<String> args) async {
 
   switch (mode) {
     case 'put':
-      await runPut(keyKind, n, single: true);
+      await runPut(keyKind, n, isSingle: true);
     case 'putall':
-      await runPut(keyKind, n, single: false);
+      await runPut(keyKind, n, isSingle: false);
     case 'prep':
       await runPrep(keyKind, n, workDir);
     case 'open':
@@ -89,7 +89,7 @@ Object keyFor(String keyKind, (int, int) pair) => switch (keyKind) {
 
 void emit(Map<String, Object?> record) => stdout.writeln(jsonEncode(record));
 
-Future<void> runPut(String keyKind, int n, {required bool single}) async {
+Future<void> runPut(String keyKind, int n, {required bool isSingle}) async {
   final dir = Directory.systemTemp.createTempSync('hbm_bench_put_');
   Hive.init(dir.path);
   // Materialised: a lazy mapped Iterable re-runs keyFor on every traversal, which would both
@@ -100,7 +100,7 @@ Future<void> runPut(String keyKind, int n, {required bool single}) async {
   // Immediately-consumed materialisation: the putAll batch, built outside the timed window.
   final batch = {for (final key in keys) key: 'v'};
   final watch = Stopwatch()..start();
-  if (single) {
+  if (isSingle) {
     // Sequential by contract: this lane measures per-put round-trip latency; mapping to
     // futures + .wait would fire every put concurrently and measure throughput instead.
     for (final key in keys) {
@@ -115,7 +115,7 @@ Future<void> runPut(String keyKind, int n, {required bool single}) async {
   await Hive.close();
   dir.deleteSync(recursive: true);
   emit({
-    'mode': single ? 'put' : 'putall',
+    'mode': isSingle ? 'put' : 'putall',
     'keyKind': keyKind,
     'n': n,
     'boxKind': 'eager',

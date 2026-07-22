@@ -1,9 +1,9 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:hive_ce/hive.dart';
 
-import '../../codec/key/key_codec.dart';
-import '../../event/typed_box_event.dart';
-import '../../observer/box_observer.dart';
+import '/src/codec/key/key_codec.dart';
+import '/src/event/typed_box_event.dart';
+import '/src/observer/box_observer.dart';
 import '../raw_key_gate.dart';
 import '../value_codec/value_codec.dart';
 

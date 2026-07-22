@@ -14,9 +14,7 @@ import '../core/observers/log_panel_observer.dart';
 final class SingleValueViewModel extends ViewModel {
   final observer = LogPanelObserver();
   final tokenController = TextEditingController();
-
   final _current = ValueNotifier<Option<String>>(const None());
-  ValueListenable<Option<String>> get current => _current;
 
   late final LazySingleValueBox<String> _box;
   StreamSubscription<Option<String>>? _subscription;
@@ -38,13 +36,7 @@ final class SingleValueViewModel extends ViewModel {
     unawaited(_box.get().run().then((value) => _current.value = value));
   }
 
-  @override
-  void onUnmount() {
-    unawaited(_subscription?.cancel());
-    tokenController.dispose();
-    _current.dispose();
-    super.onUnmount();
-  }
+  ValueListenable<Option<String>> get current => _current;
 
   Future<void> onSavePressed() async {
     final token = tokenController.text.trim();
@@ -55,4 +47,13 @@ final class SingleValueViewModel extends ViewModel {
   }
 
   Future<void> onClearPressed() => _box.clear().run();
+
+  @override
+  void onUnmount() {
+    unawaited(_subscription?.cancel());
+    tokenController.dispose();
+    _current.dispose();
+
+    super.onUnmount();
+  }
 }

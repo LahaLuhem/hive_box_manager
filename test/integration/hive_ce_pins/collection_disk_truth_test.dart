@@ -19,8 +19,8 @@ import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
 import '../../support/bdd.dart';
-import '../../support/person.dart';
-import '../../support/release_probe_runner.dart';
+import '../../support/fixtures/person.dart';
+import '../../support/pins/release_probe_runner.dart';
 
 void main() {
   const alice = Person('alice', 30);
