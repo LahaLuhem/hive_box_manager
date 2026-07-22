@@ -78,12 +78,13 @@ jobs:
       # Upload to Codecov. Project + patch coverage are enforced as PR status
       # checks configured in codecov.yml, so there's no in-CI threshold step
       # here (mark those checks required on master to actually block merges).
-      # OIDC auth (no CODECOV_TOKEN secret); the Codecov GitHub App must be
-      # installed on the repo. `fail_ci_if_error` makes a broken upload a red
-      # job instead of a silently lost report.
+      # Token auth via the CODECOV_TOKEN secret (the repo upload token from
+      # Codecov's settings). The OIDC path left uploads accepted-but-unprocessed
+      # (0 recorded, "missing head report"). `fail_ci_if_error` makes a broken
+      # upload a red job, not a silent loss — so add the secret before merging.
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7
         with:
-          use_oidc: true
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage/lcov.info
           fail_ci_if_error: true
