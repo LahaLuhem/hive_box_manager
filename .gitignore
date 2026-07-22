@@ -23,6 +23,9 @@ coverage/
 build/
 # If you're building an application, you may want to check-in your pubspec.lock
 pubspec.lock
+# The example IS an app: commit its lock so its Flutter CI and releases resolve to the
+# same versions. Without it a floated transitive (e.g. material_ui 0.0.2) breaks the build.
+!example/pubspec.lock
 
 # Directory created by dartdoc
 # If you don't generate documentation locally you can remove this line.
