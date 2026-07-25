@@ -11,11 +11,51 @@ Maintainer tooling, excluded from the published tarball. Two lanes live here:
   under-5% target. The eager read path carries `vm:prefer-inline` pragmas exactly because this
   lane holds it to raw speed.
 
+- **Iterable lane** (`iterable_bench.dart` + `iterable_driver.sh`): `IterableBox` against two
+  hand-rolled baselines, across two element types and the elements-per-key axis.
+
 Only operations with an **exact** raw counterpart live in the overhead lane, so its percentages
 mean "what the wrapper costs" and nothing else. `IterableBox` and `DualKeyBox` are deliberately
 out: raw hive_ce has no list-valued or two-part-keyed box, so their baseline has to be hand-rolled
 code rather than one call. That is a different question, asked in the matrix lane (dual) and in the
 iterable lane.
+
+## The iterable lane's two baselines
+
+"Versus raw hive_ce" isn't one question here, because raw hive_ce has no list-valued box. The
+baseline is code a consumer writes, and there are two versions of it:
+
+| impl | what it does |
+|---|---|
+| `naive` | `box.get(k) as List<T>`, `box.put(k, list)`. What you write first |
+| `correct` | plus `.cast<T>()` on read and a defensive `List.from` on write. What you write after being bitten |
+| `facade` | `IterableBox` |
+
+`facade` vs `correct` prices the wrapper. `facade` vs `naive` prices **safety**. Reporting one
+without the other answers the wrong question.
+
+### Whether `naive` is broken depends on the element type
+
+Probed against hive_ce 2.19.3, and this is narrower than `IterableBox`'s own docs used to claim:
+
+- **`List<String>`** reads back from disk as `List<String>`. The engine specialises lists of
+  primitives, so the naive cast survives a restart and hand-rolling is genuinely fine.
+- **`List<Person>`** (adapter-registered custom type) reads back as `List<dynamic>`, so the naive
+  cast throws `TypeError` on the first post-restart read. That is upstream #150, pinned in
+  [`collection_disk_truth_test.dart`](../test/integration/hive_ce_pins/collection_disk_truth_test.dart),
+  and the reason the box exists.
+
+So the lane runs both element types, and the read lanes record the throw as the result instead of
+dying on it: "this baseline cannot read its own data back" is the measurement. It lands on exactly
+one of the two axes.
+
+### Watch the seeding
+
+`add` and `remove` seed a box before timing, and the seed must build **a distinct list per key in
+every impl**. Raw hive_ce will happily store one list instance under 200 keys; the façade's `putAll`
+materialises a private copy per key. Seed them differently and the RSS column reports that setup
+difference as a wrapper cost, which is exactly the false 2x this lane produced on its first run
+before the seeding was equalised and the RSS window moved after the seed.
 
 > **The overhead lane needs a quiet host.** It resolves tens of nanoseconds per op, so background
 > load doesn't add noise, it drowns the signal. Passes taken on a laptop with two JetBrains IDEs
@@ -104,6 +144,14 @@ uv run --project benchmark/python python overhead.py
 
 It prints both medians per lane, the per-op delta, and flags anything at or over the 5% target.
 
+## Running the iterable lane
+
+```sh
+dart compile exe benchmark/iterable_bench.dart -o /tmp/hbm_iterable
+benchmark/iterable_driver.sh /tmp/hbm_iterable benchmark/results/results_iterable.jsonl 5
+uv run --project benchmark/python python iterable.py
+```
+
 ## Running the matrix
 
 ```sh
@@ -130,6 +178,7 @@ Raw JSONL backing the top-level README's performance tables and codec-crossover 
 | `results_1m.jsonl` | matrix, 1M open-only |
 | `results_jit.jsonl` | matrix, JIT: ordering sanity, never for decisions |
 | `results_overhead.jsonl` | wrapper overhead, AOT: the source of the README's percentages |
+| `results_iterable.jsonl` | iterable lane, AOT: three impls x two element types x list length |
 
 Environment for all four: macOS 15.7.7 on Apple Silicon (arm64), Dart 3.12.2, hive_ce 2.19.3,
 2026-07-25. Values were a constant 1 byte by design, isolating key cost; web performance is

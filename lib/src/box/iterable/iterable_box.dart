@@ -19,10 +19,15 @@ import 'list_edits.dart';
 
 /// A typed, fpdart-first façade over an **eager** hive box storing a `List` of [T] per [K] key.
 ///
-/// This variant exists because of a real engine limitation: hive reifies collections from disk
-/// as `List<dynamic>` whatever the write-side element type, so a naive `Box<List<Person>>`
-/// opens fine and then throws on the first post-restart read. Here the element type is restored
-/// with a cast at the read boundary instead, and `dynamic` never reaches this surface.
+/// This variant exists because of a real engine limitation: hive reifies a collection of an
+/// **adapter-registered** type from disk as `List<dynamic>`, so a naive `Box<List<Person>>` opens
+/// fine and then throws on the first post-restart read. Here the element type is restored with a
+/// cast at the read boundary instead, and `dynamic` never reaches this surface.
+///
+/// Lists of primitives are the exception: hive specialises those, so a `List<String>` does read
+/// back as `List<String>` and a hand-rolled cast would survive. The benchmark's iterable lane
+/// measures both axes, and the cast costs about 190 ns per [get] either way (fixed per call, not
+/// per element), so this surface does not branch on it.
 ///
 /// List semantics only: order-preserving, duplicates allowed. Sets, maps, and nested
 /// collections of custom types are deliberately out (the outer cast could not fix inner
@@ -31,16 +36,15 @@ import 'list_edits.dart';
 /// The aliasing contract, both directions:
 ///
 /// - **inward**: [put], [putAll], and [update]'s returns are materialised into private copies,
-///   so mutating your original collection afterwards never reaches the box (and lazy iterables
-///   become the plain lists hive requires at write time);
-/// - **outward**: every list this box hands you ([get], [getOr], [values], [update]'s return,
-///   watch-event payloads) is an unmodifiable zero-copy view; absence is still [Option], and an
+///   so mutating your original collection afterwards never reaches the box
+///   (and lazy iterables become the plain lists hive requires at write time).
+/// - **outward**: every list this box hands you ([get], [getOr], [values], [update]'s return, watch-event payloads) is an unmodifiable zero-copy view; absence is still [Option], and an
 ///   empty stored list reads `Some(empty)`, never `None`.
 ///
-/// Everything else matches [KeyedBox]: eager reads are synchronous and disk-free, effects are
-/// lazy [Task]s, keys go through a [KeyCodec] (`int` / `String` default to identity codecs),
-/// the write path gates raw keys with a synchronous [ArgumentError], engine failures surface
-/// unwrapped inside tasks, and [close] / [deleteFromDisk] are terminal.
+/// Everything else matches [KeyedBox]: eager reads are synchronous and disk-free, effects are lazy
+/// [Task]s, keys go through a [KeyCodec] (`int` / `String` default to identity codecs), the write
+/// path gates raw keys with a synchronous [ArgumentError], engine failures surface unwrapped inside
+/// tasks, and [close] / [deleteFromDisk] are terminal.
 ///
 /// `interface class`: implement it for test fakes; extending is reserved to this package.
 interface class IterableBox<T extends Object, K extends Object> {
@@ -74,16 +78,15 @@ interface class IterableBox<T extends Object, K extends Object> {
 
   /// Reads the list under [key], falling back to an empty list when absent: the natural default
   /// for a collection, so there is no fallback parameter. Absent and stored-empty read the same
-  /// here; use [get] to distinguish them.
+  /// here. Use [get] to distinguish them.
   List<T> getOr(K key) => _engine.get(key).getOrElse(List.empty);
 
   /// Whether [key] is stored right now.
   bool contains(K key) => _engine.contains(key);
 
   /// Stores [values] under [key] when run, materialised into a private fixed-length copy:
-  /// hive rejects non-`List` iterables at write time, and the copy keeps your original
-  /// collection yours. Throws a synchronous [ArgumentError] at the call site when the encoded
-  /// key leaves hive's raw domain, exactly like [KeyedBox.put].
+  /// hive rejects non-`List` iterables at write time, and the copy keeps your original collection yours.
+  /// Throws a synchronous [ArgumentError] at the call site when the encoded key leaves hive's raw domain, exactly like [KeyedBox.put].
   Task<Unit> put(K key, Iterable<T> values) => _engine.put(key, materialisedCopyOf(values));
 
   /// Stores every entry of [entries] in one batch when run, each list materialised as in [put].
@@ -91,14 +94,12 @@ interface class IterableBox<T extends Object, K extends Object> {
   Task<Unit> putAll(Map<K, Iterable<T>> entries) =>
       _engine.putAll(entries.map((key, values) => MapEntry(key, materialisedCopyOf(values))));
 
-  /// Rewrites the list under [key] through [update] when run, mirroring [Map.update]: an absent
-  /// key is seeded by [ifAbsent], and with no [ifAbsent] the task fails with an [ArgumentError]
-  /// at run time.
+  /// Rewrites the list under [key] through [update] when run, mirroring [Map.update]: an absent key
+  /// is seeded by [ifAbsent], and with no [ifAbsent] the task fails with an [ArgumentError] at run time.
   ///
-  /// [update] receives the unmodifiable view (build and return a new list; in-place mutation is
-  /// impossible by construction), returns are materialised into private copies like [put], and
-  /// the task's result is the unmodifiable view of the new list. A read-modify-write: O(n) in
-  /// the stored list.
+  /// [update] receives the unmodifiable view (build and return a new list. In-place mutation is impossible by construction),
+  /// returns are materialised into private copies like [put], and the task's result is the unmodifiable
+  /// view of the new list. A read-modify-write: O(n) in the stored list.
   Task<List<T>> update(
     K key,
     List<T> Function(List<T> values) update, {
