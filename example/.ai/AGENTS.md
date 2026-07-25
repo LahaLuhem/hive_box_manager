@@ -35,7 +35,7 @@ panel from `features/core/`:
 |---|---|---|
 | `keyed` | eager `KeyedBox<String, int>` | CRUD listing, sync `Option` reads, `Task` writes |
 | `single_value` | lazy `LazySingleValueBox<String>` + `HiveAesCipher` | one encrypted token, state fed by `watch()` |
-| `iterable` | eager `IterableBox<String, int>` | tag lists per key, `add` / `remove` sugar, unmodifiable views |
+| `list_box` | eager `ListBox<String, int>` | tag lists per key, `add` / `remove` sugar, unmodifiable views |
 | `dual_query` | lazy `LazyDualKeyBox<String, int, int>` | (user, day) composite keys, reverse queries by either part |
 
 Demo values are primitives (`String`) on purpose, so the example needs no `TypeAdapter` and no

@@ -1,4 +1,4 @@
-/// @docImport '/src/box/iterable/lazy_iterable_box.dart';
+/// @docImport '/src/box/list/lazy_list_box.dart';
 /// @docImport 'single_value_box.dart';
 library;
 
@@ -32,7 +32,7 @@ import 'single_value_slot_key.dart';
 /// The sync inspectors ([length], [isEmpty], [isNotEmpty]) need the keystore, which exists only
 /// once the box has opened: before the first effect (or [ensureInitialised]) they throw a
 /// [StateError] naming the fix. Storing a collection as [T] re-opens the disk-reification trap
-/// this package exists to guard; reach for [LazyIterableBox] instead.
+/// this package exists to guard; reach for [LazyListBox] instead.
 ///
 /// Throw taxonomy: whatever the engine itself throws for surfaces unwrapped inside the returned
 /// [Task] when it runs. [close] and [deleteFromDisk] are terminal; closing before first use

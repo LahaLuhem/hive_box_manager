@@ -1,5 +1,5 @@
 /// @docImport '/src/box/keyed/lazy_keyed_box.dart';
-/// @docImport 'iterable_box.dart';
+/// @docImport 'list_box.dart';
 library;
 
 import 'dart:collection';
@@ -23,7 +23,7 @@ import 'list_edits.dart';
 /// each list from disk on demand, so reads are effects ([get] returns a [TaskOption], [getOr]
 /// and [values] return [Task]s). The variant exists because hive reifies collections from disk
 /// as `List<dynamic>` whatever the write-side element type; the element type is restored with a
-/// cast at the read boundary, and `dynamic` never reaches this surface. Prefer [IterableBox]
+/// cast at the read boundary, and `dynamic` never reaches this surface. Prefer [ListBox]
 /// for small, hot collections.
 ///
 /// List semantics only: order-preserving, duplicates allowed. Sets, maps, and nested
@@ -45,7 +45,7 @@ import 'list_edits.dart';
 /// terminal [close] / [deleteFromDisk] with the pre-first-use close no-op.
 ///
 /// `interface class`: implement it for test fakes; extending is reserved to this package.
-interface class LazyIterableBox<T extends Object, K extends Object> {
+interface class LazyListBox<T extends Object, K extends Object> {
   final LazyCrudEngine<List<T>, K> _engine;
 
   /// Wires a box that opens single-flight on first use; construction itself touches nothing.
@@ -57,7 +57,7 @@ interface class LazyIterableBox<T extends Object, K extends Object> {
   /// [keyComparator], [compactionStrategy], and [crashRecovery] pass through to hive_ce
   /// untouched at the eventual open. [observer] hears every event of this box, starting with
   /// that open.
-  LazyIterableBox(
+  LazyListBox(
     String name, {
     KeyCodec<K>? codec,
     HiveCipher? cipher,
@@ -84,7 +84,7 @@ interface class LazyIterableBox<T extends Object, K extends Object> {
 
   /// Wiring is internal: consumers construct via the unnamed constructor (tests use the seam
   /// below).
-  LazyIterableBox._({required this._engine});
+  LazyListBox._({required this._engine});
 
   /// The box name, available before the box ever opens: the observer correlation handle.
   String get name => _engine.name;
@@ -218,18 +218,18 @@ interface class LazyIterableBox<T extends Object, K extends Object> {
   Task<Unit> deleteFromDisk() => _engine.deleteFromDisk();
 }
 
-/// Testing seam: wires a [LazyIterableBox] around [openBox] instead of the real provider, so
+/// Testing seam: wires a [LazyListBox] around [openBox] instead of the real provider, so
 /// unit suites drive the façade against in-memory doubles and scripted opens.
 ///
 /// Same library as the façade on purpose, and deliberately not exported: the barrel's `show`
 /// keeps it out of the public API, so it exists only for suites importing this file directly.
 @visibleForTesting
-LazyIterableBox<T, K> lazyIterableBoxAround<T extends Object, K extends Object>(
+LazyListBox<T, K> lazyListBoxAround<T extends Object, K extends Object>(
   String name,
   Future<LazyBox<Object?>> Function() openBox, {
   KeyCodec<K>? codec,
   BoxObserver? observer,
-}) => LazyIterableBox<T, K>._(
+}) => LazyListBox<T, K>._(
   // Explicit type arguments on purpose; see CODESTYLE #type-safety.
   engine: LazyCrudEngine<List<T>, K>(
     boxName: name,

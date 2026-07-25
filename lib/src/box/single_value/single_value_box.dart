@@ -1,4 +1,4 @@
-/// @docImport '/src/box/iterable/iterable_box.dart';
+/// @docImport '/src/box/list/list_box.dart';
 /// @docImport 'lazy_single_value_box.dart';
 library;
 
@@ -30,7 +30,7 @@ import 'single_value_slot_key.dart';
 /// - [clear] is the one unset (no separate delete; nothing else to delete).
 ///
 /// Storing a collection as [T] re-opens the disk-reification trap this package exists to guard
-/// (post-restart reads reify as `List<dynamic>`); reach for [IterableBox] instead.
+/// (post-restart reads reify as `List<dynamic>`); reach for [ListBox] instead.
 ///
 /// Throw taxonomy: whatever the engine itself throws for (operating on a closed box, an
 /// unregistered adapter) surfaces unwrapped inside the returned [Task] when it runs. [close]

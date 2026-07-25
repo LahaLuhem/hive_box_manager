@@ -1,3 +1,7 @@
+## [Unreleased]
+### Changed
+- **BREAKING**: renamed `IterableBox` to `ListBox` and `LazyIterableBox` to `LazyListBox`. Members, contracts, and on-disk frames are unchanged, so a find-and-replace on the two names is the entire migration. `Iterable` was a misnomer: the box takes and returns a `List`, hive rejects non-`List` iterables at write time, and the name would have made the planned `SetBox` look like a subtype rather than a sibling, with no room for `Map` at all.
+
 ## [1.0.0] - 2026-07-22
 ### Added
 - `KeyedBox` and `LazyKeyedBox`: typed key/value boxes with ready-made `get`, `put`, `update`, `delete`, `clear`, and `watch`.
@@ -69,6 +73,7 @@
 - Collection BoxManagers
 - (Lazy) Dual Int Index LazyBoxManager
 
+[Unreleased]: https://github.com/LahaLuhem/hive_box_manager/compare/1.0.0...HEAD
 [1.0.0]: https://github.com/LahaLuhem/hive_box_manager/compare/0.0.8...1.0.0
 [0.0.8]: https://github.com/LahaLuhem/hive_box_manager/compare/0.0.7...0.0.8
 [0.0.7]: https://github.com/LahaLuhem/hive_box_manager/compare/0.0.6...0.0.7

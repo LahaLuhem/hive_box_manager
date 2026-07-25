@@ -88,6 +88,15 @@ under [*Hard rules* in `.ai/AGENTS.md`](./.ai/AGENTS.md#hard-rules).
   puts the absence-shape at the use site, so the `.match(...)` / fold that follows reads as handling
   a real `None`. This refines the type-suffix rule above for the one case where the *shape* matters
   more than the wrapped type's name.
+- **Name a box façade for what it stores or how it is addressed, never for a parameter type it
+  merely accepts.** `KeyedBox`, `SingleValueBox`, `DualKeyBox`, `ListBox`: each names the box's own
+  identity. The counter-example is the one that shipped wrong. `IterableBox` (1.0) was named after
+  `put`'s `Iterable<T>` parameter while it stored a `List`, returned a `List`, and had to
+  *destroy* the iterable-ness before hive would accept a write, since hive rejects non-`List`
+  iterables at write time. So the name denoted the single shape the box could never store. It also
+  pre-empted its own family: `Iterable` is the supertype of `List` and `Set`, so a future `SetBox`
+  would have read as a subtype rather than a sibling, and `Map` could not have joined at all. When a
+  sibling family is planned, check the name still reads as a peer once the siblings exist.
 - **Name a boolean as a yes/no predicate.** A bool-valued name (local, field, getter, or parameter)
   leads with a predicate word (`is`, `are`, `was`, `has`, `can`, `should`, `will`, `would`, `must`,
   `needs`) or a plain verb, so it reads as a question at the use site (`if (isEmpty)`,
@@ -215,7 +224,7 @@ learns one shape and applies it across every variant. Rationale:
   is never a valid stored value. See [type safety](#type-safety).
 
 The per-family member sets live in the dartdoc of the eight façades (`KeyedBox`,
-`SingleValueBox`, `IterableBox`, `DualKeyBox`, and their `Lazy` twins); the design reasoning per
+`SingleValueBox`, `ListBox`, `DualKeyBox`, and their `Lazy` twins); the design reasoning per
 axis lives in `APPENDIX.md`'s 1.0 sections.
 
 ---

@@ -39,7 +39,7 @@ Pure Dart, so it runs anywhere Hive does: Flutter apps, Dart servers, CLIs, and 
 - [🧰 The box families](#-the-box-families)
     * [🔑 KeyedBox](#-keyedbox)
     * [📍 SingleValueBox](#-singlevaluebox)
-    * [🗂️ IterableBox](#-iterablebox)
+    * [🗂️ ListBox](#-listbox)
     * [🔗 DualKeyBox](#-dualkeybox)
 - [🎛️ Make it yours](#-make-it-yours)
 - [📏 Eager or lazy? (measured)](#-eager-or-lazy-measured)
@@ -57,7 +57,7 @@ Start here. Match what you're storing to a family, then grab its eager or lazy v
 |-------------------------------|-------------------------|---------------------------------------------|
 | Many values, one key each     | `KeyedBox<T, K>`        | users, todos, cache entries                 |
 | Exactly one value             | `SingleValueBox<T>`     | a session token, the theme, one config blob |
-| A list of values per key      | `IterableBox<T, K>`     | tags per post, history per day              |
+| A list of values per key      | `ListBox<T, K>`     | tags per post, history per day              |
 | Values addressed by two parts | `DualKeyBox<T, K1, K2>` | (user, day) events, (row, column) grids     |
 
 Every family has an eager and a `Lazy...` twin; [Eager or lazy?](#-eager-or-lazy-measured) picks
@@ -186,7 +186,7 @@ reads in place. `LazySingleValueBox` is the same surface on the lazy axis. `upda
 
 </details>
 
-### 🗂️ IterableBox
+### 🗂️ ListBox
 
 A list of values per key. Tags on a post, history for a day.
 
@@ -195,11 +195,11 @@ A list of values per key. Tags on a post, history for a day.
 
 Hive reads collections back as `List<dynamic>` no matter what you wrote
 ([issue #150](https://github.com/IO-Design-Team/hive_ce/issues/150)), so a plain
-`Box<List<Person>>` opens fine and then throws on the first read after a restart. `IterableBox`
+`Box<List<Person>>` opens fine and then throws on the first read after a restart. `ListBox`
 restores the element type at the read boundary and stacks list helpers on top:
 
 ```dart
-final tags = await IterableBox.open<String, int>('post_tags').run();
+final tags = await ListBox.open<String, int>('post_tags').run();
 
 await tags.put(1, ['flutter', 'dart']).run(); // any Iterable; stored as a private copy
 await tags.add(1, 'hive').run(); // append; an absent key becomes [value]
@@ -219,7 +219,7 @@ Worth knowing:
 - **List semantics only:** order preserved, duplicates allowed. Sets, maps, and nested
   collections of custom types stay out (the read-boundary cast can't fix inner reification). Model
   richer shapes as adapter-registered value types instead.
-- `LazyIterableBox` is the same surface on the lazy axis.
+- `LazyListBox` is the same surface on the lazy axis.
 
 </details>
 
@@ -388,7 +388,7 @@ Additive candidates for 1.x, in no committed order:
 - **IsolatedHive support** behind the box-acquisition seam (`hive_ce` itself recommends it for
   multi-isolate apps), plus `BoxCollection` wrapping if there's demand.
 - **A migration helper API** (1.0 documents recipes in [MIGRATION.md](MIGRATION.md) for now).
-- **Sets, maps, and nested collections** on the value-codec seam (`IterableBox` is list-only
+- **Sets, maps, and nested collections** on the value-codec seam (`ListBox` is list-only
   today).
 - **A consumer fakes package** (in-memory façades for app tests) and Flutter companions (a
   `ValueListenable` adapter), as separate packages so the core stays pure Dart.

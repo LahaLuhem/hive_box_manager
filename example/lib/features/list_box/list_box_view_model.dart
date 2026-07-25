@@ -8,15 +8,15 @@ import 'package:pmvvm/pmvvm.dart';
 
 import '../core/observers/log_panel_observer.dart';
 
-/// Drives the eager iterable demo: tag lists per int key, mutated through the add / remove
+/// Drives the eager list-box demo: tag lists per int key, mutated through the add / remove
 /// sugar (read-modify-writes under the hood) and read back as unmodifiable views.
-final class IterableViewModel extends ViewModel {
+final class ListBoxViewModel extends ViewModel {
   final observer = LogPanelObserver();
   final tagController = TextEditingController();
   final tags = ListNotifier<String>();
   final _selectedKey = ValueNotifier(listKeys.first);
 
-  IterableBox<String, int>? _box;
+  ListBox<String, int>? _box;
 
   late final Future<void> _opened;
 
@@ -62,7 +62,7 @@ final class IterableViewModel extends ViewModel {
   }
 
   Future<void> _open() async {
-    _box = await IterableBox.open<String, int>('demo_tags', observer: observer).run();
+    _box = await ListBox.open<String, int>('demo_tags', observer: observer).run();
 
     _refresh();
   }

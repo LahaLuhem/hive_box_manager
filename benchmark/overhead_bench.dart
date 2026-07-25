@@ -4,10 +4,10 @@
 // deciding AOT numbers).
 //
 // Every lane here compares operations with an *exact* raw counterpart, so the percentage means
-// "what the wrapper costs" and nothing else. `IterableBox` and `DualKeyBox` are deliberately absent:
+// "what the wrapper costs" and nothing else. `ListBox` and `DualKeyBox` are deliberately absent:
 // raw hive_ce has no equivalent of a list-valued or two-part-keyed box, so their baseline has to be
 // hand-rolled code rather than one call, which is a different question measured elsewhere (the
-// matrix lane covers dual; iterable has its own lane).
+// matrix lane covers dual; the list box has its own lane).
 //
 // Usage:
 //   overhead_bench prep <n> <workDir>

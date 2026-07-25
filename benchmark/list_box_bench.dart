@@ -1,5 +1,5 @@
-// Iterable lane: `IterableBox` against the two things a consumer would hand-write instead.
-// One measurement per process invocation; emits one JSON line. Drive via iterable_driver.sh.
+// List-box lane: `ListBox` against the two things a consumer would hand-write instead.
+// One measurement per process invocation; emits one JSON line. Drive via list_box_driver.sh.
 //
 // Three impls, because "vs raw hive_ce" is not one question here. Raw hive_ce has no list-valued
 // box, so the baseline is code a consumer writes, and there are two versions of that code:
@@ -8,7 +8,7 @@
 //   correct  the same with `.cast<T>()` at the read boundary and a defensive `List.from` at the
 //            write boundary. What a consumer writes after being bitten. This is the honest
 //            wrapper-tax denominator.
-//   facade   `IterableBox`.
+//   facade   `ListBox`.
 //
 // So: naive-vs-facade prices safety, correct-vs-facade prices the wrapper. Reporting only one of
 // them would answer the wrong question.
@@ -21,7 +21,7 @@
 //   obj  a `List<Person>` (adapter-registered custom type) reads back as `List<dynamic>`, so the
 //        naive cast throws TypeError on the first post-restart read. This is upstream #150, pinned
 //        in test/integration/hive_ce_pins/collection_disk_truth_test.dart, and it is the reason
-//        `IterableBox` exists.
+//        `ListBox` exists.
 //
 // The read lanes record that throw as the result rather than dying on it: "this baseline cannot read
 // its own data back" is the measurement, and it only lands on one of the two element types.
@@ -31,7 +31,7 @@
 // read-modify-writes (O(n) in the stored list), and the read path's cast view is O(1) to obtain and
 // O(n) across iteration. Box size is held constant.
 //
-// Usage: iterable_bench <mode> <impl> <elem> <keys> <listLen> [workDir]
+// Usage: list_box_bench <mode> <impl> <elem> <keys> <listLen> [workDir]
 //   modes: prep | put | putall | get | add | remove | open
 //   impl: naive | correct | facade
 //   elem: str | obj
@@ -81,7 +81,7 @@ int weighString(String element) => element.length;
 
 int weighPerson(Person element) => element.name.length;
 
-/// Everything a lane needs about its element type, so `IterableBox<T, K>` and the raw casts can stay
+/// Everything a lane needs about its element type, so `ListBox<T, K>` and the raw casts can stay
 /// statically typed while the element type varies per invocation.
 ///
 /// [weigh] exists to force iteration: without touching each element the read lanes would measure
@@ -115,7 +115,7 @@ void initHive(String path, String elem) {
 
 /// A fresh temp dir with hive pointed at it, for the lanes that mutate and so cannot share a box.
 Directory scratchBox(String suffix, String elem) {
-  final dir = Directory.systemTemp.createTempSync('hbm_iterable_$suffix');
+  final dir = Directory.systemTemp.createTempSync('hbm_list_box_$suffix');
   initHive(dir.path, elem);
 
   return dir;
@@ -226,7 +226,7 @@ Future<LaneResult> runPut<T extends Object>(
   final rssBefore = ProcessInfo.currentRss;
 
   if (impl == 'facade') {
-    final box = await IterableBox.open<T, int>(boxName).run();
+    final box = await ListBox.open<T, int>(boxName).run();
     stopwatch.start();
     if (batched) {
       await box.putAll(batch).run();
@@ -289,7 +289,7 @@ Future<LaneResult> runGet<T extends Object>(
   String? failure;
 
   if (impl == 'facade') {
-    final box = await IterableBox.open<T, int>(boxName).run();
+    final box = await ListBox.open<T, int>(boxName).run();
     stopwatch.start();
     for (var key = 0; key < keys; key++) {
       for (final element in box.getOr(key)) {
@@ -352,7 +352,7 @@ Future<LaneResult> runAdd<T extends Object>(
   late final int rssBefore;
 
   if (impl == 'facade') {
-    final box = await IterableBox.open<T, int>(boxName).run();
+    final box = await ListBox.open<T, int>(boxName).run();
     await box.putAll(seed).run();
     // Sampled after seeding, so the window covers the operation under test and not the setup.
     rssBefore = ProcessInfo.currentRss;
@@ -406,7 +406,7 @@ Future<LaneResult> runRemove<T extends Object>(
   final stopwatch = Stopwatch();
 
   if (impl == 'facade') {
-    final box = await IterableBox.open<T, int>(boxName).run();
+    final box = await ListBox.open<T, int>(boxName).run();
     await box.putAll(seed).run();
     stopwatch.start();
     for (var key = 0; key < keys; key++) {
@@ -456,7 +456,7 @@ Future<LaneResult> runOpen<T extends Object>(
   final stopwatch = Stopwatch()..start();
   final int length;
   if (impl == 'facade') {
-    final box = await IterableBox.open<T, int>(boxName).run();
+    final box = await ListBox.open<T, int>(boxName).run();
     stopwatch.stop();
     length = box.length;
   } else {

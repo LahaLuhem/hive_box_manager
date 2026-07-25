@@ -6,16 +6,16 @@ import 'package:pmvvm/pmvvm.dart';
 
 import '/features/core/widgets/demo_intro.dart';
 import '/features/core/widgets/demo_scaffold.dart';
-import 'iterable_view_model.dart';
+import 'list_box_view_model.dart';
 
-class IterableView extends StatelessWidget {
-  const IterableView({super.key});
+class ListBoxView extends StatelessWidget {
+  const ListBoxView({super.key});
 
   @override
   Widget build(BuildContext context) => MVVM.builder(
-    viewModel: IterableViewModel(),
+    viewModel: ListBoxViewModel(),
     viewBuilder: (context, vm) => DemoScaffold(
-      title: 'IterableBox (eager)',
+      title: 'ListBox (eager)',
       observer: vm.observer,
       body: Column(
         children: [
@@ -29,7 +29,7 @@ class IterableView extends StatelessWidget {
             child: ValueListenableBuilder(
               valueListenable: vm.selectedKey,
               builder: (_, selected, _) => PlatformSegmentButton(
-                choices: IterableViewModel.listKeys,
+                choices: ListBoxViewModel.listKeys,
                 segmentBuilder: (key) => Text('List $key'),
                 selectedChoice: selected,
                 onSelectionChanged: vm.onKeySelected,

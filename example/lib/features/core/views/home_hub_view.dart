@@ -5,8 +5,8 @@ import 'package:platform_adaptive_widgets/platform_adaptive_widgets.dart';
 import 'package:platform_icons/platform_icons.dart';
 
 import '/features/dual_query/dual_query_view.dart';
-import '/features/iterable/iterable_view.dart';
 import '/features/keyed/keyed_view.dart';
+import '/features/list_box/list_box_view.dart';
 import '/features/single_value/single_value_view.dart';
 
 /// The demo hub: one tile per box family.
@@ -33,9 +33,9 @@ class HomeHubView extends StatelessWidget {
           ),
           _DemoTile(
             icon: PlatformIcons.folder,
-            title: 'IterableBox',
+            title: 'ListBox',
             subtitle: 'Tag lists per key: add / remove sugar, unmodifiable views',
-            builder: (_) => const IterableView(),
+            builder: (_) => const ListBoxView(),
           ),
           _DemoTile(
             icon: PlatformIcons.search,

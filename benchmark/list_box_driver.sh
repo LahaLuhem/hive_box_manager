@@ -1,6 +1,6 @@
 #!/bin/bash
-# Iterable-lane driver. Usage: iterable_driver.sh <bench-executable> <out.jsonl> [reps] [keys] ["listLens"]
-# AOT (the deciding lane): `dart compile exe benchmark/iterable_bench.dart` first and pass the
+# List-box-lane driver. Usage: list_box_driver.sh <bench-executable> <out.jsonl> [reps] [keys] ["listLens"]
+# AOT (the deciding lane): `dart compile exe benchmark/list_box_bench.dart` first and pass the
 # produced executable.
 #
 # Three impls (naive / correct / facade) x two element types (str / obj) x the elements-per-key axis.
@@ -26,7 +26,7 @@ LOAD_START="$(current_load)"
 
 for elem in str obj; do
   for len in $LIST_LENS; do
-    work="$(mktemp -d "${TMPDIR:-/tmp}/hbm_iterable.XXXXXX")"
+    work="$(mktemp -d "${TMPDIR:-/tmp}/hbm_list_box.XXXXXX")"
     "$BIN" prep shared "$elem" "$KEYS" "$len" "$work" >> "$OUT"
     for _ in $(seq "$REPS"); do
       for impl in naive correct facade; do
@@ -49,4 +49,4 @@ done
 printf '{"mode":"meta","reps":%s,"keys":%s,"listLens":"%s","loadStart":"%s","loadEnd":"%s"}\n' \
   "$REPS" "$KEYS" "$LIST_LENS" "$LOAD_START" "$(current_load)" >> "$OUT"
 
-echo "iterable driver done: $(wc -l < "$OUT") records; load $LOAD_START -> $(current_load)" >&2
+echo "list-box driver done: $(wc -l < "$OUT") records; load $LOAD_START -> $(current_load)" >&2
