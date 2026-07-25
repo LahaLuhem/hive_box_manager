@@ -5,7 +5,7 @@
 //
 // Usage:
 //   overhead_bench prep <n> <workDir>
-//   overhead_bench get <impl> <n> <boxKind> <workDir>
+//   overhead_bench get <impl> <n> <boxKind> <workDir> [passes]
 //   overhead_bench put <impl> <n>
 // with impl: facade | raw, boxKind: eager | lazy
 import 'dart:convert';
@@ -23,12 +23,28 @@ const getSampleSeed = 7;
 /// Lazy gets pay a disk read per op, so that lane samples at most this many.
 const maxLazyGetOps = 10000;
 
+/// How many times the get lane replays its whole sample inside one timed window. One by default:
+/// the historical shape, and the one the README's per-get percentages describe.
+///
+/// Raising it is **not** a free noise reduction, so it stays opt-in. A single 100K eager pass runs
+/// ~50 ms, which is close enough to process-startup and scheduling noise that a busy host swings
+/// the reading from -6% to +27% run to run, and a wider window does clear that floor. But it also
+/// changes the question: the façade allocates a `Some` per get where raw allocates nothing, so ten
+/// replays turn 100K allocations into 1M and the lane starts charging the façade for young-gen GC
+/// it never reached in one pass. Measured that way the eager lane reads +23% instead of ~+2%.
+///
+/// Both are real numbers for different questions ("one cold pass" vs "sustained reads"). Pass an
+/// explicit count when you want the sustained one, and label it as such wherever it lands.
+const defaultGetPasses = 1;
+
 Future<void> main(List<String> args) async {
   switch (args) {
     case ['prep', final n, final workDir]:
       await runPrep(int.parse(n), workDir);
     case ['get', final impl, final n, final boxKind, final workDir]:
       await runGet(impl, int.parse(n), boxKind, workDir);
+    case ['get', final impl, final n, final boxKind, final workDir, final passes]:
+      await runGet(impl, int.parse(n), boxKind, workDir, passes: int.parse(passes));
     case ['put', final impl, final n]:
       await runPut(impl, int.parse(n));
     default:
@@ -47,11 +63,12 @@ Future<void> runPrep(int n, String workDir) async {
   emit({'mode': 'prep', 'n': n});
 }
 
-Future<void> runGet(String impl, int n, String boxKind, String workDir) async {
+Future<void> runGet(String impl, int n, String boxKind, String workDir, {int? passes}) async {
   Hive.init(workDir);
   final random = Random(getSampleSeed);
   final sampleSize = boxKind == 'lazy' ? min(n, maxLazyGetOps) : n;
   final sampleKeys = List.generate(sampleSize, (_) => random.nextInt(n), growable: false);
+  final passCount = passes ?? defaultGetPasses;
 
   final stopwatch = Stopwatch();
   var checksum = 0;
@@ -59,30 +76,38 @@ Future<void> runGet(String impl, int n, String boxKind, String workDir) async {
   if (boxKind == 'eager' && impl == 'facade') {
     final box = await KeyedBox.open<String, int>(boxName).run();
     stopwatch.start();
-    for (final key in sampleKeys) {
-      checksum += box.get(key).toNullable()!.length;
+    for (var pass = 0; pass < passCount; pass++) {
+      for (final key in sampleKeys) {
+        checksum += box.get(key).toNullable()!.length;
+      }
     }
     stopwatch.stop();
   } else if (boxKind == 'eager') {
     final box = await Hive.openBox<String>(boxName);
     stopwatch.start();
-    for (final key in sampleKeys) {
-      checksum += box.get(key)!.length;
+    for (var pass = 0; pass < passCount; pass++) {
+      for (final key in sampleKeys) {
+        checksum += box.get(key)!.length;
+      }
     }
     stopwatch.stop();
   } else if (impl == 'facade') {
     final box = LazyKeyedBox<String, int>(boxName);
     await box.ensureInitialised().run();
     stopwatch.start();
-    for (final key in sampleKeys) {
-      checksum += (await box.get(key).run()).toNullable()!.length;
+    for (var pass = 0; pass < passCount; pass++) {
+      for (final key in sampleKeys) {
+        checksum += (await box.get(key).run()).toNullable()!.length;
+      }
     }
     stopwatch.stop();
   } else {
     final box = await Hive.openLazyBox<String>(boxName);
     stopwatch.start();
-    for (final key in sampleKeys) {
-      checksum += (await box.get(key))!.length;
+    for (var pass = 0; pass < passCount; pass++) {
+      for (final key in sampleKeys) {
+        checksum += (await box.get(key))!.length;
+      }
     }
     stopwatch.stop();
   }
@@ -92,7 +117,9 @@ Future<void> runGet(String impl, int n, String boxKind, String workDir) async {
     'impl': impl,
     'n': n,
     'boxKind': boxKind,
-    'ops': sampleSize,
+    'passes': passCount,
+    // Total timed ops, so per-op cost stays a plain division whatever the pass count.
+    'ops': sampleSize * passCount,
     'micros': stopwatch.elapsedMicroseconds,
     'checksum': checksum,
   });
