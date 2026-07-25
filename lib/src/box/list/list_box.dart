@@ -26,8 +26,10 @@ import 'list_edits.dart';
 ///
 /// Lists of primitives are the exception: hive specialises those, so a `List<String>` does read
 /// back as `List<String>` and a hand-rolled cast would survive. The benchmark's list-box lane
-/// measures both axes, and the cast costs about 190 ns per [get] either way (fixed per call, not
-/// per element), so this surface does not branch on it.
+/// measures both axes and the cast costs the same either way, so this surface does not branch on
+/// it: about 200 ns per [get] plus about 2.3 ns per element actually iterated. The view allocates
+/// nothing (measured RSS matches a hand-rolled cast exactly), so the per-element part is the type
+/// check, not a copy.
 ///
 /// List semantics only: order-preserving, duplicates allowed. Sets, maps, and nested
 /// collections of custom types are deliberately out (the outer cast could not fix inner

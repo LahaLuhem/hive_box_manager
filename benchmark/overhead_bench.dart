@@ -1,5 +1,7 @@
-// Wrapper-overhead lane (build Phase 4): façade vs raw hive_ce on the hot paths aim #4
-// protects, with the <5% target. One measurement per process invocation; emits one JSON line.
+// Wrapper-overhead lane: façade vs raw hive_ce on the hot paths aim #4 protects. The target is
+// two-currency, since a flat percentage says nothing on an op that costs 13 ns raw: tens of
+// nanoseconds per op on the memory paths, single-digit percent on anything reaching disk.
+// One measurement per process invocation; emits one JSON line.
 // Drive via overhead_driver.sh (JIT for sanity; `dart compile exe` + the driver for the
 // deciding AOT numbers).
 //

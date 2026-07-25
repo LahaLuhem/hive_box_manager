@@ -258,20 +258,22 @@ Future<void> runGet(String impl, String keyKind, int n, String boxKind, String w
     }
     watch.stop();
   } else {
-    // Materialised outside the window for the same reason the façade lane samples pairs there.
-    final sampleKeys = samplePairs.map((pair) => keyFor(keyKind, pair)).toList(growable: false);
+    // Encoded *inside* the window, deliberately. A consumer holding a (user, day) pair builds the
+    // composite key at the call site, exactly as the façade does, so pre-encoding the whole sample
+    // outside the timed loop would hand the raw lane a discount no real workload gets. It did: the
+    // earlier shape flattered raw and booked the difference as façade overhead.
     if (boxKind == 'eager') {
       final box = await Hive.openBox<String>(boxName);
       watch.start();
-      for (final key in sampleKeys) {
-        checksum += box.get(key)!.length;
+      for (final pair in samplePairs) {
+        checksum += box.get(keyFor(keyKind, pair))!.length;
       }
       watch.stop();
     } else {
       final box = await Hive.openLazyBox<String>(boxName);
       watch.start();
-      for (final key in sampleKeys) {
-        checksum += (await box.get(key))!.length;
+      for (final pair in samplePairs) {
+        checksum += (await box.get(keyFor(keyKind, pair)))!.length;
       }
       watch.stop();
     }
