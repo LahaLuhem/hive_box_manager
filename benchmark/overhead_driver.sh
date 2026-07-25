@@ -4,6 +4,9 @@
 # AOT (the deciding lane): `dart compile exe benchmark/overhead_bench.dart` first and pass the
 # produced executable.
 #
+# GET_N sizes the read lanes (a full pass costs one op per entry); PUT_N sizes every lane that pays
+# a disk round-trip per op, which is the write lanes plus the lazy read lanes.
+#
 # This lane resolves single-digit percentages, so background load on the host swamps the signal
 # outright: an otherwise identical pass taken under load average 10 moved a +2% lane to +27% and
 # spread individual samples 54..192 ms. Run it on a quiet machine, and read the load stamp this
@@ -25,19 +28,39 @@ LOAD_START="$(current_load)"
 
 : > "$OUT"
 
-work="$(mktemp -d "${TMPDIR:-/tmp}/hbm_overhead.XXXXXX")"
-"$BIN" prep "$GET_N" "$work" >> "$OUT"
-for _ in $(seq "$REPS"); do
-  for impl in raw facade; do
-    "$BIN" get "$impl" "$GET_N" eager "$work" >> "$OUT"
-    "$BIN" get "$impl" "$GET_N" lazy "$work" >> "$OUT"
-  done
-done
-rm -rf "$work"
+# Two prepped boxes. The big one serves every lane that samples keys out of it; the small one exists
+# for lazy `values`, which reads the *whole* box in one parallel fetch and would mean 100K concurrent
+# disk reads against the big one.
+big="$(mktemp -d "${TMPDIR:-/tmp}/hbm_overhead_big.XXXXXX")"
+small="$(mktemp -d "${TMPDIR:-/tmp}/hbm_overhead_small.XXXXXX")"
+"$BIN" prep "$GET_N" "$big" >> "$OUT"
+"$BIN" prep "$PUT_N" "$small" >> "$OUT"
 
 for _ in $(seq "$REPS"); do
   for impl in raw facade; do
+    # Read lanes off the shared boxes.
+    "$BIN" get "$impl" "$GET_N" eager "$big" >> "$OUT"
+    "$BIN" get "$impl" "$GET_N" lazy "$big" >> "$OUT"
+    "$BIN" values "$impl" "$GET_N" eager "$big" >> "$OUT"
+    "$BIN" values "$impl" "$PUT_N" lazy "$small" >> "$OUT"
+    "$BIN" contains "$impl" "$GET_N" eager "$big" >> "$OUT"
+    "$BIN" contains "$impl" "$GET_N" lazy "$big" >> "$OUT"
+  done
+done
+rm -rf "$big" "$small"
+
+for _ in $(seq "$REPS"); do
+  for impl in raw facade; do
+    # Write lanes own their box: each one mutates, so none can share a prepped file.
     "$BIN" put "$impl" "$PUT_N" >> "$OUT"
+    "$BIN" putall "$impl" "$PUT_N" >> "$OUT"
+    "$BIN" delete "$impl" "$PUT_N" >> "$OUT"
+    "$BIN" deleteall "$impl" "$PUT_N" >> "$OUT"
+    # Single-value façades: one fixed slot, so n is the op count, not a box size.
+    "$BIN" single "$impl" get "$GET_N" eager >> "$OUT"
+    "$BIN" single "$impl" get "$PUT_N" lazy >> "$OUT"
+    "$BIN" single "$impl" set "$PUT_N" eager >> "$OUT"
+    "$BIN" single "$impl" set "$PUT_N" lazy >> "$OUT"
   done
 done
 
