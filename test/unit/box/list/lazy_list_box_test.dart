@@ -1,4 +1,4 @@
-// The lazy iterable façade against the stateful in-memory fake, wired through the same-library
+// The lazy list façade against the stateful in-memory fake, wired through the same-library
 // testing seam: auto-open, the sync-inspector carve-out, the aliasing contract on the lazy
 // axis, absent-vs-empty, the sugar semantics, Option-valued watch payloads, and the
 // pre-first-use close no-op rider.
@@ -6,7 +6,7 @@
 library;
 
 import 'package:checks/checks.dart';
-import 'package:hive_box_manager/src/box/iterable/lazy_iterable_box.dart';
+import 'package:hive_box_manager/src/box/list/lazy_list_box.dart';
 import 'package:hive_box_manager/src/event/lazy_typed_box_event.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
@@ -19,20 +19,20 @@ void main() {
   late FakeLazyBox box;
   late RecordingBoxObserver observer;
   late int openCalls;
-  late LazyIterableBox<String, int> facade;
+  late LazyListBox<String, int> facade;
 
   setUp(() {
     box = FakeLazyBox(name: 'tags');
     observer = RecordingBoxObserver();
     openCalls = 0;
-    facade = lazyIterableBoxAround('tags', () async {
+    facade = lazyListBoxAround('tags', () async {
       openCalls++;
 
       return box;
     }, observer: observer);
   });
 
-  feature('LazyIterableBox wiring and auto-open', () {
+  feature('LazyListBox wiring and auto-open', () {
     scenario('construction opens nothing; the first effect opens exactly once', () async {
       check(openCalls).equals(0);
 
@@ -45,7 +45,7 @@ void main() {
 
     scenario('a key type without an identity default and no codec fails the wiring assert', () {
       check(
-        () => lazyIterableBoxAround<String, DateTime>('tags', () async => box),
+        () => lazyListBoxAround<String, DateTime>('tags', () async => box),
       ).throws<AssertionError>();
     });
 
@@ -70,7 +70,7 @@ void main() {
     });
   });
 
-  feature('LazyIterableBox aliasing contract', () {
+  feature('LazyListBox aliasing contract', () {
     scenario('put materialises: mutating the source afterwards never reaches the box', () async {
       final source = ['a'];
 
@@ -103,7 +103,7 @@ void main() {
     });
   });
 
-  feature('LazyIterableBox reads and absent vs stored-empty', () {
+  feature('LazyListBox reads and absent vs stored-empty', () {
     scenario('an absent key is None; a stored empty list is Some(empty)', () async {
       final absent = await facade.get(1).run();
       check(absent.isNone()).isTrue();
@@ -129,7 +129,7 @@ void main() {
     });
   });
 
-  feature('LazyIterableBox add, addAll, and remove sugar', () {
+  feature('LazyListBox add, addAll, and remove sugar', () {
     scenario('add and addAll append (creating on absence); duplicates stay', () async {
       await facade.add(1, 'a').run();
       await facade.addAll(1, ['b', 'a']).run();
@@ -161,7 +161,7 @@ void main() {
     });
   });
 
-  feature('LazyIterableBox watch', () {
+  feature('LazyListBox watch', () {
     scenario('writes carry Some of the view, deletes carry None', () async {
       final events = <LazyTypedBoxEvent<List<String>, int>>[];
       final subscription = facade.watch().listen(events.add);
@@ -180,7 +180,7 @@ void main() {
     });
   });
 
-  feature('LazyIterableBox lifecycle', () {
+  feature('LazyListBox lifecycle', () {
     scenario('close before first use never opens, yet turns the handle terminal', () async {
       await facade.close().run();
 

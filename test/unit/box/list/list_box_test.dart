@@ -1,4 +1,4 @@
-// The eager iterable façade against the stateful in-memory fake, wired through the
+// The eager list façade against the stateful in-memory fake, wired through the
 // same-library testing seam: the aliasing contract in both directions (private copies inward,
 // unmodifiable views outward), absent-vs-empty, the add / addAll / remove sugar semantics, the
 // sync corruption gate, and terminal lifecycle.
@@ -6,7 +6,7 @@
 library;
 
 import 'package:checks/checks.dart';
-import 'package:hive_box_manager/src/box/iterable/iterable_box.dart';
+import 'package:hive_box_manager/src/box/list/list_box.dart';
 import 'package:hive_box_manager/src/event/typed_box_event.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
@@ -19,18 +19,18 @@ import '../../../support/doubles/recording_box_observer.dart';
 void main() {
   late FakeEagerBox box;
   late RecordingBoxObserver observer;
-  late IterableBox<String, int> facade;
+  late ListBox<String, int> facade;
 
   setUp(() {
     box = FakeEagerBox(name: 'tags');
     observer = RecordingBoxObserver();
-    facade = iterableBoxAround(box, observer: observer);
+    facade = listBoxAround(box, observer: observer);
   });
 
-  feature('IterableBox wiring and codec defaulting', () {
+  feature('ListBox wiring and codec defaulting', () {
     scenario('a custom codec owns the raw encoding and the decode round-trip', () async {
       final date = DateTime.utc(2026, 7, 21);
-      final dateKeyed = iterableBoxAround<String, DateTime>(box, codec: const DateKeyCodec());
+      final dateKeyed = listBoxAround<String, DateTime>(box, codec: const DateKeyCodec());
 
       await dateKeyed.put(date, ['a']).run();
 
@@ -39,11 +39,11 @@ void main() {
     });
 
     scenario('a key type without an identity default and no codec fails the wiring assert', () {
-      check(() => iterableBoxAround<String, DateTime>(box)).throws<AssertionError>();
+      check(() => listBoxAround<String, DateTime>(box)).throws<AssertionError>();
     });
   });
 
-  feature('IterableBox aliasing contract', () {
+  feature('ListBox aliasing contract', () {
     scenario('put materialises: mutating the source afterwards never reaches the box', () async {
       final source = ['a'];
 
@@ -96,7 +96,7 @@ void main() {
     });
   });
 
-  feature('IterableBox absent vs stored-empty', () {
+  feature('ListBox absent vs stored-empty', () {
     scenario('an absent key is None; a stored empty list is Some(empty)', () async {
       check(facade.get(1).isNone()).isTrue();
 
@@ -107,7 +107,7 @@ void main() {
     });
   });
 
-  feature('IterableBox add, addAll, and remove sugar', () {
+  feature('ListBox add, addAll, and remove sugar', () {
     scenario('add appends, creates on absence, and allows duplicates', () async {
       await facade.add(1, 'a').run();
       await facade.add(1, 'b').run();
@@ -156,7 +156,7 @@ void main() {
     });
   });
 
-  feature('IterableBox keyed surface and failure paths', () {
+  feature('ListBox keyed surface and failure paths', () {
     scenario('putAll materialises each list; inspectors and deletes behave keyed', () async {
       final source = ['b'];
 

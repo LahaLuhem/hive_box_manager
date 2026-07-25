@@ -213,10 +213,10 @@ touching the public surface: the scan strategy simply implements them as no-ops.
 ## Variant taxonomy & naming
 
 Four shapes × two synchronicities = eight `interface class` façades: `KeyedBox`,
-`SingleValueBox`, `IterableBox`, `DualKeyBox`, each with a `Lazy` twin. The names say what you
+`SingleValueBox`, `ListBox`, `DualKeyBox`, each with a `Lazy` twin. The names say what you
 hold and mirror hive's own `Box` / `LazyBox` split; the 0.0.x `Manager` suffix died because the
 1.0 types are a different contract, and same-name-changed-contract misleads migrators.
-(`IterableBox` rather than `CollectionBox` because hive_ce already exports the latter.)
+(`ListBox` rather than `CollectionBox` because hive_ce already exports the latter.)
 
 The reverse query folds into the dual façades instead of being its own `Query*` family: the scan
 is read-only and free unless called, and the separate 0.0.x query types only existed because of
@@ -308,7 +308,7 @@ fail at the site, not at `.run()`.
 Reads are absence-first: `get` returns `Option` / `TaskOption`, `getOr` is sugar, and there is no
 `tryGet` twin because the primary read *is* the absence-shaped one. Queries return plain,
 possibly-empty lists, never `Option`: the 0.0.x `None`-on-no-matches conflation of "absent" with
-"empty result" died, and `IterableBox` keeps the same distinction between an absent key (`None`)
+"empty result" died, and `ListBox` keeps the same distinction between an absent key (`None`)
 and a stored empty list (`Some(empty)`). Effects are `Task<Unit>` on both axes; reads are sync
 only where the eager cache makes them free.
 

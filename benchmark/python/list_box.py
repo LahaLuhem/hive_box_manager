@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Summarise the iterable lane: `IterableBox` against the two hand-rolled baselines.
+"""Summarise the list-box lane: `ListBox` against the two hand-rolled baselines.
 
-Reads ``../results/results_iterable.jsonl`` and prints, per element type and elements-per-key, the
+Reads ``../results/results_list_box.jsonl`` and prints, per element type and elements-per-key, the
 median time for each impl plus two ratios that answer different questions:
 
 * **vs correct** is the wrapper tax. `correct` is the code a consumer writes once they know about the
@@ -26,7 +26,7 @@ import statistics
 from pathlib import Path
 
 BENCH_DIR = Path(__file__).resolve().parent.parent  # benchmark/
-RESULT_FILE = BENCH_DIR / "results" / "results_iterable.jsonl"
+RESULT_FILE = BENCH_DIR / "results" / "results_list_box.jsonl"
 
 IMPLS = ("naive", "correct", "facade")
 MODES = ("get", "put", "putall", "add", "remove", "open")
@@ -71,7 +71,7 @@ def main():
     meta = next((row for row in rows if row.get("mode") == "meta"), {})
     list_lens = sorted({row["listLen"] for row in rows if row.get("mode") == "get"})
 
-    print(f"iterable lane: {RESULT_FILE.name}")
+    print(f"list-box lane: {RESULT_FILE.name}")
     print(f"keys per box: {meta.get('keys')}, reps: {meta.get('reps')}")
     print(f"host load {meta.get('loadStart')} -> {meta.get('loadEnd')}")
 

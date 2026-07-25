@@ -1,6 +1,6 @@
 # Benchmarks
 
-Maintainer tooling, excluded from the published tarball. Two lanes live here:
+Maintainer tooling, excluded from the published tarball. Three lanes live here:
 
 - **Key-codec matrix** (`bench.dart` + `driver.sh`, plus `driver_1m.sh` for the open-only 1M
   pass): measures put / putAll / open / get / scan / query / RSS / file size per key-encoding
@@ -10,17 +10,16 @@ Maintainer tooling, excluded from the published tarball. Two lanes live here:
   deleteAll) and `SingleValueBox` / `LazySingleValueBox` (get, set); the aim-#4 proof with its
   under-5% target. The eager read path carries `vm:prefer-inline` pragmas exactly because this
   lane holds it to raw speed.
-
-- **Iterable lane** (`iterable_bench.dart` + `iterable_driver.sh`): `IterableBox` against two
+- **List-box lane** (`list_box_bench.dart` + `list_box_driver.sh`): `ListBox` against two
   hand-rolled baselines, across two element types and the elements-per-key axis.
 
 Only operations with an **exact** raw counterpart live in the overhead lane, so its percentages
-mean "what the wrapper costs" and nothing else. `IterableBox` and `DualKeyBox` are deliberately
+mean "what the wrapper costs" and nothing else. `ListBox` and `DualKeyBox` are deliberately
 out: raw hive_ce has no list-valued or two-part-keyed box, so their baseline has to be hand-rolled
 code rather than one call. That is a different question, asked in the matrix lane (dual) and in the
-iterable lane.
+list-box lane.
 
-## The iterable lane's two baselines
+## The list-box lane's two baselines
 
 "Versus raw hive_ce" isn't one question here, because raw hive_ce has no list-valued box. The
 baseline is code a consumer writes, and there are two versions of it:
@@ -29,14 +28,14 @@ baseline is code a consumer writes, and there are two versions of it:
 |---|---|
 | `naive` | `box.get(k) as List<T>`, `box.put(k, list)`. What you write first |
 | `correct` | plus `.cast<T>()` on read and a defensive `List.from` on write. What you write after being bitten |
-| `facade` | `IterableBox` |
+| `facade` | `ListBox` |
 
 `facade` vs `correct` prices the wrapper. `facade` vs `naive` prices **safety**. Reporting one
 without the other answers the wrong question.
 
 ### Whether `naive` is broken depends on the element type
 
-Probed against hive_ce 2.19.3, and this is narrower than `IterableBox`'s own docs used to claim:
+Probed against hive_ce 2.19.3, and this is narrower than `ListBox`'s own docs used to claim:
 
 - **`List<String>`** reads back from disk as `List<String>`. The engine specialises lists of
   primitives, so the naive cast survives a restart and hand-rolling is genuinely fine.
@@ -144,12 +143,12 @@ uv run --project benchmark/python python overhead.py
 
 It prints both medians per lane, the per-op delta, and flags anything at or over the 5% target.
 
-## Running the iterable lane
+## Running the list-box lane
 
 ```sh
-dart compile exe benchmark/iterable_bench.dart -o /tmp/hbm_iterable
-benchmark/iterable_driver.sh /tmp/hbm_iterable benchmark/results/results_iterable.jsonl 5
-uv run --project benchmark/python python iterable.py
+dart compile exe benchmark/list_box_bench.dart -o /tmp/hbm_list_box
+benchmark/list_box_driver.sh /tmp/hbm_list_box benchmark/results/results_list_box.jsonl 5
+uv run --project benchmark/python python list_box.py
 ```
 
 ## Running the matrix
@@ -178,7 +177,7 @@ Raw JSONL backing the top-level README's performance tables and codec-crossover 
 | `results_1m.jsonl` | matrix, 1M open-only |
 | `results_jit.jsonl` | matrix, JIT: ordering sanity, never for decisions |
 | `results_overhead.jsonl` | wrapper overhead, AOT: the source of the README's percentages |
-| `results_iterable.jsonl` | iterable lane, AOT: three impls x two element types x list length |
+| `results_list_box.jsonl` | list-box lane, AOT: three impls x two element types x list length |
 
 Environment for all four: macOS 15.7.7 on Apple Silicon (arm64), Dart 3.12.2, hive_ce 2.19.3,
 2026-07-25. Values were a constant 1 byte by design, isolating key cost; web performance is

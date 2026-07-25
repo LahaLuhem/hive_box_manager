@@ -1,15 +1,37 @@
-# Migrating from 0.0.x to 1.0
+# Migrating to 2.0
 
-1.0 is a from-scratch rewrite and a hard break from `0.0.x`: the manager classes are gone, the
-new box façades carry a different contract, and this guide is the bridge. The good news sits in
-the first table: your data almost always reads in place.
+Two hops, and you probably only need one of them. Already on 1.0? Skip to
+[1.0 to 2.0](#10-to-20), which is a rename and nothing else. Coming from `0.0.x`? Read on: that was
+a from-scratch rewrite and a hard break, the manager classes are gone, and the new box façades carry
+a different contract. The good news sits in the first table either way: your data almost always
+reads in place.
 
-## Your data: almost always compatible in place
+<a id="10-to-20"></a>
+## 1.0 to 2.0
 
-1.0 keeps `0.0.x`'s on-disk conventions wherever they were sound, so most boxes open under the
-new façades with no migration at all:
+One rename, no behaviour change:
 
-| 0.0.x box | 1.0 verdict |
+| 1.0 | 2.0 |
+|---|---|
+| `IterableBox<T, K>` | `ListBox<T, K>` |
+| `LazyIterableBox<T, K>` | `LazyListBox<T, K>` |
+
+Every member, contract, and on-disk frame is untouched, so a find-and-replace on the two type names
+is the whole migration. Nothing else in 2.0 is breaking.
+
+Why bother: the box stores a `List`, hands back a `List`, and hive *rejects* non-`List` iterables at
+write time, so `Iterable` named the one shape that could never be stored. It also could not survive
+its own roadmap, since the planned `SetBox` would have read as a subtype of `IterableBox` rather
+than a sibling, and `Map` is not an `Iterable` at all.
+
+## 0.0.x to 2.0
+
+### Your data: almost always compatible in place
+
+The rewrite kept `0.0.x`'s on-disk conventions wherever they were sound, so most boxes open under
+the new façades with no migration at all:
+
+| 0.0.x box | 2.0 verdict |
 |---|---|
 | Simple (`BoxManager` / `LazyBoxManager`) | **reads in place** (same box names, keys, frames) |
 | Single value (`SingleIndex*Manager`) | **reads in place** (the internal slot key is retained) |
@@ -19,13 +41,13 @@ new façades with no migration at all:
 
 Box kind is not persisted by hive, so moving between eager and lazy façades is also free.
 
-## Symbol map
+### Symbol map
 
-| 0.0.x | 1.0 |
+| 0.0.x | 2.0 |
 |---|---|
 | `BoxManager` / `LazyBoxManager` | `KeyedBox` / `LazyKeyedBox` |
 | `SingleIndexBoxManager` / `SingleIndexLazyBoxManager` | `SingleValueBox` / `LazySingleValueBox` |
-| `CollectionLazyBoxManager<T, I>` | `LazyIterableBox<T, K>` (plus a new eager `IterableBox`) |
+| `CollectionLazyBoxManager<T, I>` | `LazyListBox<T, K>` (plus a new eager `ListBox`) |
 | `DualIntIndex*` + `QueryDualIntIndex*` + `BitShiftQuery*` | `DualKeyBox` / `LazyDualKeyBox` + a codec choice |
 | `init(cipher)` | gone: eager `open(...)` factories / lazy auto-open; `cipher:` at construction |
 | `defaultValue` (mandatory) | gone: `get` returns `Option`, `getOr` is the sugar |
@@ -38,7 +60,7 @@ Box kind is not persisted by hive, so moving between eager and lazy façades is 
 | `.bitShift` encoder | `codec: const PackedIntDualCodec()` |
 | `.negative` encoder | re-key once; recipe below |
 
-## Re-keying a `.negative` dual box
+### Re-keying a `.negative` dual box
 
 The 0.0.x `.negative` encoder wrote keys as `((primary + 16383) << 15) | (secondary + 16383)`
 (range ±16383 per part). 1.0 doesn't reship it: the default `StringCompositeDualCodec` covers
@@ -80,7 +102,7 @@ Future<void> rekeyNegativeBox(String legacyName, String newName) async {
 Read every entry through the shim, write into a composite-keyed box, delete the legacy file.
 Run it once at startup behind a "migrated" flag (a `SingleValueBox<bool>` works nicely).
 
-## Behavioural changes worth re-reading
+### Behavioural changes worth re-reading
 
 - **No `init()` anywhere.** Holding an eager box means it's open; lazy boxes open themselves on
   the first effect.
@@ -93,5 +115,5 @@ Run it once at startup behind a "migrated" flag (a `SingleValueBox<bool>` works 
 - **Queries return plain lists.** The 0.0.x reverse queries answered "no matches" with `None`;
   the 1.0 `queryByPrimary` / `queryBySecondary` answer with an empty list, and `Option` is
   reserved for genuine key absence.
-- **Collections come back unmodifiable.** `IterableBox` reads hand you a view; build a new list
+- **Collections come back unmodifiable.** `ListBox` reads hand you a view; build a new list
   (or use the `add` / `addAll` / `remove` sugar) instead of mutating in place.

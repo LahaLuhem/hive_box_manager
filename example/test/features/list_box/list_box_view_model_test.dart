@@ -1,4 +1,4 @@
-// The iterable demo's behaviour through its view-model: the add / remove sugar with List
+// The list-box demo's behaviour through its view-model: the add / remove sugar with List
 // semantics per selected key, against real hive on a temp dir. Input values live in the example
 // rows, read back through the context.
 import 'dart:io';
@@ -6,17 +6,17 @@ import 'dart:io';
 import 'package:bdd_framework/bdd_framework.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hbm_example/features/iterable/iterable_view_model.dart';
+import 'package:hbm_example/features/list_box/list_box_view_model.dart';
 import 'package:hive_ce/hive.dart';
 
 void main() {
   late Directory tempDir;
-  late IterableViewModel sut;
+  late ListBoxViewModel sut;
 
   setUp(() {
-    tempDir = Directory.systemTemp.createTempSync('hbm_example_iterable_');
+    tempDir = Directory.systemTemp.createTempSync('hbm_example_list_box_');
     Hive.init(tempDir.path);
-    sut = IterableViewModel();
+    sut = ListBoxViewModel();
   });
 
   tearDown(() async {
@@ -32,7 +32,7 @@ void main() {
     }
   }
 
-  final feature = BddFeature('Iterable demo');
+  final feature = BddFeature('ListBox demo');
 
   Bdd(feature)
       .scenario('Tags accumulate per key, duplicates allowed.')

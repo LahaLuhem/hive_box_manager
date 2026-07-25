@@ -1,5 +1,5 @@
 /// @docImport '/src/box/keyed/keyed_box.dart';
-/// @docImport 'lazy_iterable_box.dart';
+/// @docImport 'lazy_list_box.dart';
 library;
 
 import 'dart:collection';
@@ -25,7 +25,7 @@ import 'list_edits.dart';
 /// cast at the read boundary instead, and `dynamic` never reaches this surface.
 ///
 /// Lists of primitives are the exception: hive specialises those, so a `List<String>` does read
-/// back as `List<String>` and a hand-rolled cast would survive. The benchmark's iterable lane
+/// back as `List<String>` and a hand-rolled cast would survive. The benchmark's list-box lane
 /// measures both axes, and the cast costs about 190 ns per [get] either way (fixed per call, not
 /// per element), so this surface does not branch on it.
 ///
@@ -47,11 +47,11 @@ import 'list_edits.dart';
 /// tasks, and [close] / [deleteFromDisk] are terminal.
 ///
 /// `interface class`: implement it for test fakes; extending is reserved to this package.
-interface class IterableBox<T extends Object, K extends Object> {
+interface class ListBox<T extends Object, K extends Object> {
   final EagerCrudEngine<List<T>, K> _engine;
 
   /// Wiring is internal: acquisition goes through [open] (tests use the seam below).
-  IterableBox._({required this._engine});
+  ListBox._({required this._engine});
 
   /// The box name: the correlation handle observers receive with every event.
   String get name => _engine.name;
@@ -170,7 +170,7 @@ interface class IterableBox<T extends Object, K extends Object> {
   /// Deletes the box from disk when run. **Terminal**, like [close].
   Task<Unit> deleteFromDisk() => _engine.deleteFromDisk();
 
-  /// Opens the box named [name] and wires an [IterableBox] around it, as a lazy [Task]: nothing
+  /// Opens the box named [name] and wires an [ListBox] around it, as a lazy [Task]: nothing
   /// touches disk until `.run()`.
   ///
   /// One-time engine setup stays hive_ce's, exactly as it documents: `Hive.init(path)` (or
@@ -179,7 +179,7 @@ interface class IterableBox<T extends Object, K extends Object> {
   /// codec fails an assert synchronously at wiring time). [cipher], [keyComparator],
   /// [compactionStrategy], and [crashRecovery] pass through to hive_ce untouched. [observer]
   /// hears every event of this box, starting with the open itself.
-  static Task<IterableBox<T, K>> open<T extends Object, K extends Object>(
+  static Task<ListBox<T, K>> open<T extends Object, K extends Object>(
     String name, {
     KeyCodec<K>? codec,
     HiveCipher? cipher,
@@ -202,7 +202,7 @@ interface class IterableBox<T extends Object, K extends Object> {
         observer?.onOpened(name);
 
         // Type arguments stay explicit through this wiring (CODESTYLE #type-safety).
-        return IterableBox<T, K>._(
+        return ListBox<T, K>._(
           engine: EagerCrudEngine<List<T>, K>(
             box: box,
             keyCodec: keyCodec,
@@ -218,17 +218,17 @@ interface class IterableBox<T extends Object, K extends Object> {
   }
 }
 
-/// Testing seam: wires an [IterableBox] around an already-open (or fake) [box] instead of going
+/// Testing seam: wires an [ListBox] around an already-open (or fake) [box] instead of going
 /// through the real provider, so unit suites drive the façade against in-memory doubles.
 ///
 /// Same library as the façade on purpose, and deliberately not exported: the barrel's `show`
 /// keeps it out of the public API, so it exists only for suites importing this file directly.
 @visibleForTesting
-IterableBox<T, K> iterableBoxAround<T extends Object, K extends Object>(
+ListBox<T, K> listBoxAround<T extends Object, K extends Object>(
   Box<Object?> box, {
   KeyCodec<K>? codec,
   BoxObserver? observer,
-}) => IterableBox<T, K>._(
+}) => ListBox<T, K>._(
   // Explicit type arguments on purpose; see CODESTYLE #type-safety.
   engine: EagerCrudEngine<List<T>, K>(
     box: box,

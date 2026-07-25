@@ -1,4 +1,4 @@
-// The lazy iterable façade end to end against real hive_ce on temp dirs, through the public
+// The lazy list façade end to end against real hive_ce on temp dirs, through the public
 // barrel: auto-open, the collection disk truth of upstream issue 150 with a custom adapter
 // type via a new instance, Option-valued watch payloads, the sugar semantics, and the
 // pre-first-use close no-op rider.
@@ -20,7 +20,7 @@ void main() {
   late Directory tempDir;
 
   setUp(() {
-    tempDir = Directory.systemTemp.createTempSync('hbm_lazy_iterable_');
+    tempDir = Directory.systemTemp.createTempSync('hbm_lazy_list_box_');
     Hive
       ..init(tempDir.path)
       ..registerAdapter(PersonAdapter(), override: true);
@@ -31,14 +31,14 @@ void main() {
     tempDir.deleteSync(recursive: true);
   });
 
-  feature('LazyIterableBox against real hive', () {
+  feature('LazyListBox against real hive', () {
     scenario('custom-type lists reify typed across close + a new instance', () async {
       const people = [Person('a', 1), Person('b', 2)];
-      final first = LazyIterableBox<Person, int>('people');
+      final first = LazyListBox<Person, int>('people');
       await first.put(1, people).run();
       await first.close().run();
 
-      final second = LazyIterableBox<Person, int>('people');
+      final second = LazyListBox<Person, int>('people');
       final read = await second.getOr(1).run();
 
       check(read).deepEquals(people);
@@ -47,7 +47,7 @@ void main() {
     });
 
     scenario('construction touches nothing; inspectors work after the first effect', () async {
-      final facade = LazyIterableBox<String, int>('tags');
+      final facade = LazyListBox<String, int>('tags');
 
       check(Hive.isBoxOpen('tags')).isFalse();
       check(() => facade.length).throws<StateError>();
@@ -60,7 +60,7 @@ void main() {
     });
 
     scenario('absent is None, stored-empty is Some(empty), values materialise', () async {
-      final facade = LazyIterableBox<String, int>('tags');
+      final facade = LazyListBox<String, int>('tags');
 
       await facade.put(1, <String>[]).run();
       await facade.put(2, ['b']).run();
@@ -78,7 +78,7 @@ void main() {
     });
 
     scenario('add, addAll, remove, and update round-trip on the lazy axis', () async {
-      final facade = LazyIterableBox<String, int>('tags');
+      final facade = LazyListBox<String, int>('tags');
 
       await facade.add(1, 'a').run();
       await facade.addAll(1, ['b', 'a']).run();
@@ -91,7 +91,7 @@ void main() {
     });
 
     scenario('writes carry Some of the view, deletes carry None', () async {
-      final facade = LazyIterableBox<String, int>('tags');
+      final facade = LazyListBox<String, int>('tags');
       await facade.ensureInitialised().run();
       final events = <LazyTypedBoxEvent<List<String>, int>>[];
       final subscription = facade.watch().listen(events.add);
@@ -108,7 +108,7 @@ void main() {
     });
 
     scenario('close before first use never creates the box, yet is terminal', () async {
-      final untouched = LazyIterableBox<String, int>('never_used');
+      final untouched = LazyListBox<String, int>('never_used');
 
       await untouched.close().run();
 

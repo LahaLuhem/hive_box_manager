@@ -10,7 +10,7 @@ void main() {
   testWidgets('the hub lists all four family demos', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: HomeHubView()));
 
-    for (final title in ['KeyedBox', 'SingleValueBox', 'IterableBox', 'DualKeyBox']) {
+    for (final title in ['KeyedBox', 'SingleValueBox', 'ListBox', 'DualKeyBox']) {
       check(find.text(title).evaluate()).length.equals(1);
     }
   });
