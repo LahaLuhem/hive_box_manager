@@ -217,6 +217,15 @@ learns one shape and applies it across every variant. Rationale:
   both axes.
 - **Codec defaulting at construction.** `int` / `String` keys (and `(int, int)` dual parts)
   resolve to shipped codecs; any other key type without an explicit codec fails a wiring assert.
+- **Never instantiate the shared CRUD engines with a record as the key type argument.** This one is
+  measured, not aesthetic: `EagerCrudEngine<T, (int, int)>` costs **+440 to +550 ns per get** over
+  the identical engine typed `EagerCrudEngine<T, int>`, on the same box and the same codec. The
+  benchmark decomposes it lane by lane: the dual codec is free (1.01x raw), the adapter call around
+  it is free (1.08x), and the jump to 1.87x appears exactly when the record enters the engine's type
+  parameter. Dart AOT does not monomorphise generics, so a record in a generic slot cannot hold its
+  fields unboxed. `DualKeyBox` and `LazyDualKeyBox` still do this and it is their whole overhead;
+  a new family with a composite key should encode to the raw key in the façade and hand the engine a
+  plain `int` / `String` instead.
 - **The one blessed nullable is `watch({key})`'s filter**: a toggle the consumer passes, never a
   value they receive. Eager watch events carry non-null values even on deletes; lazy events carry
   `Option` (the engine holds no values to attach).

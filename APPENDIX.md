@@ -329,8 +329,18 @@ Three tagged lanes: `unit` (fast, in-memory), `integration` (real hive_ce on tem
 `browser` (chrome, dart2js + dart2wasm). The hive_ce behaviour pins are the load-bearing lane:
 they encode everything the probes discovered, so the `hive_ce` caret can stay open, because an
 engine release that shifts pinned semantics fails the suite instead of silently invalidating the
-wrapper's contracts. The wrapper-overhead benchmark lane (`benchmark/`) holds the façades to
-within 5% of raw hive on eager get / lazy get / put; the measured numbers live in the README.
+wrapper's contracts. The wrapper-overhead benchmark lane (`benchmark/`) holds the façades to raw
+hive across fourteen operations; the measured numbers live in the README.
+
+The aim was originally written as a flat "within 5% of raw", and measuring it properly showed that
+target is malformed rather than met or missed. A percentage is only meaningful when the operation
+being wrapped costs enough to be a denominator: a same-slot `SingleValueBox.get` is ~13 ns of raw
+hive, so the `Option` allocation alone reads +89% while costing +11 ns, and no amount of optimising
+would move that percentage anywhere useful. The aim is now two-currency: **tens of nanoseconds per
+op on the memory paths, single-digit percent on anything that reaches disk**, with the per-op
+figure authoritative wherever the two disagree. The one surface that genuinely misses is
+`DualKeyBox`'s eager get, at roughly 2x raw for the record allocation plus double codec dispatch;
+that is documented in the README rather than averaged away, and cutting it is a roadmap item.
 
 ---
 

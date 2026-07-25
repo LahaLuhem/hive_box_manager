@@ -7,9 +7,10 @@ Maintainer tooling, excluded from the published tarball. Three lanes live here:
   scheme (arithmetic packed int, String composite, 0.0.x bit-shift reference) at 1K/10K/100K.
 - **Wrapper-overhead lane** (`overhead_bench.dart` + `overhead_driver.sh`): façade vs raw hive_ce,
   fourteen lanes across `KeyedBox` / `LazyKeyedBox` (get, values, contains, put, putAll, delete,
-  deleteAll) and `SingleValueBox` / `LazySingleValueBox` (get, set); the aim-#4 proof with its
-  under-5% target. The eager read path carries `vm:prefer-inline` pragmas exactly because this
-  lane holds it to raw speed.
+  deleteAll) and `SingleValueBox` / `LazySingleValueBox` (get, set); the aim-#4 proof. The target
+  is two-currency (tens of ns per op on memory paths, single-digit percent on disk paths) because a
+  flat percentage is meaningless on the cheap lanes; see below. The eager read path carries
+  `vm:prefer-inline` pragmas exactly because this lane holds it to raw speed.
 - **List-box lane** (`list_box_bench.dart` + `list_box_driver.sh`): `ListBox` against two
   hand-rolled baselines, across two element types and the elements-per-key axis.
 
@@ -71,7 +72,15 @@ it to ~24 ns: **+89%**, and also +11 ns. Walking an eager `values` iterable is +
 
 Neither is a performance problem, and quoting either percentage would be a lie by arithmetic. So
 `overhead.py` prints a per-op nanosecond column and, below `CHEAP_OP_NS`, says outright that the
-percentage is a fact about the denominator. The two readings sort the lanes cleanly:
+percentage is a fact about the denominator.
+
+The list-box lane has the same hazard from the other direction: its `get` ratio runs 2.4x at one
+element per key and 1.2x at a thousand, which reads like the wrapper getting cheaper at scale. It
+isn't. Fitting the four lengths gives **~198 ns fixed per get + ~2.29 ns per element** (within 4% at
+every length), so both terms are real and the ratio only moves because the fixed term stops
+dominating. Quote the two-term model, never the ratio at one list length.
+
+The overhead lane's two readings sort its own lanes cleanly:
 
 - **memory-path ops** (eager get, contains, values, batch writes): 1 to 22 ns of wrapper per op;
 - **effectful ops** (anything returning a `Task` that hits disk): 300 to 660 ns per op, which is

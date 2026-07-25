@@ -24,8 +24,10 @@ that's the gap this fills:
   you stop rewriting the same boilerplate for every type you store.
 - 🧩 **Four boxes for four real shapes of data**, each in an eager and a lazy flavour, so the box
   fits the problem instead of the other way round.
-- 🚀 **You keep Hive's speed.** The typed surface benchmarks within noise of raw `hive_ce`, and
-  the numbers below back that up instead of hand-waving it.
+- 🚀 **You keep Hive's speed**, on the surfaces where that is measurable: keyed, single-value and
+  batch operations land within tens of nanoseconds per op of raw `hive_ce`. The one exception is
+  `DualKeyBox`'s eager reads, at 1.4x to 1.8x, and [the numbers below](#-what-that-costs) say so
+  rather than hand-waving it.
 
 Pure Dart, so it runs anywhere Hive does: Flutter apps, Dart servers, CLIs, and the web.
 
@@ -43,8 +45,9 @@ Pure Dart, so it runs anywhere Hive does: Flutter apps, Dart servers, CLIs, and 
     * [🔗 DualKeyBox](#-dualkeybox)
 - [🎛️ Make it yours](#-make-it-yours)
 - [📏 Eager or lazy? (measured)](#-eager-or-lazy-measured)
-- [🛡️ Safer than raw hive, at raw-hive speed](#-safer-than-raw-hive-at-raw-hive-speed)
-    * [⚡ Performance](#-performance)
+- [🛡️ Safer than raw hive](#-safer-than-raw-hive)
+    * [⚡ What that costs](#-what-that-costs)
+    * [⚡ Codec choice](#-codec-choice)
 - [🗺️ Roadmap](#-roadmap)
 
 <!-- TOC end -->
@@ -57,7 +60,7 @@ Start here. Match what you're storing to a family, then grab its eager or lazy v
 |-------------------------------|-------------------------|---------------------------------------------|
 | Many values, one key each     | `KeyedBox<T, K>`        | users, todos, cache entries                 |
 | Exactly one value             | `SingleValueBox<T>`     | a session token, the theme, one config blob |
-| A list of values per key      | `ListBox<T, K>`     | tags per post, history per day              |
+| A list of values per key      | `ListBox<T, K>`         | tags per post, history per day              |
 | Values addressed by two parts | `DualKeyBox<T, K1, K2>` | (user, day) events, (row, column) grids     |
 
 Every family has an eager and a `Lazy...` twin; [Eager or lazy?](#-eager-or-lazy-measured) picks
@@ -251,7 +254,7 @@ Both parts round-trip through one `DualKeyCodec`. `(int, int)` defaults to the s
 in 16 bits and the numbers matter to you, opt into `PackedIntDualCodec`
 (`codec: const PackedIntDualCodec()`). It packs both parts into a single u32 key and is
 **bit-identical to the old `0.0.x` `.bitShift` scheme**, so those boxes read in place. The two
-codecs trade off measurably; [Performance](#-performance) has the head-to-head. Rolling your own
+codecs trade off measurably; [Codec choice](#-codec-choice) has the head-to-head. Rolling your own
 part types? Implement `DualKeyCodec<K1, K2>` and keep the encoding bijective, or reverse queries
 will lie to you.
 
@@ -321,13 +324,13 @@ contents while your observer reports what the code did to them.
 Folklore says "lazy opens instantly and saves all the memory." The maintainer benchmark (macOS
 Apple Silicon, AOT, hive_ce 2.19.3) disagrees:
 
-- **Opening costs the same either way**, and it scales with file size: ~70 ms at 100K int-keyed
-  entries, ~3 s at 1M. Hive parses every frame to build the keystore on any open. What lazy skips
-  is holding onto the *values*.
-- **Keys always live in RAM**, eager or lazy: ~21 to 33 MB at 100K entries, ~200 to 270 MB at 1M
-  (String keys run 20 to 80% heavier than int keys).
-- **Reads are where they split.** An eager get is ~0.5 to 0.8 µs from memory; a lazy get pays for
-  a disk read at ~22 to 25 µs.
+- **Opening costs about the same either way**, and it scales with file size: ~70 ms at 100K
+  int-keyed entries, ~3.4 s at 1M (lazy shaves 5 to 10% off, not an order of magnitude). Hive parses
+  every frame to build the keystore on any open. What lazy skips is holding onto the *values*.
+- **Keys always live in RAM**, eager or lazy: 22 to 64 MB at 100K entries, 210 to 340 MB at 1M.
+  The spread is the key encoding, not the box kind: String keys run 50 to 80% heavier than int keys.
+- **Reads are where they split.** An eager get is ~1.1 to 1.4 µs from memory; a lazy get pays for
+  a disk read at ~26 µs.
 
 Open cost tracks file size on both axes (the two lines sit right on top of each other), while
 reads are where they part ways:
@@ -340,35 +343,84 @@ So reach for **eager** on hot, value-heavy-*read* boxes that fit comfortably in 
 on value-heavy boxes you read only now and then. Neither opens "instantly" at scale, and keys are
 a RAM cost you pay regardless.
 
-## 🛡️ Safer than raw hive, at raw-hive speed
+## 🛡️ Safer than raw hive
 
 Release-mode `hive_ce` takes an out-of-range int key or an oversized String key without
 complaint, then corrupts quietly: keys wrap into other slots, and an oversized String key can make
 the whole box file unreadable on its next open. This package rejects exactly those keys with an
 `ArgumentError` at the call site, before anything reaches disk.
 
-That safety is measured, not paid for in speed. The wrapper-overhead benchmark (AOT, façade vs raw
-`hive_ce`) lands the typed surface at roughly **2.5% on eager gets, 1.5% on lazy gets, and 3% on
-puts**. Within noise of raw, with the whole no-null contract sitting on top.
+### ⚡ What that costs
 
-### ⚡ Performance
+There is no single number, and any package that gives you one is quoting the surface that flattered
+it. Wrapper cost depends on how expensive the thing being wrapped is, so it splits by surface:
+
+| Surface                                                             | Wrapper cost                              | Read as                                                   |
+|---------------------------------------------------------------------|-------------------------------------------|-----------------------------------------------------------|
+| `KeyedBox` / `SingleValueBox`, memory reads (get, contains, values) | 1 to 22 ns per op                         | free                                                      |
+| Any effect that reaches disk (put, delete, lazy get)                | 300 to 700 ns per op, 2 to 4%             | free, disk dominates                                      |
+| `ListBox` reads                                                     | ~200 ns per `get` + ~2.3 ns per element   | 2.4x on one-element lists, 1.2x on thousand-element lists |
+| Batch writes (`putAll`, `deleteAll`)                                | 1 to 21 ns per entry                      | free                                                      |
+| Open time, keystore RAM, file size                                  | no measurable difference                  | identical                                                 |
+| **`DualKeyBox` eager get**                                          | **1.4x to 1.8x** (+440 to +550 ns per op) | genuinely slower, see below                               |
+| **`DualKeyBox` `putAll`**                                           | **1.5x to 1.7x**                          | genuinely slower, see below                               |
+
+<details>
+<summary>Why percentages are the wrong unit for most of this</summary>
+
+Some operations are cheap enough that one extra call frame doubles them while costing nothing that
+matters. A same-slot `SingleValueBox.get` is ~13 ns of raw hive, so the `Option` allocation and codec
+dispatch take it to ~24 ns: that is **+89%**, and it is also **+11 ns**. Walking an eager `values`
+iterable is +32% and +3 ns.
+
+Quoting those percentages would be a lie by arithmetic, so the table gives nanoseconds wherever the
+underlying op is that cheap, and percentages only where the denominator is a real disk round-trip.
+`benchmark/python/overhead.py` enforces the same split, and refuses to stand behind a run whose
+median and minimum disagree.
+
+Precision, honestly: repeated passes reproduce the *bands* above and the ordering, not two
+significant figures on any single lane. Treat each figure as an order of magnitude.
+
+</details>
+
+**The dual-key cost is real, and it is one line of plumbing.** Decomposing a 100K-get pass lane by
+lane puts the whole gap in one place: the dual codec is free (1.01x), the adapter call around it is
+free (1.08x), and the cost appears the moment the shared CRUD engine is instantiated with the
+`(K1, K2)` **record** as its key type argument (1.87x). Hand that same engine a plain `int` key and
+it drops back to 1.01x. Records in a generic slot are the entire story; nothing else in
+`DualKeyBox` contributes measurably.
+
+So it is fixable rather than inherent, and it sits on the [roadmap](#-roadmap) as its own piece of
+work. Meanwhile the blast radius is narrow: only eager `get` and `putAll` are affected, lazy gets
+(1.04x), reverse queries (0.92 to 1.01x), open and memory are all free, and exact lookups stay O(1).
+At ~1.2 µs per eager dual-key get it matters if you do millions in a tight loop, and not otherwise.
+
+**`ListBox` prices differently**, because raw hive has no list-valued box to compare against. Its
+baseline is the code you would hand-write, and there are two of those. Against the version with a
+`.cast<T>()` at the read boundary, `ListBox` costs the ~200 ns plus ~2.3 ns per element above (the
+per-element part is the cast view's type check, one per element you actually touch). Against the
+version without a cast, your hand-roll is *faster and broken*: a stored `List<Person>` reads back as
+`List<dynamic>` after a restart and the cast throws. Memory matches a correct hand-roll on every
+lane, reads included, so the read view really is copy-free; it just isn't check-free.
+
+### ⚡ Codec choice
 
 Two dual-key codecs ship, and they trade off like this:
 
 | Operation                     | packed int                         | String composite |
 |-------------------------------|------------------------------------|------------------|
-| eager get, 100K entries       | 51 ms                              | 81 ms            |
-| box open (eager), 100K        | 70 ms                              | 133 ms           |
-| putAll, 100K                  | 78 ms                              | 145 ms           |
-| full key scan (a query), 100K | 5.0 ms                             | 18.9 ms          |
-| keystore RSS after open, 100K | 33 MB                              | 61 MB            |
-| box file size, 100K           | 1.9 MB                             | 2.6 MB           |
+| eager get, 100K entries       | 119 ms                             | 163 ms           |
+| box open (eager), 100K        | 77 ms                              | 144 ms           |
+| putAll, 100K                  | 132 ms                             | 232 ms           |
+| reverse query, 100K           | 6.2 ms                             | 11.6 ms          |
+| keystore RSS after open, 100K | 35 MB                              | 64 MB            |
+| box file size, 100K           | 1.9 MB                             | 2.7 MB           |
 | lazy get / single put         | codec-indifferent (disk dominates) |                  |
 
-Medians from the maintainer benchmark (macOS Apple Silicon, AOT, constant 1-byte values to
-isolate key cost). Web is unmeasured; its ordering is assumed to follow the VM.
-`StringCompositeDualCodec` is the safe default; reach for `PackedIntDualCodec` when these wins
-matter and both parts fit in 16 bits.
+Medians measured **through `DualKeyBox` itself** (macOS Apple Silicon, AOT, constant 1-byte values to
+isolate key cost), not through a hand-rolled stand-in. Web is unmeasured; its ordering is assumed to
+follow the VM. `StringCompositeDualCodec` is the safe default; reach for `PackedIntDualCodec` when
+these wins matter and both parts fit in 16 bits.
 
 The table rows are the 100K slice of these curves; the gap widens as boxes grow:
 
@@ -383,6 +435,10 @@ The table rows are the 100K slice of these curves; the gap widens as boxes grow:
 
 Additive candidates for 1.x, in no committed order:
 
+- **Cutting `DualKeyBox`'s eager `get` and `putAll` cost** (1.4x to 1.8x raw hive). Measured to a
+  single cause: the shared CRUD engine is instantiated with the `(K1, K2)` record as its key type
+  argument, and handing the same engine a plain key type recovers all of it. None of that is
+  contract, so it should land without touching the public surface.
 - **Indexed reverse queries** for very large (>100K) datasets: an inverted-index strategy on
   `LazyDualKeyBox`, swapping out the O(K) scan behind the same query methods.
 - **IsolatedHive support** behind the box-acquisition seam (`hive_ce` itself recommends it for
