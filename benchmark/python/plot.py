@@ -3,8 +3,8 @@
 
 seaborn (whitegrid theme) over matplotlib, fed polars frames via seaborn's dataframe
 interchange support (0.13+), matching the sibling packages' chart house style; run under uv
-(see benchmark/README.md). Reads ``../results/*.jsonl``, takes per-config medians, and writes
-``../reports/*.png``.
+(see benchmark/README.md). Reads ``../results/*.jsonl``, filters to the ``facade`` impl, takes
+per-config medians, and writes ``../reports/*.png``.
 
 Maintainer tooling; not shipped (``benchmark/`` is excluded from the pub.dev
 tarball, so none of this reaches downstream users).
@@ -43,6 +43,11 @@ INK = "#222222"  # text + annotations (a text token, never a series colour)
 CHART_DPI = 150  # matches the sibling; sharp on retina without bloating the PNG
 FIG_SIZE = (8.0, 4.6)
 
+# Charts plot the shipped façades, because that is what the README's tables claim to describe.
+# The raw lane stays in the JSONL as the overhead denominator; switch a call's ``impl`` to
+# inspect it.
+FACADE = "facade"
+
 
 def load_rows():
     rows = []
@@ -54,12 +59,18 @@ def load_rows():
     return rows
 
 
-def median_by_size(rows, *, mode, key_kind, box_kind, field="ms"):
-    """{n: median(field)} across reps for one (mode, key_kind, box_kind)."""
+def impl_of(row):
+    """The row's impl, defaulting pre-1.0 records (written before the axis existed) to ``raw``."""
+    return row.get("impl", "raw")
+
+
+def median_by_size(rows, *, mode, key_kind, box_kind, field="ms", impl=FACADE):
+    """{n: median(field)} across reps for one (mode, impl, key_kind, box_kind)."""
     buckets = defaultdict(list)
     for row in rows:
         if (
             row.get("mode") == mode
+            and impl_of(row) == impl
             and row.get("keyKind") == key_kind
             and row.get("boxKind") == box_kind
             and row.get("n") is not None
@@ -70,12 +81,13 @@ def median_by_size(rows, *, mode, key_kind, box_kind, field="ms"):
     return {n: statistics.median(values) for n, values in buckets.items()}
 
 
-def median_per_op_us(rows, *, key_kind, box_kind):
+def median_per_op_us(rows, *, key_kind, box_kind, impl=FACADE):
     """{n: median microseconds-per-op} for reads (ms / ops * 1000)."""
     buckets = defaultdict(list)
     for row in rows:
         if (
             row.get("mode") == "get"
+            and impl_of(row) == impl
             and row.get("keyKind") == key_kind
             and row.get("boxKind") == box_kind
             and row.get("ops")

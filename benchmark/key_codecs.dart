@@ -1,7 +1,16 @@
 /// The composite-key packing candidates from the planning benchmarks (P1),
 /// duplicated from `test/support/probe_codecs.dart` because the benchmark tree
-/// cannot import test support cleanly; both copies are superseded by the real
-/// `KeyCodec` implementations once Phase 1 lands them.
+/// cannot import test support cleanly.
+///
+/// These are the matrix lane's **raw baseline**, not dead code: `bench.dart`'s `raw` impl packs
+/// with these hand-inlined functions while its `facade` impl goes through the shipped
+/// `DualKeyCodec`s, and the pair is what turns the lane into a wrapper-overhead measurement.
+/// They also carry the `bitshift` reference scheme, which no shipped codec implements.
+///
+/// Keep them byte-compatible with the shipped codecs ([arithPack] with `PackedIntDualCodec`,
+/// [stringPack] with `StringCompositeDualCodec`): the driver preps one box file per
+/// (keyKind, scale) and points both impls at it, so a divergence here silently stops comparing
+/// like with like.
 library;
 
 // Decode sits inside measured lanes (micro + scan): `substring` keeps the implementation
