@@ -5,16 +5,63 @@ Maintainer tooling, excluded from the published tarball. Two lanes live here:
 - **Key-codec matrix** (`bench.dart` + `driver.sh`, plus `driver_1m.sh` for the open-only 1M
   pass): measures put / putAll / open / get / scan / query / RSS / file size per key-encoding
   scheme (arithmetic packed int, String composite, 0.0.x bit-shift reference) at 1K/10K/100K.
-- **Wrapper-overhead lane** (`overhead_bench.dart` + `overhead_driver.sh`): façade vs raw
-  hive_ce on eager get (100K random gets), lazy get (10K ops over 100K entries), and single
-  puts (10K); the aim-#4 proof with its under-5% target. The eager read path carries
-  `vm:prefer-inline` pragmas exactly because this lane holds it to raw speed.
+- **Wrapper-overhead lane** (`overhead_bench.dart` + `overhead_driver.sh`): façade vs raw hive_ce,
+  fourteen lanes across `KeyedBox` / `LazyKeyedBox` (get, values, contains, put, putAll, delete,
+  deleteAll) and `SingleValueBox` / `LazySingleValueBox` (get, set); the aim-#4 proof with its
+  under-5% target. The eager read path carries `vm:prefer-inline` pragmas exactly because this
+  lane holds it to raw speed.
 
-> **The overhead lane needs a quiet host.** It resolves fractions of a microsecond per op, so
-> background load doesn't add noise, it drowns the signal. Four passes taken on a laptop with two
-> JetBrains IDEs running (load average 4 to 17) put eager get anywhere from -6% to +27%, and put
-> individual samples 27x apart. `python/overhead.py` cross-checks median against min and refuses to
-> stand behind a run where they diverge; read its verdict before quoting any number from this lane.
+Only operations with an **exact** raw counterpart live in the overhead lane, so its percentages
+mean "what the wrapper costs" and nothing else. `IterableBox` and `DualKeyBox` are deliberately
+out: raw hive_ce has no list-valued or two-part-keyed box, so their baseline has to be hand-rolled
+code rather than one call. That is a different question, asked in the matrix lane (dual) and in the
+iterable lane.
+
+> **The overhead lane needs a quiet host.** It resolves tens of nanoseconds per op, so background
+> load doesn't add noise, it drowns the signal. Passes taken on a laptop with two JetBrains IDEs
+> running (load average 4 to 17) put eager get anywhere from -6% to +27% and spread individual
+> samples 27x apart; the same lane on the same machine at load 3 reads +1.5%, reproducibly.
+> `python/overhead.py` cross-checks median against min and refuses to stand behind a run where they
+> diverge. Read its verdict before quoting any number from this lane.
+
+### Percentages lie on cheap operations
+
+Some ops here are so cheap that one extra call frame is a double-digit percentage. A same-slot
+`SingleValueBox.get` costs ~13 ns raw, so the façade's `Option` allocation and codec dispatch take
+it to ~24 ns: **+89%**, and also +11 ns. Walking an eager `values` iterable is +32% and +3 ns.
+
+Neither is a performance problem, and quoting either percentage would be a lie by arithmetic. So
+`overhead.py` prints a per-op nanosecond column and, below `CHEAP_OP_NS`, says outright that the
+percentage is a fact about the denominator. The two readings sort the lanes cleanly:
+
+- **memory-path ops** (eager get, contains, values, batch writes): 1 to 22 ns of wrapper per op;
+- **effectful ops** (anything returning a `Task` that hits disk): 300 to 660 ns per op, which is
+  `Task` construction plus `.run()` plus the engine's guard, and lands at 2 to 3% against a
+  disk read of tens of microseconds.
+
+Quote nanoseconds for the first group and percentages for the second.
+
+### How precise is this lane, really
+
+Two full passes at comparable load (3.3 to 4.8) reproduce the ordering and the bands, not the
+individual figures. Per-op wrapper cost, run A then run B:
+
+| Lane | A | B |
+|---|---|---|
+| values (eager) | +3 ns | +2 ns |
+| single get (eager) | +11 ns | +7 ns |
+| get (eager) | +10 ns | +16 ns |
+| contains (lazy) | +45 ns | +10 ns |
+| delete | +311 ns | +337 ns |
+| single set (eager) | +410 ns | +378 ns |
+| put | +393 ns | +789 ns |
+| single get (lazy) | +657 ns | +684 ns |
+| get (lazy) | -62 ns | +452 ns |
+
+So: the two groups above are solid, and most lanes land within a factor of two. `put` and
+`get (lazy)` are not: they moved 2x and flipped sign respectively, and `put` tripped the 5% target
+in B while clearing it in A. Treat any single figure from this lane as an order of magnitude, and
+don't quote a lane to two significant figures without a third pass agreeing.
 
 ## The `impl` axis
 
@@ -88,11 +135,9 @@ Environment for all four: macOS 15.7.7 on Apple Silicon (arm64), Dart 3.12.2, hi
 2026-07-25. Values were a constant 1 byte by design, isolating key cost; web performance is
 unmeasured (ordering assumed to follow the VM).
 
-`results_overhead.jsonl` is **provisional**. It is the one pass of four whose median and min agree
-on every lane (1.4x sample spread), but it predates the driver's load stamp, so nothing in the file
-proves the host was quiet. Its lazy-get lane also clears 5% on the median (+3.0%) and misses on the
-min (+6.6%), which is not a result that supports an under-5% claim either way. Re-run it on an idle
-machine before any number from it goes in the top-level README:
+`results_overhead.jsonl` carries a load stamp and every lane resolves, but see the precision note
+above before quoting a single figure from it: a repeat pass moved `put` 2x and flipped `get (lazy)`'s
+sign. Re-run before anything from this lane lands in the top-level README:
 
 ```sh
 dart compile exe benchmark/overhead_bench.dart -o /tmp/hbm_overhead
