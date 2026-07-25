@@ -2,6 +2,9 @@
 ### Changed
 - **BREAKING**: renamed `IterableBox` to `ListBox` and `LazyIterableBox` to `LazyListBox`. Members, contracts, and on-disk frames are unchanged, so a find-and-replace on the two names is the entire migration. `Iterable` was a misnomer: the box takes and returns a `List`, hive rejects non-`List` iterables at write time, and the name would have made the planned `SetBox` look like a subtype rather than a sibling, with no room for `Map` at all.
 
+### Fixed
+- \[#13\] Correct the DualKeyBox overhead figures and name their real cause
+
 ## [1.0.0] - 2026-07-22
 ### Added
 - `KeyedBox` and `LazyKeyedBox`: typed key/value boxes with ready-made `get`, `put`, `update`, `delete`, `clear`, and `watch`.
