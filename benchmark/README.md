@@ -10,6 +10,12 @@ Maintainer tooling, excluded from the published tarball. Two lanes live here:
   puts (10K); the aim-#4 proof with its under-5% target. The eager read path carries
   `vm:prefer-inline` pragmas exactly because this lane holds it to raw speed.
 
+> **The overhead lane needs a quiet host.** It resolves fractions of a microsecond per op, so
+> background load doesn't add noise, it drowns the signal. Four passes taken on a laptop with two
+> JetBrains IDEs running (load average 4 to 17) put eager get anywhere from -6% to +27%, and put
+> individual samples 27x apart. `python/overhead.py` cross-checks median against min and refuses to
+> stand behind a run where they diverge; read its verdict before quoting any number from this lane.
+
 ## The `impl` axis
 
 Every matrix lane runs twice, once per `impl`:
@@ -40,8 +46,16 @@ Two scan modes, deliberately:
 
 ```sh
 dart compile exe benchmark/overhead_bench.dart -o /tmp/hbm_overhead
-benchmark/overhead_driver.sh /tmp/hbm_overhead /tmp/overhead.jsonl
+benchmark/overhead_driver.sh /tmp/hbm_overhead benchmark/results/results_overhead.jsonl 9
 ```
+
+Then derive the percentages the top-level README quotes, rather than hand-computing them:
+
+```sh
+uv run --project benchmark/python python overhead.py
+```
+
+It prints both medians per lane, the per-op delta, and flags anything at or over the 5% target.
 
 ## Running the matrix
 
@@ -62,15 +76,34 @@ Each invocation is one fresh process per measurement; the driver writes one JSON
 ## `results/`
 
 Raw JSONL backing the top-level README's performance tables and codec-crossover guidance:
-`results_aot.jsonl` (deciding lane), `results_jit.jsonl` (sanity), `results_1m.jsonl` (1M
-open-only).
 
-Environment: macOS 15.7.7 on Apple Silicon (arm64), Dart 3.12.2, hive_ce 2.19.3, 2026-07-25.
-Values were a constant 1 byte by design, isolating key cost; web performance is unmeasured
-(ordering assumed to follow the VM).
+| File | Lane |
+|---|---|
+| `results_aot.jsonl` | matrix, AOT: the numbers that decide anything |
+| `results_1m.jsonl` | matrix, 1M open-only |
+| `results_jit.jsonl` | matrix, JIT: ordering sanity, never for decisions |
+| `results_overhead.jsonl` | wrapper overhead, AOT: the source of the README's percentages |
 
-Re-stamp this section whenever the results are regenerated. A number with no environment behind
-it is not a measurement.
+Environment for all four: macOS 15.7.7 on Apple Silicon (arm64), Dart 3.12.2, hive_ce 2.19.3,
+2026-07-25. Values were a constant 1 byte by design, isolating key cost; web performance is
+unmeasured (ordering assumed to follow the VM).
+
+`results_overhead.jsonl` is **provisional**. It is the one pass of four whose median and min agree
+on every lane (1.4x sample spread), but it predates the driver's load stamp, so nothing in the file
+proves the host was quiet. Its lazy-get lane also clears 5% on the median (+3.0%) and misses on the
+min (+6.6%), which is not a result that supports an under-5% claim either way. Re-run it on an idle
+machine before any number from it goes in the top-level README:
+
+```sh
+dart compile exe benchmark/overhead_bench.dart -o /tmp/hbm_overhead
+benchmark/overhead_driver.sh /tmp/hbm_overhead benchmark/results/results_overhead.jsonl 9
+uv run --project benchmark/python python overhead.py   # must not print CONTAMINATED
+```
+
+Re-stamp this section whenever the results are regenerated, and commit the JSONL in the same
+change as any number that cites it. A percentage with no committed data behind it is not a
+measurement, it is a memory of one: the overhead lane spent 1.0 in exactly that state, with a
+harness in the tree and its output nowhere.
 
 ## `reports/`
 
@@ -87,6 +120,10 @@ The Python lives in [`python/`](python/) as a [`uv`](https://docs.astral.sh/uv/)
 globally. Regenerate whenever the results change:
 
 ```sh
-uv sync --project benchmark/python                # create .venv, install the pinned stack
-uv run --project benchmark/python python plot.py  # rewrite reports/*.png
+uv sync --project benchmark/python                    # create .venv, install the pinned stack
+uv run --project benchmark/python python plot.py      # rewrite reports/*.png
+uv run --project benchmark/python python overhead.py  # print the overhead table
 ```
+
+[`overhead.py`](python/overhead.py) prints rather than plots (three lanes make a table, not a
+chart), so it leans on the stdlib instead of the charting stack.
