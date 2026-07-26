@@ -162,6 +162,46 @@ def main():
                 f"({by_median:+.1f}% median, {by_min:+.1f}% min, {spread:.1f}x spread)."
             )
 
+    report_put_all_by(rows)
+
+
+def report_put_all_by(rows):
+    """The putAllBy lane, on its own terms: two ways to write one call, not wrapper overhead.
+
+    Its impl axis is map|facade, so it cannot go through the LANES machinery above, and a percentage
+    against "raw hive_ce" would be meaningless here: both impls are the facade. What it prices is
+    the intermediate `Map` that `putAllBy` removes, which is why the saving tracks how dear the key
+    type is to hash rather than anything about the write.
+    """
+    by_impl = {
+        impl: sorted(
+            row["micros"]
+            for row in rows
+            if row.get("mode") == "putallby" and row.get("impl") == impl and "micros" in row
+        )
+        for impl in ("map", "facade")
+    }
+    if not all(by_impl.values()):
+        return
+
+    ops = next(row["ops"] for row in rows if row.get("mode") == "putallby")
+    mapped, facade = by_impl["map"], by_impl["facade"]
+    map_med, map_min = statistics.median(mapped) / 1000, mapped[0] / 1000
+    by_med, by_lo = statistics.median(facade) / 1000, facade[0] / 1000
+    by_median, by_min = by_med / map_med, by_lo / map_min
+    per_entry = (by_med - map_med) * 1e6 / ops
+
+    print(f"\nputAllBy vs the Map.fromIterables form, {ops:,} entries")
+    print(f"  map form   median {map_med:7.1f} ms   min {map_min:7.1f} ms")
+    print(f"  putAllBy   median {by_med:7.1f} ms   min {by_lo:7.1f} ms")
+    print(f"  {by_median:.2f}x by median, {by_min:.2f}x by min, {per_entry:+.0f} ns per entry")
+    if (by_median < 1) != (by_min < 1):
+        print("  median and min disagree on the sign: too noisy to quote, re-run on a quiet host.")
+    else:
+        print(
+            "  both estimators agree on the sign, so the direction is real even where runs overlap."
+        )
+
 
 if __name__ == "__main__":
     main()

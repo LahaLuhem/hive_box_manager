@@ -1,6 +1,6 @@
 #!/bin/bash
 # Wrapper-overhead driver (aim #4's proof; target: within noise, under 5%).
-# Usage: overhead_driver.sh <bench-executable> <out.jsonl> [reps] [get_n] [put_n]
+# Usage: overhead_driver.sh <bench-executable> <out.jsonl> [reps] [get_n] [put_n] [by_n]
 # AOT (the deciding lane): `dart compile exe benchmark/overhead_bench.dart` first and pass the
 # produced executable.
 #
@@ -20,6 +20,10 @@ OUT="$2"
 REPS="${3:-9}"
 GET_N="${4:-100000}"
 PUT_N="${5:-10000}"
+# The putAllBy lane gets its own, larger size: it is one batched call, so a big n is cheap, and the
+# few-percent effect it measures does not clear this host's rep noise at PUT_N. The per-op write
+# lanes cannot follow, because each of their ops is a disk round-trip.
+BY_N="${6:-100000}"
 
 # Both-format tolerant: macOS says "load averages: a b c", GNU says "load average: a, b, c".
 current_load() { uptime | sed -E 's/.*load averages?: *//; s/,/ /g; s/  */ /g; s/ *$//'; }
@@ -54,6 +58,7 @@ for _ in $(seq "$REPS"); do
     # Write lanes own their box: each one mutates, so none can share a prepped file.
     "$BIN" put "$impl" "$PUT_N" >> "$OUT"
     "$BIN" putall "$impl" "$PUT_N" >> "$OUT"
+
     "$BIN" delete "$impl" "$PUT_N" >> "$OUT"
     "$BIN" deleteall "$impl" "$PUT_N" >> "$OUT"
     # Single-value façades: one fixed slot, so n is the op count, not a box size.
@@ -64,7 +69,15 @@ for _ in $(seq "$REPS"); do
   done
 done
 
-printf '{"mode":"meta","reps":%s,"getN":%s,"putN":%s,"loadStart":"%s","loadEnd":"%s"}\n' \
-  "$REPS" "$GET_N" "$PUT_N" "$LOAD_START" "$(current_load)" >> "$OUT"
+# putAllBy lane: its impl axis is map|facade (the two ways to write the same call), not raw|facade,
+# because there is no raw hive_ce counterpart to compare against. See the bench's own header.
+for _ in $(seq "$REPS"); do
+  for impl in map facade; do
+    "$BIN" putallby "$impl" "$BY_N" >> "$OUT"
+  done
+done
+
+printf '{"mode":"meta","reps":%s,"getN":%s,"putN":%s,"byN":%s,"loadStart":"%s","loadEnd":"%s"}\n' \
+  "$REPS" "$GET_N" "$PUT_N" "$BY_N" "$LOAD_START" "$(current_load)" >> "$OUT"
 
 echo "overhead driver done: $(wc -l < "$OUT") records; load $LOAD_START -> $(current_load)" >&2
