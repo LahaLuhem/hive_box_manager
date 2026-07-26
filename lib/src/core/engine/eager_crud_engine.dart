@@ -1,35 +1,29 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:hive_ce/hive.dart';
 
-import '/src/codec/key/key_codec.dart';
-import '/src/event/typed_box_event.dart';
 import '/src/observer/box_observer.dart';
+import '../raw_key.dart';
 import '../raw_key_gate.dart';
 import '../value_codec/value_codec.dart';
 
 /// The eager CRUD engine: every eager façade delegates here, so CRUD is written exactly once.
 ///
-/// Policies enter by injection (key codec, value codec, observer); the engine owns the mechanics:
-/// encode, gate, hive, decode, dispatch. Sync reads are legal by construction: an eager engine only
-/// ever exists around an already-open box (the façades' async openers guarantee it), and `close()`
-/// / `deleteFromDisk()` are terminal, after which operations surface the engine's own already-closed error
-/// (tier 3: no wrapper pre-check).
+/// Owns hive and the corruption gate; façades own their codecs. Keys arrive encoded as [RawKey],
+/// with the semantic key alongside purely so observers hear what a consumer would recognise.
+/// Keeping codecs out is what removes the `KeyCodec<(K1, K2)>` adapter the dual façades would otherwise
+/// need, and its ~350 ns per op (`benchmark/key_shape_bench.dart`).
 ///
-/// Precondition violations (a codec emitting a non-storable raw key) throw synchronously at the call
-/// site, before any [Task] is built: fail at the site, not at `.run()`.
-final class EagerCrudEngine<T extends Object, K extends Object> {
+/// Sync reads are legal by construction: an eager engine only exists around an already-open box.
+/// `close()` / `deleteFromDisk()` are terminal, after which operations surface the engine's own
+/// already-closed error (tier 3: no wrapper pre-check). A codec emitting a non-storable raw key
+/// throws at the call site, before any [Task] is built.
+final class EagerCrudEngine<T extends Object> {
   final Box<Object?> _box;
-  final KeyCodec<K> _keyCodec;
   final ValueCodec<T> _valueCodec;
   final BoxObserver? _observer;
 
   /// Wires the engine around an open [_box].
-  EagerCrudEngine({
-    required this._box,
-    required this._keyCodec,
-    required this._valueCodec,
-    this._observer,
-  });
+  EagerCrudEngine({required this._box, required this._valueCodec, this._observer});
 
   /// The underlying box name: the observer correlation handle.
   String get name => _box.name;
@@ -43,10 +37,7 @@ final class EagerCrudEngine<T extends Object, K extends Object> {
   /// Whether the box holds at least one entry.
   bool get isNotEmpty => _box.isNotEmpty;
 
-  /// The stored keys, decoded lazily.
-  Iterable<K> get keys => _box.keys.map((rawKey) => _keyCodec.decode(rawKey as Object));
-
-  /// The raw keys exactly as hive stores them, undecoded: the query strategies' scan surface.
+  /// The stored keys exactly as hive holds them. Façades decode; the query strategies scan.
   Iterable<Object> get rawKeys => _box.keys.map((rawKey) => rawKey as Object);
 
   /// The stored values, decoded lazily; dispatches one read-all event at call time.
@@ -56,101 +47,104 @@ final class EagerCrudEngine<T extends Object, K extends Object> {
     return _box.values.map((storedValue) => _valueCodec.fromStored(storedValue!));
   }
 
-  /// Reads [key], `None` when absent.
-  // Inlined into callers: the wrapper-overhead lane holds the eager read to raw-hive speed, and
-  // call frames are the one cost the compiler can erase here (the Some allocation is contract).
+  /// Restores a stored value through the value codec, for façades assembling their watch events.
+  T decodeStored(Object storedValue) => _valueCodec.fromStored(storedValue);
+
+  /// Reads [rawKey], `None` when absent. [semanticKey] is what observers hear.
+  // Inlined into callers: the wrapper-overhead lane holds the eager read to raw-hive speed, and call
+  // frames are the one cost the compiler can erase here (the Some allocation is contract).
   @pragma('vm:prefer-inline')
-  Option<T> get(K key) {
-    final storedValue = _box.get(_keyCodec.encode(key));
-    _observer?.onRead(name, key, storedValue);
+  Option<T> get(RawKey rawKey, Object semanticKey) {
+    final storedValue = _box.get(rawKey.value);
+    _observer?.onRead(name, semanticKey, storedValue);
 
     return storedValue == null ? const None() : Some(_valueCodec.fromStored(storedValue));
   }
 
-  /// Reads [key], falling back to [fallback] when absent.
-  T getOr(K key, T fallback) => get(key).getOrElse(() => fallback);
+  /// Reads [rawKey], falling back to [fallback] when absent.
+  T getOr(RawKey rawKey, Object semanticKey, T fallback) =>
+      get(rawKey, semanticKey).getOrElse(() => fallback);
 
-  /// Whether [key] is stored right now.
-  bool contains(K key) => _box.containsKey(_keyCodec.encode(key));
+  /// Whether [rawKey] is stored right now. No observer event, so no semantic key is needed.
+  bool contains(RawKey rawKey) => _box.containsKey(rawKey.value);
 
-  /// Writes [value] under [key].
-  Task<Unit> put(K key, T value) {
-    final rawKey = _keyCodec.encode(key);
-    ensureStorableRawKey(rawKey);
+  /// Writes [value] under [rawKey].
+  Task<Unit> put(RawKey rawKey, Object semanticKey, T value) {
+    ensureStorableRawKey(rawKey.value);
 
     return _guard('put', () async {
-      await _box.put(rawKey, _valueCodec.toStorable(value));
-      _observer?.onWritten(name, key, value);
+      await _box.put(rawKey.value, _valueCodec.toStorable(value));
+      _observer?.onWritten(name, semanticKey, value);
 
       return unit;
     });
   }
 
-  /// Writes every entry of [entries] in one batch.
-  Task<Unit> putAll(Map<K, T> entries) {
-    // Encoded and gated at call time (fail fast, before the Task exists), so a bad key means nothing
-    // gets written.
-    final rawEntries = entries.map((key, value) {
-      final rawKey = _keyCodec.encode(key);
+  /// Writes every entry of [rawEntries] in one batch. No semantic keys: the event carries a count.
+  ///
+  /// Lazy iterable, consumed eagerly here: the façade's encode fuses into this pass (one materialisation, not two)
+  /// while a bad key still fails before the [Task] exists.
+  Task<Unit> putAll(Iterable<MapEntry<RawKey, T>> rawEntries) {
+    final storableEntries = <Object, Object?>{};
+    for (final entry in rawEntries) {
+      final rawKey = entry.key.value;
       ensureStorableRawKey(rawKey);
-
-      return MapEntry(rawKey, _valueCodec.toStorable(value));
-    });
+      storableEntries[rawKey] = _valueCodec.toStorable(entry.value);
+    }
 
     return _guard('putAll', () async {
-      await _box.putAll(rawEntries);
-      _observer?.onWrittenAll(name, rawEntries.length);
+      await _box.putAll(storableEntries);
+      _observer?.onWrittenAll(name, storableEntries.length);
 
       return unit;
     });
   }
 
-  /// Rewrites [key] through [update], mirroring `Map.update`: absent + no [ifAbsent] is an
-  /// [ArgumentError] inside the task, evaluated when it runs.
-  Task<T> update(K key, T Function(T value) update, {T Function()? ifAbsent}) {
-    final rawKey = _keyCodec.encode(key);
-    ensureStorableRawKey(rawKey);
+  /// Rewrites [rawKey] through [update], mirroring `Map.update`: absent + no [ifAbsent] is an [ArgumentError]
+  /// inside the task, evaluated when it runs.
+  Task<T> update(
+    RawKey rawKey,
+    Object semanticKey,
+    T Function(T value) update, {
+    T Function()? ifAbsent,
+  }) {
+    ensureStorableRawKey(rawKey.value);
 
     return _guard('update', () async {
-      final storedValue = _box.get(rawKey);
+      final storedValue = _box.get(rawKey.value);
       final updatedValue = storedValue == null
           ? (ifAbsent ??
                 (() => throw ArgumentError.value(
-                  key,
+                  semanticKey,
                   'key',
                   'absent, and no ifAbsent was given (mirrors Map.update)',
                 )))()
           : update(_valueCodec.fromStored(storedValue));
-      await _box.put(rawKey, _valueCodec.toStorable(updatedValue));
-      _observer?.onWritten(name, key, updatedValue);
+      await _box.put(rawKey.value, _valueCodec.toStorable(updatedValue));
+      _observer?.onWritten(name, semanticKey, updatedValue);
 
       return updatedValue;
     });
   }
 
-  /// Deletes [key]. No gate: deletes cannot corrupt (hive no-ops absent keys before writing any
+  /// Deletes [rawKey]. No gate: deletes cannot corrupt (hive no-ops absent keys before writing any
   /// frame, and a bad key was never admitted by the write gate).
-  Task<Unit> delete(K key) {
-    final rawKey = _keyCodec.encode(key);
+  Task<Unit> delete(RawKey rawKey, Object semanticKey) => _guard('delete', () async {
+    await _box.delete(rawKey.value);
+    _observer?.onDeleted(name, semanticKey);
 
-    return _guard('delete', () async {
-      await _box.delete(rawKey);
-      _observer?.onDeleted(name, key);
+    return unit;
+  });
 
-      return unit;
-    });
-  }
-
-  /// Deletes every key in [keys] in one batch.
-  Task<Unit> deleteAll(Iterable<K> keys) {
-    // Materialised: encoded once at call time (fail-fast contract), re-used for dispatch.
-    final keyList = keys.toList(growable: false);
-    final rawKeys = keyList.map(_keyCodec.encode).toList(growable: false);
+  /// Deletes [rawKeysToDelete] in one batch, dispatching one event per [semanticKeys] entry.
+  /// Parallel lists, both built by the façade in one traversal.
+  Task<Unit> deleteAll(List<RawKey> rawKeysToDelete, List<Object> semanticKeys) {
+    final unwrappedKeys = [for (final rawKey in rawKeysToDelete) rawKey.value];
 
     return _guard('deleteAll', () async {
-      await _box.deleteAll(rawKeys);
-      for (final key in keyList) {
-        _observer?.onDeleted(name, key);
+      await _box.deleteAll(unwrappedKeys);
+      for (final semanticKey in semanticKeys) {
+        _observer?.onDeleted(name, semanticKey);
       }
 
       return unit;
@@ -165,17 +159,9 @@ final class EagerCrudEngine<T extends Object, K extends Object> {
     return unit;
   });
 
-  /// Typed change stream; [key] filters to one key. Values are non-null even on deletes: eager
-  /// hive delivers the deleted value from its cache (pinned).
-  Stream<TypedBoxEvent<T, K>> watch({K? key}) => _box
-      .watch(key: key == null ? null : _keyCodec.encode(key))
-      .map(
-        (event) => TypedBoxEvent(
-          key: _keyCodec.decode(event.key as Object),
-          value: _valueCodec.fromStored(event.value as Object),
-          deleted: event.deleted,
-        ),
-      );
+  /// hive's own change stream, narrowed to [key] when given. Raw because the façade owns the key codec,
+  /// and typing it here would only be rebuilt there.
+  Stream<BoxEvent> watchRaw({RawKey? key}) => _box.watch(key: key?.value);
 
   /// Flushes pending writes to disk.
   Task<Unit> flush() => _guard('flush', () async {

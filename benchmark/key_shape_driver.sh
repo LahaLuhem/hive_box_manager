@@ -1,18 +1,14 @@
 #!/bin/bash
 # Key-shape driver: prices the type shapes behind the dual family's overhead.
 # Usage: key_shape_driver.sh <bench-executable> <out.jsonl> [reps] [n]
-# AOT (the deciding lane): `dart compile exe benchmark/key_shape_bench.dart` first and pass the
-# produced executable. A JIT run answers a different question, because the whole effect is an AOT
-# subtype-check path.
+# AOT only: `dart compile exe benchmark/key_shape_bench.dart` first. JIT answers a different
+# question, since the effect is an AOT subtype-check path.
 #
-# Unlike the other drivers this one touches no disk and prepares no box: the lanes measure a type
-# shape, so the store is an in-process Map (see the bench's header for why). That also means the
-# lanes are far less load-sensitive than the overhead lane, though the load stamp is still recorded
-# so a reading taken on a busy host can be spotted after the fact.
+# No disk and no prepped box, unlike the other drivers: the store is an in-process Map (the bench
+# header says why). Load stamp still recorded, though these lanes barely move with it.
 #
-# The lane order is deliberate: each one moves a single variable relative to its neighbour, and
-# reading them top to bottom is the argument. raw-generic-adapter vs raw-concrete-adapter is the
-# pair that carries it.
+# Lane order is the argument, read top to bottom; raw-generic-adapter vs raw-concrete-adapter is
+# the pair that carries it.
 # shellcheck disable=SC2129  # per-invocation appends are deliberate: one measurement per subprocess, one line each
 set -euo pipefail
 

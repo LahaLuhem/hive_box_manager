@@ -1,19 +1,14 @@
 #!/usr/bin/env python3
 """Check the key-shape lane still says what the docs claim it says.
 
-Reads ``../results/results_key_shape.jsonl`` and prints one row per lane, then evaluates the
-attribution as a set of explicit relationships rather than leaving a table of numbers for the
-reader to interpret. That is the whole point: issue #14's root cause was wrong because someone read
-a table and drew the intuitive conclusion from it, and the intuitive conclusion was not the one the
-numbers supported.
+Reads ``../results/results_key_shape.jsonl``, prints one row per lane, then checks the attribution
+as explicit claims rather than leaving a table for the reader to interpret. That is the point:
+issue #14's root cause was wrong because someone read a table and drew the intuitive conclusion,
+which was not the one the numbers supported. If a future SDK caches the subtype check, PREMISE
+fails loudly instead of the numbers quietly changing under docs that still assert the old story.
 
-So each relationship below is stated as a claim and checked. If a future Dart SDK caches the
-subtype check this lane depends on, the PREMISE check fails loudly and every doc citing it needs
-revisiting, instead of the numbers quietly changing under a paragraph that still asserts the old
-story.
-
-Text only, so this leans on the stdlib rather than the charting stack; run under uv all the same
-(see benchmark/README.md).
+Text only, so stdlib rather than the charting stack; run under uv all the same (see
+benchmark/README.md).
 
 Maintainer tooling; not shipped (``benchmark/`` is excluded from the pub.dev tarball).
 """
@@ -29,9 +24,8 @@ RESULT_FILE = BENCH_DIR / "results" / "results_key_shape.jsonl"
 
 BASELINE = "generic-int"
 
-# How close two lanes must be to count as "the same shape". Generous on purpose: the fast lanes sit
-# around 13-17 ns where a couple of nanoseconds of scheduling noise is a large fraction, and the
-# effect being detected is 20x, not 20%.
+# How close two lanes must be to count as "the same shape". Generous: the fast lanes sit at 13-17 ns
+# where a nanosecond of noise is a large fraction, and the effect being detected is 20x, not 20%.
 NEAR_TOL = 0.35
 
 # The defect has to still be here for anything else in this file to mean something.

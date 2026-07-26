@@ -365,6 +365,29 @@ the type already says that. `public_member_api_docs` is on (see
 semantics a consumer can't read off the signature: eager vs lazy (does a read hit disk?), how keys
 are handled, and what a `defaultValue` means for that method.
 
+**Be brief. Raise signal by cutting noise.** One or two sentences for most symbols; a short
+paragraph for the genuinely load-bearing ones. Longer rationale belongs in `APPENDIX.md` (design
+reasoning) or a benchmark's own header (measurements), with a one-line pointer from the dartdoc.
+
+*Why:* a docstring competes with the code under it. A wall of prose above a three-line method
+buries the one sentence that mattered, and readers start skipping dartdoc wholesale, including the
+sentences that would have saved them.
+
+*How to apply:* lead with the guarantee, then stop. Cut background the reader can get from the
+linked symbol. Cite a measurement once, where it lives, instead of restating it at every site that
+depends on it. Don't re-explain a rule this file already states.
+
+```dart
+// Prefer
+/// Reads [rawKey], `None` when absent. [semanticKey] is what observers hear.
+
+// Over
+/// Reads [rawKey] and returns an Option. The engine looks the key up in the underlying box, and
+/// because the box may not contain it, absence is modelled as None rather than null, which is the
+/// package-wide contract for absence, and [semanticKey] is passed separately because the engine no
+/// longer holds a key codec and observers should hear the consumer-facing key rather than ...
+```
+
 ### `@docImport` for dartdoc-only references
 
 When a file needs a symbol only for `[Name]` references in dartdoc, use Dart's dartdoc-only directive

@@ -6,7 +6,6 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:meta/meta.dart';
 
-import '/src/codec/key/int_key_codec.dart';
 import '/src/core/box_provider.dart';
 import '/src/core/engine/eager_crud_engine.dart';
 import '/src/core/value_codec/identity_value_codec.dart';
@@ -39,7 +38,7 @@ import 'single_value_slot_key.dart';
 ///
 /// `interface class`: implement it for test fakes; extending is reserved to this package.
 interface class SingleValueBox<T extends Object> {
-  final EagerCrudEngine<T, int> _engine;
+  final EagerCrudEngine<T> _engine;
 
   /// Wiring is internal: acquisition goes through [open] (tests use the seam below).
   SingleValueBox._({required this._engine});
@@ -58,19 +57,19 @@ interface class SingleValueBox<T extends Object> {
 
   /// Reads the value synchronously from memory: `Some` when set, `None` when never set (or
   /// cleared).
-  Option<T> get() => _engine.get(singleValueSlotKey);
+  Option<T> get() => _engine.get(singleValueRawSlotKey, singleValueSlotKey);
 
   /// Reads the value, falling back to [fallback] when absent. Sugar over [get].
-  T getOr(T fallback) => _engine.getOr(singleValueSlotKey, fallback);
+  T getOr(T fallback) => _engine.getOr(singleValueRawSlotKey, singleValueSlotKey, fallback);
 
   /// Stores [value] when run, replacing whatever was there.
-  Task<Unit> set(T value) => _engine.put(singleValueSlotKey, value);
+  Task<Unit> set(T value) => _engine.put(singleValueRawSlotKey, singleValueSlotKey, value);
 
   /// Rewrites the value through [update] when run and returns the new value, mirroring
   /// [Map.update] on the internal slot: an absent value is seeded by [ifAbsent], and with no
   /// [ifAbsent] the task fails with an [ArgumentError] at run time.
   Task<T> update(T Function(T value) update, {T Function()? ifAbsent}) =>
-      _engine.update(singleValueSlotKey, update, ifAbsent: ifAbsent);
+      _engine.update(singleValueRawSlotKey, singleValueSlotKey, update, ifAbsent: ifAbsent);
 
   /// Unsets the value when run; the next [get] reads `None`. Observers hear a clear.
   Task<Unit> clear() => _engine.clear();
@@ -78,8 +77,10 @@ interface class SingleValueBox<T extends Object> {
   /// The value's change stream: `Some` on every [set], `None` on [clear]. Same shape on both
   /// axes. No replay: pair with [get] for the current value.
   Stream<Option<T>> watch() => _engine
-      .watch(key: singleValueSlotKey)
-      .map((event) => event.deleted ? const None() : Some(event.value));
+      .watchRaw(key: singleValueRawSlotKey)
+      .map(
+        (event) => event.deleted ? const None() : Some(_engine.decodeStored(event.value as Object)),
+      );
 
   /// Flushes pending writes to disk when run. Maintenance, not a data event: observers only
   /// hear failures.
@@ -124,9 +125,8 @@ interface class SingleValueBox<T extends Object> {
 
       // Type arguments stay explicit through this wiring (CODESTYLE #type-safety).
       return SingleValueBox<T>._(
-        engine: EagerCrudEngine<T, int>(
+        engine: EagerCrudEngine<T>(
           box: box,
-          keyCodec: const IntKeyCodec(),
           valueCodec: IdentityValueCodec<T>(),
           observer: observer,
         ),
@@ -149,10 +149,5 @@ SingleValueBox<T> singleValueBoxAround<T extends Object>(
   BoxObserver? observer,
 }) => SingleValueBox<T>._(
   // Explicit type arguments on purpose; see CODESTYLE #type-safety.
-  engine: EagerCrudEngine<T, int>(
-    box: box,
-    keyCodec: const IntKeyCodec(),
-    valueCodec: IdentityValueCodec<T>(),
-    observer: observer,
-  ),
+  engine: EagerCrudEngine<T>(box: box, valueCodec: IdentityValueCodec<T>(), observer: observer),
 );
