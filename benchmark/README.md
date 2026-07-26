@@ -168,6 +168,11 @@ benchmark/key_shape_driver.sh /tmp/hbm_key_shape benchmark/results/results_key_s
 uv run --project benchmark/python python key_shape.py   # every claim must print HOLDS
 ```
 
+The reader prints the table, checks each claim, and writes
+[`reports/key_shape_attribution.png`](reports/key_shape_attribution.png):
+
+![What the dual-key overhead actually was](reports/key_shape_attribution.png)
+
 AOT only; a JIT pass answers a different question, since the effect is an AOT subtype-check path.
 This lane touches no disk and prepares no box: the store is an in-process Map, because the question
 is a type shape rather than a storage cost.
@@ -227,10 +232,13 @@ harness in the tree and its output nowhere.
 
 ## `reports/`
 
-Charts rendered from `results/` by [`python/plot.py`](python/plot.py) and committed as PNGs. The
-top-level README references them by absolute raw GitHub URL, so they render on pub.dev without
-shipping in the tarball (`benchmark/` is `.pubignore`d). Four charts: codec get + keystore-RSS
-scaling (packed vs String), and open time + per-read latency (eager vs lazy). Built with seaborn
+Charts rendered from `results/` and committed as PNGs. Four come from
+[`python/plot.py`](python/plot.py) and are referenced by the top-level README by absolute raw
+GitHub URL, so they render on pub.dev without shipping in the tarball (`benchmark/` is
+`.pubignore`d): codec get + keystore-RSS scaling (packed vs String), and open time + per-read
+latency (eager vs lazy). The fifth, `key_shape_attribution.png`, comes from
+[`python/key_shape.py`](python/key_shape.py) and is referenced the same way, from the top-level
+README's composite-key note. Built with seaborn
 over matplotlib, data in polars (seaborn reads polars frames directly via the dataframe
 interchange protocol), matching the sibling packages' chart style. Colours are the Okabe-Ito
 CVD-safe pair, with line style and marker as a second cue so identity never rests on colour alone.

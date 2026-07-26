@@ -394,6 +394,28 @@ significant figures on any single lane. Treat each figure as an order of magnitu
 from 1.09x to 1.36x, but the ratio only moves because raw's own per-entry cost grows with the batch
 while the wrapper's stays flat, so take the nanoseconds and ignore the multiple.
 
+<details>
+<summary>Where a composite key can cost you, measured</summary>
+
+This surface takes `(K1, K2)` records, and there is one way to encode them that costs ~25x the
+others. Eight variants of the same two-part encode, each changing exactly one thing from the one
+above it:
+
+![Eight key-shape variants by ns per op: the three that route a generic-parameterised record through a checked parameter cost about 355 ns, every other shape sits near 15 ns](https://raw.githubusercontent.com/LahaLuhem/hive_box_manager/master/benchmark/reports/key_shape_attribution.png)
+
+Records are free. Generics are free. An extra adapter call frame is free. What costs ~350 ns is a
+**record type built from a class's own type parameters, sitting in a checked parameter position**:
+the subtype check resolves through the instantiated type-argument vector and misses AOT's inline
+subtype-test cache. Widening that parameter to `Object` and casting inside does not help, because it
+is the same check written out, and making the record type concrete hides the cost while leaving the
+trap armed for whoever re-parameterises it next.
+
+So `DualKeyBox` encodes both parts as separate scalar arguments, which is the free side of that
+line. `benchmark/key_shape_bench.dart` prices every variant and its reader asserts each
+relationship, so this stays measured rather than remembered.
+
+</details>
+
 **`ListBox` prices differently**, because raw hive has no list-valued box to compare against. Its
 baseline is the code you would hand-write, and there are two of those. Against the version with a
 `.cast<T>()` at the read boundary, `ListBox` costs the ~200 ns plus ~2.3 ns per element above (the

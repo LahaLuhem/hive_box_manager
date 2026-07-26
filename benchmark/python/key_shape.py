@@ -7,8 +7,9 @@ issue #14's root cause was wrong because someone read a table and drew the intui
 which was not the one the numbers supported. If a future SDK caches the subtype check, PREMISE
 fails loudly instead of the numbers quietly changing under docs that still assert the old story.
 
-Text only, so stdlib rather than the charting stack; run under uv all the same (see
-benchmark/README.md).
+Also writes ``../reports/key_shape_attribution.png``: the same argument as a chart, because the
+original mistake was made reading a table, and a table is what reproduces it. seaborn/matplotlib
+house style and the Okabe-Ito palette, as in plot.py; run under uv (see benchmark/README.md).
 
 Maintainer tooling; not shipped (``benchmark/`` is excluded from the pub.dev tarball).
 """
@@ -19,10 +20,32 @@ import json
 import statistics
 from pathlib import Path
 
+import matplotlib.pyplot as plt
+import seaborn as sns
+
 BENCH_DIR = Path(__file__).resolve().parent.parent  # benchmark/
 RESULT_FILE = BENCH_DIR / "results" / "results_key_shape.jsonl"
 
 BASELINE = "generic-int"
+
+OUT_DIR = BENCH_DIR / "reports"
+CHART_NAME = "key_shape_attribution.png"
+
+BLUE = "#0072B2"  # free: the shapes that cost nothing
+VERMILLION = "#D55E00"  # costly: the shapes that pay the subtype check
+INK = "#222222"
+CHART_DPI = 150
+FIG_SIZE = (9.0, 5.4)
+
+# Above this multiple of the baseline a lane is drawn as costly. The gap is 20x, so the exact
+# threshold is irrelevant; it exists so the colouring is derived rather than hard-coded per lane.
+COSTLY_MULTIPLE = 5.0
+
+# The two annotations that carry the argument, keyed by the lane they point at.
+PAIR_NOTES = {
+    "raw-generic-adapter": "engine's key type parameter gone: no change",
+    "raw-concrete-adapter": "class type parameters gone too: free",
+}
 
 # How close two lanes must be to count as "the same shape". Generous: the fast lanes sit at 13-17 ns
 # where a nanosecond of noise is a large fraction, and the effect being detected is 20x, not 20%.
@@ -79,11 +102,7 @@ CLAIMS = (
 
 
 def load_rows():
-    return [
-        json.loads(line)
-        for line in RESULT_FILE.read_text().splitlines()
-        if line.strip()
-    ]
+    return [json.loads(line) for line in RESULT_FILE.read_text().splitlines() if line.strip()]
 
 
 def samples(rows, lane):
@@ -106,7 +125,9 @@ def main():
         for sdk in sorted(sdks):
             print(f"sdk: {sdk}")
     else:
-        print("no SDK stamp in this run: re-run before citing it, this lane pins compiler behaviour")
+        print(
+            "no SDK stamp in this run: re-run before citing it, this lane pins compiler behaviour"
+        )
 
     by_lane = {lane: samples(rows, lane) for lane in LANE_ORDER}
     missing = [lane for lane, values in by_lane.items() if not values]
@@ -156,6 +177,72 @@ def main():
                 f"  BROKEN {lane} is {ratio:.2f}x {reference}, expected ~1.00x. "
                 f"This claim no longer holds: {claim}"
             )
+
+    render_chart(by_lane, base)
+
+
+def render_chart(by_lane, base):
+    """Draw the lanes in declaration order, so reading top to bottom *is* the argument."""
+    lanes = [lane for lane in LANE_ORDER if by_lane.get(lane)]
+    values = [statistics.median(by_lane[lane]) for lane in lanes]
+    widest = max(values)
+    costly = [v / base >= COSTLY_MULTIPLE for v in values]
+
+    # The pair notes ride on the tick labels rather than as arrows into the plot: the reader is
+    # already looking at the lane name, and arrows across bars this uneven collide with everything.
+    labels = [f"{lane}\n{PAIR_NOTES[lane]}" if lane in PAIR_NOTES else lane for lane in lanes]
+
+    sns.set_theme(style="whitegrid")
+    fig, ax = plt.subplots(figsize=FIG_SIZE, layout="constrained")
+    bars = ax.barh(
+        labels,
+        values,
+        color=[VERMILLION if c else BLUE for c in costly],
+        edgecolor=INK,
+        linewidth=0.6,
+    )
+    # Hatching so the two groups survive greyscale and colour blindness (plot.py's rule; bars
+    # cannot carry the dash/marker cues the line charts use).
+    for bar, is_costly in zip(bars, costly, strict=True):
+        if is_costly:
+            bar.set_hatch("///")
+
+    for bar, value in zip(bars, values, strict=True):
+        ax.text(
+            bar.get_width() + widest * 0.015,
+            bar.get_y() + bar.get_height() / 2,
+            f"{value:.0f} ns",
+            va="center",
+            fontsize=9,
+            color=INK,
+        )
+
+    ax.invert_yaxis()
+    ax.set_xlabel("ns per op (AOT, median)")
+    ax.set_xlim(0, widest * 1.16)
+    ax.tick_params(axis="y", labelsize=9)
+    # suptitle + set_title rather than a hand-placed text: constrained layout then spaces the two
+    # for us, instead of the subtitle colliding with the title's descenders at some figure sizes.
+    fig.suptitle(
+        "What the dual-key overhead actually was",
+        x=0.012,
+        ha="left",
+        fontsize=12,
+        color=INK,
+    )
+    ax.set_title(
+        "Each lane changes one thing from the lane above it. Only the shapes with a record\n"
+        "built from the class's own type parameters pay.",
+        loc="left",
+        fontsize=8.5,
+        color=INK,
+        linespacing=1.5,
+        pad=10,
+    )
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    fig.savefig(OUT_DIR / CHART_NAME, dpi=CHART_DPI)
+    plt.close(fig)
+    print(f"\nwrote reports/{CHART_NAME}")
 
 
 if __name__ == "__main__":
