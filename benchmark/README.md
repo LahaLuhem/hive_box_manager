@@ -225,6 +225,14 @@ benchmark/overhead_driver.sh /tmp/hbm_overhead benchmark/results/results_overhea
 uv run --project benchmark/python python overhead.py   # must not print CONTAMINATED
 ```
 
+This lane also carries `putallby`, which does **not** go through the wrapper-overhead machinery: its
+impl axis is `map` vs `facade` (the two ways to write one call) rather than `raw` vs `facade`, since
+there is no raw hive_ce counterpart. It is also the one lane that times the caller's batch
+construction, because removing that map is the entire point of `putAllBy`; every other write lane
+treats the batch as given input. It gets its own `by_n` (6th driver argument, default 100000): one
+batched call is cheap at that size, and a few-percent effect does not clear rep noise at `put_n`,
+where each op is a disk round-trip and 100K would be unaffordable.
+
 Re-stamp this section whenever the results are regenerated, and commit the JSONL in the same
 change as any number that cites it. A percentage with no committed data behind it is not a
 measurement, it is a memory of one: the overhead lane spent 1.0 in exactly that state, with a

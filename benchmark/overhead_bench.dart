@@ -67,6 +67,8 @@ Future<void> main(List<String> args) async {
       await runPut(impl, int.parse(n));
     case ['putall', final impl, final n]:
       await runPutAll(impl, int.parse(n));
+    case ['putallby', final impl, final n]:
+      await runPutAllBy(impl, int.parse(n));
     case ['delete', final impl, final n]:
       await runDelete(impl, int.parse(n), batched: false);
     case ['deleteall', final impl, final n]:
@@ -287,6 +289,47 @@ Future<void> runPutAll(String impl, int n) async {
   }
 
   emit({'mode': 'putall', 'impl': impl, 'n': n, 'ops': n, 'micros': stopwatch.elapsedMicroseconds});
+  dir.deleteSync(recursive: true);
+}
+
+/// The `putAllBy` lane: from a flat list of values to written, caller prep **included**.
+///
+/// Deliberately unlike [runPutAll], which treats the batch map as given input because it measures
+/// the write. Here building that map *is* what is under test, since removing it is the whole point
+/// of `putAllBy`. Both impls start from the same flat list and pay for whatever they need on the
+/// way to hive.
+///
+///   map     `Map.fromIterables(values, values)` then `putAll`: what a consumer writes without it.
+///   facade  `putAllBy(values, key: ...)`.
+///
+/// Keys are the values themselves (`KeyedBox<String, String>`), so the extractor is identity and
+/// costs the same on both sides. Anything expensive there would add a constant to both impls and
+/// bury the difference being measured.
+Future<void> runPutAllBy(String impl, int n) async {
+  final dir = scratchBox('putallby_');
+  // Built outside the window: the *values* are this lane's input. Turning them into a batch is not.
+  final values = [for (var i = 0; i < n; i++) 'v$i'];
+
+  final stopwatch = Stopwatch();
+  final box = await KeyedBox.open<String, String>(boxName).run();
+  if (impl == 'facade') {
+    stopwatch.start();
+    await box.putAllBy(values, key: (value) => value).run();
+    stopwatch.stop();
+  } else {
+    stopwatch.start();
+    await box.putAll(Map.fromIterables(values, values)).run();
+    stopwatch.stop();
+  }
+  await box.close().run();
+
+  emit({
+    'mode': 'putallby',
+    'impl': impl,
+    'n': n,
+    'ops': n,
+    'micros': stopwatch.elapsedMicroseconds,
+  });
   dir.deleteSync(recursive: true);
 }
 
