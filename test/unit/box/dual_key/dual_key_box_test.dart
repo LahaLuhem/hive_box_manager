@@ -141,6 +141,31 @@ void main() {
       await check(facade.update(8, 8, (value) => value).run()).throws<ArgumentError>();
     });
 
+    scenario('putAllBy keys each value through both extractors', () async {
+      await facade
+          .putAllBy(
+            ['a', 'bb', 'ccc'],
+            primary: (value) => value.length,
+            secondary: (value) => value.codeUnitAt(0),
+          )
+          .run();
+
+      check(facade.keys).deepEquals([(1, 97), (2, 98), (3, 99)]);
+      check(facade.get(2, 98).toNullable()).equals('bb');
+    });
+
+    scenario('putAllBy trips the duplicate assert before anything is written', () {
+      check(
+        () => facade.putAllBy(
+          ['ab', 'cd'],
+          primary: (value) => value.length,
+          secondary: (value) => value.length,
+        ),
+      ).throws<AssertionError>();
+
+      check(box.store).isEmpty();
+    });
+
     scenario('delete, deleteAll, and clear remove entries with per-key dispatch', () async {
       await facade.putAll({(1, 1): 'a', (2, 2): 'b', (3, 3): 'c', (4, 4): 'd'}).run();
       observer.calls.clear();

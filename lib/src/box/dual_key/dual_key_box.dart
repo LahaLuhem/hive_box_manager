@@ -117,6 +117,40 @@ interface class DualKeyBox<T extends Object, K1 extends Object, K2 extends Objec
         return unit;
       });
 
+  /// Writes every value in [values] when run, each under the two parts [primary] and [secondary] extract
+  /// from it.
+  ///
+  /// Sugar over [putAll] for values that carry both their own parts. Worth more here than on the keyed
+  /// families: [putAll] needs the caller to build a `(K1, K2)`-keyed map, and hashing a record per
+  /// entry is the dearest part of that call. This path never builds a record at all.
+  ///
+  /// Reach for [putAll] when the parts are not derivable from the value, which is common: parts coming
+  /// from a grid, a legacy key set, or anywhere but the value itself.
+  ///
+  /// Two values yielding the same pair trips an assert in development; in release the later one wins.
+  /// Same throw taxonomy as [putAll] otherwise, gate included.
+  Task<Unit> putAllBy(
+    Iterable<T> values, {
+    required K1 Function(T value) primary,
+    required K2 Function(T value) secondary,
+  }) {
+    // Materialised: the engine consumes the entries, then the query hooks replay the same values.
+    // Extractors run twice per value as a result, which is why they should stay cheap.
+    final valueList = values.toList(growable: false);
+
+    return _engine
+        .putAll(
+          valueList.map((value) => MapEntry(_rawKeyFor(primary(value), secondary(value)), value)),
+        )
+        .map((_) {
+          for (final value in valueList) {
+            _afterWrite(primary(value), secondary(value));
+          }
+
+          return unit;
+        });
+  }
+
   /// Rewrites the value under ([primary], [secondary]) through [update] when run and returns the new
   /// value, mirroring [Map.update]: absent is seeded by [ifAbsent], and with no [ifAbsent] the task
   /// fails with an [ArgumentError] at run time.
