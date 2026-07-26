@@ -113,8 +113,8 @@ final class PackedIntDualCodec implements DualKeyCodec<int, int> {
   }
 }
 
-/// Replicates `DualKeyCodecAdapter`: its record parameter is built from this class's own type
-/// parameters, which is the defect being priced.
+/// Replicates the since-deleted `DualKeyCodecAdapter`: its record parameter is built from this
+/// class's own type parameters, which is the defect being priced.
 final class GenericDualAdapter<K1 extends Object, K2 extends Object> implements KeyCodec<(K1, K2)> {
   final DualKeyCodec<K1, K2> _dualCodec;
 

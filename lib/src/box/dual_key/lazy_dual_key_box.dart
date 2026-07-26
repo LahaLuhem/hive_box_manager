@@ -9,9 +9,7 @@ import 'package:hive_ce/hive.dart';
 import 'package:meta/meta.dart';
 
 import '/src/codec/dual/dual_key_codec.dart';
-import '/src/codec/dual/dual_key_codec_adapter.dart';
 import '/src/codec/dual/dual_key_codec_resolution.dart';
-import '/src/codec/key/key_codec.dart';
 import '/src/core/box_provider.dart';
 import '/src/core/engine/lazy_crud_engine.dart';
 import '/src/core/raw_key.dart';
@@ -47,10 +45,6 @@ interface class LazyDualKeyBox<T extends Object, K1 extends Object, K2 extends O
   final LazyCrudEngine<T> _engine;
   final DualKeyCodec<K1, K2> _dualCodec;
 
-  /// On death row, exactly as in `DualKeyBox`: the ~350 ns per op issue #14 removes, kept one
-  /// checkpoint longer so this refactor carries no measurable delta.
-  final KeyCodec<(K1, K2)> _adapter;
-
   /// Wires a box that opens single-flight on first use; construction itself touches nothing.
   ///
   /// One-time engine setup stays hive_ce's, exactly as it documents: `Hive.init(path)` (or
@@ -85,17 +79,17 @@ interface class LazyDualKeyBox<T extends Object, K1 extends Object, K2 extends O
         observer: observer,
       ),
       dualCodec: dualCodec,
-      adapter: DualKeyCodecAdapter<K1, K2>(dualCodec: dualCodec),
     );
   }
 
   /// Wiring is internal: consumers construct via the unnamed constructor (tests use the seam
   /// below).
-  LazyDualKeyBox._({required this._engine, required this._dualCodec, required this._adapter});
+  LazyDualKeyBox._({required this._engine, required this._dualCodec});
 
-  /// Encodes a two-part key for the engine, which admits only encoded keys.
+  /// Encodes a two-part key for the engine, which admits only encoded keys. Two scalar arguments,
+  /// never a `(K1, K2)` record; see [DualKeyBox] and [RawKey] for what that record used to cost.
   @pragma('vm:prefer-inline')
-  RawKey _rawKeyFor(K1 primary, K2 secondary) => RawKey(_adapter.encode((primary, secondary)));
+  RawKey _rawKeyFor(K1 primary, K2 secondary) => RawKey(_dualCodec.encode(primary, secondary));
 
   late final _scanIndex = ScanQueryIndex<K1, K2>(rawKeys: () => _engine.rawKeys, codec: _dualCodec);
 
@@ -300,6 +294,5 @@ lazyDualKeyBoxAround<T extends Object, K1 extends Object, K2 extends Object>(
       observer: observer,
     ),
     dualCodec: dualCodec,
-    adapter: DualKeyCodecAdapter<K1, K2>(dualCodec: dualCodec),
   );
 }
