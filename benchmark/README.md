@@ -160,6 +160,23 @@ benchmark/list_box_driver.sh /tmp/hbm_list_box benchmark/results/results_list_bo
 uv run --project benchmark/python python list_box.py
 ```
 
+## Running the key-shape lane
+
+```sh
+dart compile exe benchmark/key_shape_bench.dart -o /tmp/hbm_key_shape
+benchmark/key_shape_driver.sh /tmp/hbm_key_shape benchmark/results/results_key_shape.jsonl 7
+uv run --project benchmark/python python key_shape.py   # every claim must print HOLDS
+```
+
+AOT only; a JIT pass answers a different question, since the effect is an AOT subtype-check path.
+This lane touches no disk and prepares no box: the store is an in-process Map, because the question
+is a type shape rather than a storage cost.
+
+It exists because #14's root cause was wrong in three documents for a release, having been read off
+a table where one lane moved two variables at once. So the reader states each relationship as a
+claim and checks it, and the `PREMISE` line fails loudly if a future SDK starts caching the subtype
+check this whole argument rests on. Numbers alone would let the same mistake happen twice.
+
 ## Running the matrix
 
 ```sh
@@ -187,9 +204,10 @@ Raw JSONL backing the top-level README's performance tables and codec-crossover 
 | `results_jit.jsonl` | matrix, JIT: ordering sanity, never for decisions |
 | `results_overhead.jsonl` | wrapper overhead, AOT: the source of the README's percentages |
 | `results_list_box.jsonl` | list-box lane, AOT: three impls x two element types x list length |
+| `results_key_shape.jsonl` | key-shape lane, AOT: which type shape costs what, with its controls |
 
-Environment for all four: macOS 15.7.7 on Apple Silicon (arm64), Dart 3.12.2, hive_ce 2.19.3,
-2026-07-25. Values were a constant 1 byte by design, isolating key cost; web performance is
+Environment for all of them: macOS 15.7.7 on Apple Silicon (arm64), Dart 3.12.2, hive_ce 2.19.3,
+2026-07-26. Values were a constant 1 byte by design, isolating key cost; web performance is
 unmeasured (ordering assumed to follow the VM).
 
 `results_overhead.jsonl` carries a load stamp and every lane resolves, but see the precision note

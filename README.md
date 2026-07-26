@@ -24,10 +24,13 @@ that's the gap this fills:
   you stop rewriting the same boilerplate for every type you store.
 - 🧩 **Four boxes for four real shapes of data**, each in an eager and a lazy flavour, so the box
   fits the problem instead of the other way round.
-- 🚀 **You keep Hive's speed**, on the surfaces where that is measurable: keyed, single-value and
-  batch operations land within tens of nanoseconds per op of raw `hive_ce`. The one exception is
-  `DualKeyBox`'s eager reads, at 1.4x to 1.8x, and [the numbers below](#-what-that-costs) say so
-  rather than hand-waving it.
+- 🛡️ **Safer than raw Hive.** The write path rejects keys release-mode `hive_ce` accepts and then
+  silently corrupts on, and `ListBox` closes the `List<dynamic>` trap that breaks a naive
+  `Box<List<T>>` on its first post-restart read. Both pinned by tests against upstream, not assumed.
+- 🚀 **At near-native Hive speed.\*** Reads cost 1 to 22 ns per op against raw `hive_ce`, and
+  effects that reach disk stay within 2 to 4%.
+  <br><sub>\* Two surfaces cost more than that, and [what that costs](#-what-that-costs) prices
+  every surface rather than quoting one flattering average.</sub>
 
 Pure Dart, so it runs anywhere Hive does: Flutter apps, Dart servers, CLIs, and the web.
 
@@ -355,15 +358,15 @@ the whole box file unreadable on its next open. This package rejects exactly tho
 There is no single number, and any package that gives you one is quoting the surface that flattered
 it. Wrapper cost depends on how expensive the thing being wrapped is, so it splits by surface:
 
-| Surface                                                             | Wrapper cost                              | Read as                                                   |
-|---------------------------------------------------------------------|-------------------------------------------|-----------------------------------------------------------|
-| `KeyedBox` / `SingleValueBox`, memory reads (get, contains, values) | 1 to 22 ns per op                         | free                                                      |
-| Any effect that reaches disk (put, delete, lazy get)                | 300 to 700 ns per op, 2 to 4%             | free, disk dominates                                      |
-| `ListBox` reads                                                     | ~200 ns per `get` + ~2.3 ns per element   | 2.4x on one-element lists, 1.2x on thousand-element lists |
-| Batch writes (`putAll`, `deleteAll`)                                | 1 to 21 ns per entry                      | free                                                      |
-| Open time, keystore RAM, file size                                  | no measurable difference                  | identical                                                 |
-| **`DualKeyBox` eager get**                                          | **1.4x to 1.8x** (+440 to +550 ns per op) | genuinely slower, see below                               |
-| **`DualKeyBox` `putAll`**                                           | **1.5x to 1.7x**                          | genuinely slower, see below                               |
+| Surface                                                             | Wrapper cost                                                        | Read as                                                   |
+|---------------------------------------------------------------------|---------------------------------------------------------------------|-----------------------------------------------------------|
+| `KeyedBox` / `SingleValueBox`, memory reads (get, contains, values) | 1 to 22 ns per op                                                   | free                                                      |
+| Any effect that reaches disk (put, delete, lazy get)                | 300 to 700 ns per op, 2 to 4%                                       | free, disk dominates                                      |
+| `ListBox` reads                                                     | ~200 ns per `get` + ~2.3 ns per element                             | 2.4x on one-element lists, 1.2x on thousand-element lists |
+| Batch writes (`putAll`, `deleteAll`)                                | 1 to 21 ns per entry                                                | free                                                      |
+| Open time, keystore RAM, file size                                  | no measurable difference                                            | identical                                                 |
+| `DualKeyBox` eager get                                              | 1.02x (+3 to +21 ns per op)                                         | free                                                      |
+| `DualKeyBox` `putAll`                                               | +45 to +85 ns per entry (int parts), +230 to +310 ns (String parts) | 1.09x to 1.36x by batch size, see below                   |
 
 <details>
 <summary>Why percentages are the wrong unit for most of this</summary>
@@ -383,17 +386,13 @@ significant figures on any single lane. Treat each figure as an order of magnitu
 
 </details>
 
-**The dual-key cost is real, and it is one line of plumbing.** Decomposing a 100K-get pass lane by
-lane puts the whole gap in one place: the dual codec is free (1.01x), the adapter call around it is
-free (1.08x), and the cost appears the moment the shared CRUD engine is instantiated with the
-`(K1, K2)` **record** as its key type argument (1.87x). Hand that same engine a plain `int` key and
-it drops back to 1.01x. Records in a generic slot are the entire story; nothing else in
-`DualKeyBox` contributes measurably.
+**`DualKeyBox` is free to read and costs per entry to batch-write.** Eager get is 1.02x, lazy gets
+1.01x, reverse queries 0.93 to 1.03x, open and memory are unchanged, and exact lookups stay O(1).
 
-So it is fixable rather than inherent, and it sits on the [roadmap](#-roadmap) as its own piece of
-work. Meanwhile the blast radius is narrow: only eager `get` and `putAll` are affected, lazy gets
-(1.04x), reverse queries (0.92 to 1.01x), open and memory are all free, and exact lookups stay O(1).
-At ~1.2 µs per eager dual-key get it matters if you do millions in a tight loop, and not otherwise.
+`putAll` is the one exception: it rebuilds its record-keyed batch into a raw-keyed map, at +45 to
++85 ns per entry for `int` parts and +230 to +310 ns for `String` parts. That reads as anywhere
+from 1.09x to 1.36x, but the ratio only moves because raw's own per-entry cost grows with the batch
+while the wrapper's stays flat, so take the nanoseconds and ignore the multiple.
 
 **`ListBox` prices differently**, because raw hive has no list-valued box to compare against. Its
 baseline is the code you would hand-write, and there are two of those. Against the version with a
@@ -435,10 +434,6 @@ The table rows are the 100K slice of these curves; the gap widens as boxes grow:
 
 Additive candidates for 1.x, in no committed order:
 
-- **Cutting `DualKeyBox`'s eager `get` and `putAll` cost** (1.4x to 1.8x raw hive). Measured to a
-  single cause: the shared CRUD engine is instantiated with the `(K1, K2)` record as its key type
-  argument, and handing the same engine a plain key type recovers all of it. None of that is
-  contract, so it should land without touching the public surface.
 - **Indexed reverse queries** for very large (>100K) datasets: an inverted-index strategy on
   `LazyDualKeyBox`, swapping out the O(K) scan behind the same query methods.
 - **IsolatedHive support** behind the box-acquisition seam (`hive_ce` itself recommends it for

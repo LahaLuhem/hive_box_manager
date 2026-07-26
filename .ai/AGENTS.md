@@ -165,6 +165,13 @@ keep in working memory:
   Dart default; code that fails lint won't pass review.
 - **Surface semver implications loudly.** If a change touches anything re-exported from
   `lib/hive_box_manager.dart`, call out whether it's patch / minor / major before the diff lands.
+- **Verify a performance claim with an experiment that isolates one variable.** Issue #14's root
+  cause was wrong in three documents for a release because one lane changed two things at once: it
+  dropped a record type argument *and* an adapter in the same step, then credited the wrong one.
+  Before attributing a cost to a mechanism, build the lane that separates it from its neighbour, and
+  commit that lane so the attribution stays reproducible instead of remembered. The corollary holds
+  when reading results too: check a lane's own run-to-run spread before believing a delta, and
+  prefer a ratio against an unchanged control over absolute timings on a drifting host.
 - **Verify Hive's real behaviour; don't code to assumptions about it.** The pre-1.0 design baked in
   several beliefs about `hive_ce`'s limits (key types, negative-number keys, dataset-size ceilings,
   reading collections of custom types) that turned out false or merely unproven. Before building on

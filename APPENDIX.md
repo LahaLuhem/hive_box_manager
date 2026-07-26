@@ -223,8 +223,8 @@ is read-only and free unless called, and the separate 0.0.x query types only exi
 inheritance wiring. `SingleValueBox` stays its own façade rather than a degenerate keyed box
 because the no-argument `get()` *is* the variant. The eager collection variant exists (0.0.x was
 lazy-only) because the memory folklore that forbade it was retired by measurement. Dual parts are
-generic with `(int, int)` codecs shipped; internally a dual box is the keyed engine over
-`(K1, K2)` record keys, one small adapter away.
+generic with `(int, int)` codecs shipped; internally a dual box encodes both parts at the façade
+and hands the shared engine a plain raw key, like every other family.
 
 ---
 
@@ -338,9 +338,12 @@ being wrapped costs enough to be a denominator: a same-slot `SingleValueBox.get`
 hive, so the `Option` allocation alone reads +89% while costing +11 ns, and no amount of optimising
 would move that percentage anywhere useful. The aim is now two-currency: **tens of nanoseconds per
 op on the memory paths, single-digit percent on anything that reaches disk**, with the per-op
-figure authoritative wherever the two disagree. The one surface that genuinely misses is
-`DualKeyBox`'s eager get, at roughly 2x raw for the record allocation plus double codec dispatch;
-that is documented in the README rather than averaged away, and cutting it is a roadmap item.
+figure authoritative wherever the two disagree. `DualKeyBox`'s eager get used to be the one surface
+that genuinely missed, at 1.4x to 1.8x raw. That turned out not to be the record allocation or the
+double dispatch, both of which are free: it was a `(K1, K2)` record parameter typed from the
+adapter's own type parameters, costing ~350 ns per call on a subtype check. Encoding at the façade
+removed the adapter and the cost with it (#14); `benchmark/key_shape_bench.dart` keeps the
+attribution reproducible.
 
 ---
 
