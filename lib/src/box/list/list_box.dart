@@ -22,27 +22,27 @@ import 'list_edits.dart';
 ///
 /// This variant exists because of a real engine limitation: hive reifies a collection of an
 /// **adapter-registered** type from disk as `List<dynamic>`, so a naive `Box<List<Person>>` opens
-/// fine and then throws on the first post-restart read. Here the element type is restored with a
-/// cast at the read boundary instead, and `dynamic` never reaches this surface.
+/// fine and then throws on the first post-restart read. Here the element type is restored with a cast
+/// at the read boundary instead, and `dynamic` never reaches this surface.
 ///
-/// Lists of primitives are the exception: hive specialises those, so a `List<String>` does read
-/// back as `List<String>` and a hand-rolled cast would survive. The benchmark's list-box lane
-/// measures both axes and the cast costs the same either way, so this surface does not branch on
-/// it: about 200 ns per [get] plus about 2.3 ns per element actually iterated. The view allocates
-/// nothing (measured RSS matches a hand-rolled cast exactly), so the per-element part is the type
-/// check, not a copy.
+/// Lists of primitives are the exception: hive specialises those, so a `List<String>` does read back
+/// as `List<String>` and a hand-rolled cast would survive. The benchmark's list-box lane measures both
+/// axes and the cast costs the same either way, so this surface does not branch on it: about 200 ns
+/// per [get] plus about 2.3 ns per element actually iterated. The view allocates nothing
+/// (measured RSS matches a hand-rolled cast exactly), so the per-element part is the type check, not a copy.
 ///
-/// List semantics only: order-preserving, duplicates allowed. Sets, maps, and nested
-/// collections of custom types are deliberately out (the outer cast could not fix inner
-/// reification); store flat lists, or model richer shapes as adapter-registered value types.
+/// List semantics only: order-preserving, duplicates allowed. Sets, maps, and nested collections of
+/// custom types are deliberately out (the outer cast could not fix inner reification). Store flat lists,
+/// or model richer shapes as adapter-registered value types.
 ///
 /// The aliasing contract, both directions:
 ///
-/// - **inward**: [put], [putAll], and [update]'s returns are materialised into private copies,
-///   so mutating your original collection afterwards never reaches the box
+/// - **inward**: [put], [putAll], and [update]'s returns are materialised into private copies, so
+///   mutating your original collection afterwards never reaches the box
 ///   (and lazy iterables become the plain lists hive requires at write time).
-/// - **outward**: every list this box hands you ([get], [getOr], [values], [update]'s return, watch-event payloads) is an unmodifiable zero-copy view; absence is still [Option], and an
-///   empty stored list reads `Some(empty)`, never `None`.
+/// - **outward**: every list this box hands you ([get], [getOr], [values], [update]'s return, watch-event payloads)
+///   is an unmodifiable zero-copy view; absence is still [Option], and an empty stored list reads
+///   `Some(empty)`, never `None`.
 ///
 /// Everything else matches [KeyedBox]: eager reads are synchronous and disk-free, effects are lazy
 /// [Task]s, keys go through a [KeyCodec] (`int` / `String` default to identity codecs), the write
@@ -187,6 +187,29 @@ interface class ListBox<T extends Object, K extends Object> {
           deleted: event.deleted,
         ),
       );
+
+  /// Writes every value in [values] when run, grouped into one stored list per key [key] extracts.
+  ///
+  /// The list-shaped counterpart to the keyed families' `putAllBy`: a flat iterable in, one list per
+  /// distinct key out, elements in encounter order. **Replaces** the list at each key rather than
+  /// appending, matching [putAll]; use [addAll] to extend what is already stored.
+  ///
+  /// Grouping cannot stay lazy the way [putAll] does, because every value has to be seen before any
+  /// one list is final. The grouped lists are built here and never escape, so they skip the defensive
+  /// copy [put] makes.
+  ///
+  /// Reach for [putAll] when the key is not derivable from the element, or when a key needs an **empty**
+  /// list: grouping can never produce one, and stored-empty is a distinct state from absent on this surface.
+  Task<Unit> putAllGrouped(Iterable<T> values, {required K Function(T value) key}) {
+    final grouped = <K, List<T>>{};
+    for (final value in values) {
+      grouped.putIfAbsent(key(value), () => <T>[]).add(value);
+    }
+
+    return _engine.putAll(
+      grouped.entries.map((entry) => MapEntry(_rawKeyFor(entry.key), entry.value)),
+    );
+  }
 
   /// Flushes pending writes to disk when run. Maintenance, not a data event: observers only hear failures.
   Task<Unit> flush() => _engine.flush();
