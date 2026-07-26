@@ -48,7 +48,7 @@ Pure Dart, so it runs anywhere Hive does: Flutter apps, Dart servers, CLIs, and 
     * [🔗 DualKeyBox](#-dualkeybox)
 - [🎛️ Make it yours](#-make-it-yours)
 - [📏 Eager or lazy? (measured)](#-eager-or-lazy-measured)
-- [🛡️ Safer than raw hive](#-safer-than-raw-hive)
+- [🛡️ Safer than raw hive, at near-native speed](#-safer-than-raw-hive-at-near-native-speed)
     * [⚡ What that costs](#-what-that-costs)
     * [⚡ Codec choice](#-codec-choice)
 - [🗺️ Roadmap](#-roadmap)
@@ -358,7 +358,7 @@ So reach for **eager** on hot, value-heavy-*read* boxes that fit comfortably in 
 on value-heavy boxes you read only now and then. Neither opens "instantly" at scale, and keys are
 a RAM cost you pay regardless.
 
-## 🛡️ Safer than raw hive
+## 🛡️ Safer than raw hive, at near-native speed
 
 Release-mode `hive_ce` takes an out-of-range int key or an oversized String key without
 complaint, then corrupts quietly: keys wrap into other slots, and an oversized String key can make

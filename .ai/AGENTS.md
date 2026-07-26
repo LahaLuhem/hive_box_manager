@@ -72,7 +72,7 @@ hive_box_manager/
 ├── .fvmrc / .editorconfig          Local SDK pin / text-file formatting
 ├── CHANGELOG.md                    Pipeline-owned; appears on pub.dev
 ├── README.md                       pub.dev landing page
-├── MIGRATION.md                    The 0.0.x → 1.0 bridge
+├── MIGRATION.md                    The 0.0.x → 1.x bridge; one path, no per-1.x-release forks
 ├── APPENDIX.md                     Design rationale (anchor-keyed)
 ├── CODESTYLE.md                    Library-package code style
 └── .ai/                            This file + CLAUDE.md (symlinked to repo root)
@@ -107,7 +107,14 @@ hold, and nothing internal can leak by accident.
    [`APPENDIX.md#packaging-core-and-companions`](./APPENDIX.md#packaging-core-and-companions).
 8. **Semver, strictly.** Any change to a public signature, a deletion, or a behavioural change of a
    documented contract is breaking. `cider` enforces the version-bump discipline. (The `1.0`
-   rewrite is itself the one sanctioned wholesale break.)
+   rewrite is itself the one sanctioned wholesale break.) Breaking does not automatically mean a
+   major bump: `scripts/release.sh` takes `major` / `minor` / `patch` as its own deliberate call
+   at release time, decoupled from the `sem-*` label a PR carries (that label only routes the
+   CHANGELOG entry to a section, e.g. `sem-change` → `### Changed`). This repo keeps a breaking
+   change on the current major's minor line when the migration is mechanical (a rename, a plain
+   find-and-replace), and reserves a major bump for a break that needs real restructuring. The
+   `IterableBox` → `ListBox` rename is breaking and is planned to ship as `1.1.0`, not `2.0.0`,
+   on exactly that reasoning.
 9. **`CHANGELOG.md` is bot-owned. Do not edit any section, including `## Unreleased`.** Release
    headers are written by [`scripts/release.sh`](./scripts/release.sh); the `## Unreleased` buffer
    is appended to by [`.github/workflows/changelog.yml`](./.github/workflows/changelog.yml) from the

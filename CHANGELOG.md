@@ -1,4 +1,7 @@
 ## [Unreleased]
+### Added
+- \[#17\] Bring back `putAllBy`/`putAllGrouped`, the 0.0.x self-keying batch write
+
 ### Changed
 - **BREAKING**: renamed `IterableBox` to `ListBox` and `LazyIterableBox` to `LazyListBox`. Members, contracts, and on-disk frames are unchanged, so a find-and-replace on the two names is the entire migration. `Iterable` was a misnomer: the box takes and returns a `List`, hive rejects non-`List` iterables at write time, and the name would have made the planned `SetBox` look like a subtype rather than a sibling, with no room for `Map` at all.
 
