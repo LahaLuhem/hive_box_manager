@@ -122,6 +122,31 @@ void main() {
       await check(facade.update(8, 8, (value) => value).run()).throws<ArgumentError>();
     });
 
+    scenario('putAllBy keys each value through both extractors', () async {
+      await facade
+          .putAllBy(
+            ['a', 'bb', 'ccc'],
+            primary: (value) => value.length,
+            secondary: (value) => value.codeUnitAt(0),
+          )
+          .run();
+
+      check(await facade.get(2, 98).run()).equals(const Some('bb'));
+      check(facade.keys).deepEquals([(1, 97), (2, 98), (3, 99)]);
+    });
+
+    scenario('putAllBy trips the duplicate assert before the box even opens', () {
+      check(
+        () => facade.putAllBy(
+          ['ab', 'cd'],
+          primary: (value) => value.length,
+          secondary: (value) => value.length,
+        ),
+      ).throws<AssertionError>();
+
+      check(box.store).isEmpty();
+    });
+
     scenario('delete, deleteAll, and clear remove entries', () async {
       await facade.putAll({(1, 1): 'a', (2, 2): 'b', (3, 3): 'c'}).run();
 
