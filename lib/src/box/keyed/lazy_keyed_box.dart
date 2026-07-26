@@ -9,6 +9,7 @@ import '/src/codec/key/key_codec.dart';
 import '/src/codec/key/key_codec_resolution.dart';
 import '/src/core/box_provider.dart';
 import '/src/core/engine/lazy_crud_engine.dart';
+import '/src/core/raw_key.dart';
 import '/src/core/value_codec/identity_value_codec.dart';
 import '/src/event/lazy_typed_box_event.dart';
 import '/src/observer/box_observer.dart';
@@ -42,7 +43,7 @@ import '/src/observer/box_observer.dart';
 ///
 /// `interface class`: implement it for test fakes; extending is reserved to this package.
 interface class LazyKeyedBox<T extends Object, K extends Object> {
-  final LazyCrudEngine<T, K> _engine;
+  final LazyCrudEngine<T> _engine;
 
   /// Wires a box that opens single-flight on first use; construction itself touches nothing.
   ///
@@ -67,7 +68,7 @@ interface class LazyKeyedBox<T extends Object, K extends Object> {
          // Type arguments stay explicit through this wiring: a bare `const IdentityValueCodec()`
          // cannot mention T, so inference silently instantiates it as `Never`, which covariance
          // accepts statically and the first put trips over at run time.
-         engine: LazyCrudEngine<T, K>(
+         engine: LazyCrudEngine<T>(
            boxName: name,
            openBox: () => BoxProvider().openLazyBox(
              name,
@@ -76,15 +77,21 @@ interface class LazyKeyedBox<T extends Object, K extends Object> {
              compactionStrategy: compactionStrategy,
              crashRecovery: crashRecovery,
            ),
-           keyCodec: resolveKeyCodec<K>(codec),
            valueCodec: IdentityValueCodec<T>(),
            observer: observer,
          ),
+         codec: resolveKeyCodec<K>(codec),
        );
 
   /// Wiring is internal: consumers construct via the unnamed constructor (tests use the seam
   /// below).
-  LazyKeyedBox._({required this._engine});
+  LazyKeyedBox._({required this._engine, required this._codec});
+
+  final KeyCodec<K> _codec;
+
+  /// Encodes [key] for the engine, which admits only encoded keys.
+  @pragma('vm:prefer-inline')
+  RawKey _rawKeyFor(K key) => RawKey(_codec.encode(key));
 
   /// The box name, available before the box ever opens: the observer correlation handle.
   String get name => _engine.name;
@@ -102,7 +109,7 @@ interface class LazyKeyedBox<T extends Object, K extends Object> {
 
   /// The stored keys, decoded through the box's [KeyCodec] as they are iterated. Sync carve-out:
   /// throws [StateError] before the first open.
-  Iterable<K> get keys => _engine.keys;
+  Iterable<K> get keys => _engine.rawKeys.map(_codec.decode);
 
   /// Every stored value when run, each read from disk and materialised into one list:
   /// completion means every disk read already happened. Dispatches one read-all event per run.
@@ -113,13 +120,13 @@ interface class LazyKeyedBox<T extends Object, K extends Object> {
 
   /// Whether [key] is stored right now. Sync carve-out: throws [StateError] before the first
   /// open.
-  bool contains(K key) => _engine.contains(key);
+  bool contains(K key) => _engine.contains(_rawKeyFor(key));
 
   /// Reads [key] from disk when run: `Some` when present, `None` when absent.
-  TaskOption<T> get(K key) => _engine.get(key);
+  TaskOption<T> get(K key) => _engine.get(_rawKeyFor(key), key);
 
   /// Reads [key] from disk when run, falling back to [fallback] when absent. Sugar over [get].
-  Task<T> getOr(K key, T fallback) => _engine.getOr(key, fallback);
+  Task<T> getOr(K key, T fallback) => _engine.getOr(_rawKeyFor(key), key, fallback);
 
   /// Writes [value] under [key] when run.
   ///
@@ -127,24 +134,32 @@ interface class LazyKeyedBox<T extends Object, K extends Object> {
   /// the encoded key leaves hive's raw domain (an int outside `0..0xFFFFFFFF`, a String over 255
   /// UTF-8 bytes): exactly the keys release-mode hive_ce accepts and then corrupts on. Engine
   /// failures, including a failed auto-open, surface inside the task.
-  Task<Unit> put(K key, T value) => _engine.put(key, value);
+  Task<Unit> put(K key, T value) => _engine.put(_rawKeyFor(key), key, value);
 
   /// Writes every entry of [entries] in one batch when run. All keys are encoded and gated at
   /// call time, so a bad key means nothing gets written; same throw taxonomy as [put].
-  Task<Unit> putAll(Map<K, T> entries) => _engine.putAll(entries);
+  Task<Unit> putAll(Map<K, T> entries) => _engine.putAll(
+    // Lazy: the engine's own pass consumes this, so the batch is materialised once, not twice.
+    entries.entries.map((entry) => MapEntry(_rawKeyFor(entry.key), entry.value)),
+  );
 
   /// Rewrites [key] through [update] when run and returns the new value, mirroring [Map.update]:
   /// an absent [key] is seeded by [ifAbsent], and with no [ifAbsent] the task fails with an
   /// [ArgumentError] at run time. The call-site key gate applies as in [put].
   Task<T> update(K key, T Function(T value) update, {T Function()? ifAbsent}) =>
-      _engine.update(key, update, ifAbsent: ifAbsent);
+      _engine.update(_rawKeyFor(key), key, update, ifAbsent: ifAbsent);
 
   /// Deletes [key] when run; deleting an absent key is hive's documented no-op. Deletes are not
   /// gated: a key this box never admitted cannot reach disk this way.
-  Task<Unit> delete(K key) => _engine.delete(key);
+  Task<Unit> delete(K key) => _engine.delete(_rawKeyFor(key), key);
 
   /// Deletes every key in [keys] in one batch when run; observers hear one event per key.
-  Task<Unit> deleteAll(Iterable<K> keys) => _engine.deleteAll(keys);
+  Task<Unit> deleteAll(Iterable<K> keys) {
+    // Materialised once: the batch needs raw keys, the hooks need semantic ones.
+    final keyList = keys.toList(growable: false);
+
+    return _engine.deleteAll([for (final key in keyList) _rawKeyFor(key)], keyList);
+  }
 
   /// Removes every entry when run.
   Task<Unit> clear() => _engine.clear();
@@ -155,7 +170,14 @@ interface class LazyKeyedBox<T extends Object, K extends Object> {
   /// Writes carry `Some`, deletes carry `None`: a lazy box retains no values in memory, so the
   /// engine has nothing to attach on deletes (pinned behaviour); [LazyTypedBoxEvent.deleted] is
   /// derived from exactly that.
-  Stream<LazyTypedBoxEvent<T, K>> watch({K? key}) => _engine.watch(key: key);
+  Stream<LazyTypedBoxEvent<T, K>> watch({K? key}) => _engine
+      .watchRaw(key: key == null ? null : _rawKeyFor(key))
+      .map(
+        (event) => LazyTypedBoxEvent<T, K>(
+          key: _codec.decode(event.key as Object),
+          value: Option.fromNullable(event.value as Object?).map(_engine.decodeStored),
+        ),
+      );
 
   /// Flushes pending writes to disk when run. Maintenance, not a data event: observers only hear
   /// failures.
@@ -188,11 +210,11 @@ LazyKeyedBox<T, K> lazyKeyedBoxAround<T extends Object, K extends Object>(
   BoxObserver? observer,
 }) => LazyKeyedBox<T, K>._(
   // Explicit type arguments on purpose; see the note inside the unnamed constructor.
-  engine: LazyCrudEngine<T, K>(
+  engine: LazyCrudEngine<T>(
     boxName: name,
     openBox: openBox,
-    keyCodec: resolveKeyCodec<K>(codec),
     valueCodec: IdentityValueCodec<T>(),
     observer: observer,
   ),
+  codec: resolveKeyCodec<K>(codec),
 );

@@ -6,7 +6,6 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:meta/meta.dart';
 
-import '/src/codec/key/int_key_codec.dart';
 import '/src/core/box_provider.dart';
 import '/src/core/engine/lazy_crud_engine.dart';
 import '/src/core/value_codec/identity_value_codec.dart';
@@ -40,7 +39,7 @@ import 'single_value_slot_key.dart';
 ///
 /// `interface class`: implement it for test fakes; extending is reserved to this package.
 interface class LazySingleValueBox<T extends Object> {
-  final LazyCrudEngine<T, int> _engine;
+  final LazyCrudEngine<T> _engine;
 
   /// Wires a box that opens single-flight on first use; construction itself touches nothing.
   ///
@@ -59,7 +58,7 @@ interface class LazySingleValueBox<T extends Object> {
     bool crashRecovery = true,
   }) : this._(
          // Type arguments stay explicit through this wiring (CODESTYLE #type-safety).
-         engine: LazyCrudEngine<T, int>(
+         engine: LazyCrudEngine<T>(
            boxName: name,
            openBox: () => BoxProvider().openLazyBox(
              name,
@@ -68,7 +67,6 @@ interface class LazySingleValueBox<T extends Object> {
              compactionStrategy: compactionStrategy,
              crashRecovery: crashRecovery,
            ),
-           keyCodec: const IntKeyCodec(),
            valueCodec: IdentityValueCodec<T>(),
            observer: observer,
          ),
@@ -97,20 +95,20 @@ interface class LazySingleValueBox<T extends Object> {
   Task<Unit> ensureInitialised() => _engine.ensureInitialised();
 
   /// Reads the value from disk when run: `Some` when set, `None` when never set (or cleared).
-  TaskOption<T> get() => _engine.get(singleValueSlotKey);
+  TaskOption<T> get() => _engine.get(singleValueRawSlotKey, singleValueSlotKey);
 
   /// Reads the value from disk when run, falling back to [fallback] when absent. Sugar over
   /// [get].
-  Task<T> getOr(T fallback) => _engine.getOr(singleValueSlotKey, fallback);
+  Task<T> getOr(T fallback) => _engine.getOr(singleValueRawSlotKey, singleValueSlotKey, fallback);
 
   /// Stores [value] when run, replacing whatever was there.
-  Task<Unit> set(T value) => _engine.put(singleValueSlotKey, value);
+  Task<Unit> set(T value) => _engine.put(singleValueRawSlotKey, singleValueSlotKey, value);
 
   /// Rewrites the value through [update] when run and returns the new value, mirroring
   /// [Map.update] on the internal slot: an absent value is seeded by [ifAbsent], and with no
   /// [ifAbsent] the task fails with an [ArgumentError] at run time.
   Task<T> update(T Function(T value) update, {T Function()? ifAbsent}) =>
-      _engine.update(singleValueSlotKey, update, ifAbsent: ifAbsent);
+      _engine.update(singleValueRawSlotKey, singleValueSlotKey, update, ifAbsent: ifAbsent);
 
   /// Unsets the value when run; the next [get] reads `None`. Observers hear a clear.
   Task<Unit> clear() => _engine.clear();
@@ -118,7 +116,9 @@ interface class LazySingleValueBox<T extends Object> {
   /// The value's change stream: `Some` on every [set], `None` on [clear]. Same shape on both
   /// axes (a lazy delete event carries no value, which maps to `None` anyway). Subscribing
   /// auto-opens like any effect; no replay, so pair with [get] for the current value.
-  Stream<Option<T>> watch() => _engine.watch(key: singleValueSlotKey).map((event) => event.value);
+  Stream<Option<T>> watch() => _engine
+      .watchRaw(key: singleValueRawSlotKey)
+      .map((event) => Option.fromNullable(event.value as Object?).map(_engine.decodeStored));
 
   /// Flushes pending writes to disk when run. Maintenance, not a data event: observers only
   /// hear failures.
@@ -151,10 +151,9 @@ LazySingleValueBox<T> lazySingleValueBoxAround<T extends Object>(
   BoxObserver? observer,
 }) => LazySingleValueBox<T>._(
   // Explicit type arguments on purpose; see CODESTYLE #type-safety.
-  engine: LazyCrudEngine<T, int>(
+  engine: LazyCrudEngine<T>(
     boxName: name,
     openBox: openBox,
-    keyCodec: const IntKeyCodec(),
     valueCodec: IdentityValueCodec<T>(),
     observer: observer,
   ),
