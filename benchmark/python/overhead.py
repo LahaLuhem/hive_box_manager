@@ -58,11 +58,7 @@ LANES = (
 
 
 def load_rows():
-    return [
-        json.loads(line)
-        for line in RESULT_FILE.read_text().splitlines()
-        if line.strip()
-    ]
+    return [json.loads(line) for line in RESULT_FILE.read_text().splitlines() if line.strip()]
 
 
 def samples(rows, *, mode, box_kind, impl):
@@ -90,8 +86,7 @@ def main():
     print(f"boxes prepped with {', '.join(f'{n:,}' for n in prepped)} entries")
     if meta:
         print(
-            f"reps: {meta.get('reps')}, "
-            f"host load {meta.get('loadStart')} -> {meta.get('loadEnd')}"
+            f"reps: {meta.get('reps')}, host load {meta.get('loadStart')} -> {meta.get('loadEnd')}"
         )
     else:
         print("no load stamp in this run (predates the driver writing one): treat with suspicion")
@@ -123,7 +118,9 @@ def main():
         by_min = overhead_pct(min(facade), min(raw))
         # Nanoseconds of wrapper per op: the reading that stays interpretable when the underlying
         # op is so cheap that a percentage is mostly a statement about the denominator.
-        per_op_ns = (statistics.median(facade) - statistics.median(raw)) * 1000 / ops if ops else None
+        per_op_ns = (
+            (statistics.median(facade) - statistics.median(raw)) * 1000 / ops if ops else None
+        )
         print(
             f"{label:<20} {ops or '-':>7} "
             f"{statistics.median(facade) / 1000:>8.1f} ms {statistics.median(raw) / 1000:>7.1f} ms "
