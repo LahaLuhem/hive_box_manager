@@ -61,7 +61,7 @@ renames don't break callers.
   inference quietly instantiates it at `Never`. Covariance then accepts that `Never`-typed value
   for every `T`, every strict analyzer mode stays silent, and the first real call throws a
   runtime `TypeError`. Drop the `const` and name the argument's type (`IdentityValueCodec<T>()`),
-  and prefer explicit arguments down the whole wiring chain (`EagerCrudEngine<T, K>(…)`): the
+  and prefer explicit arguments down the whole wiring chain (`EagerCrudEngine<T>(…)`): the
   façade wiring in `lib/src/box/` shows the shape.
 - **No Java ceremony.** No getter-only abstract base classes, no `AbstractFooFactory`, no
   interface-per-class. Use mixins, sealed classes, records, extension types, and enums where they
@@ -217,15 +217,22 @@ learns one shape and applies it across every variant. Rationale:
   both axes.
 - **Codec defaulting at construction.** `int` / `String` keys (and `(int, int)` dual parts)
   resolve to shipped codecs; any other key type without an explicit codec fails a wiring assert.
-- **Never instantiate the shared CRUD engines with a record as the key type argument.** This one is
-  measured, not aesthetic: `EagerCrudEngine<T, (int, int)>` costs **+440 to +550 ns per get** over
-  the identical engine typed `EagerCrudEngine<T, int>`, on the same box and the same codec. The
-  benchmark decomposes it lane by lane: the dual codec is free (1.01x raw), the adapter call around
-  it is free (1.08x), and the jump to 1.87x appears exactly when the record enters the engine's type
-  parameter. Dart AOT does not monomorphise generics, so a record in a generic slot cannot hold its
-  fields unboxed. `DualKeyBox` and `LazyDualKeyBox` still do this and it is their whole overhead;
-  a new family with a composite key should encode to the raw key in the façade and hand the engine a
-  plain `int` / `String` instead.
+- **Never put a record built from a class's own type parameters in a checked parameter position.**
+  Measured, not aesthetic: an adapter declaring `Object encode((K1, K2) key)` costs **~350 ns per
+  call**, because every call subtype-checks its argument against `(K1, K2)` resolved through the
+  instantiated type-argument vector, which misses AOT's inline subtype-test cache. Pass the parts as
+  separate arguments instead (`encode(K1 primary, K2 secondary)`), which is free.
+
+  The controls matter, because the obvious readings are all wrong. Records alone are free. Generics
+  alone are free. The engine's own key type parameter was innocent. Widening the parameter to
+  `Object` and casting inside does not help, since it is the same check written out. Making the
+  record type concrete (`(Object, Object)`) *is* free and is a trap: it hides the cost while leaving
+  a record on the boundary for the next person to re-parameterise.
+  `benchmark/key_shape_bench.dart` prices every variant and its reader checks each claim.
+
+  This was `DualKeyBox`'s entire overhead (1.4x to 1.8x raw hive), removed in #14. Engines take
+  `RawKey` now and façades encode at the surface, so the shape is unrepresentable rather than
+  merely discouraged.
 - **The one blessed nullable is `watch({key})`'s filter**: a toggle the consumer passes, never a
   value they receive. Eager watch events carry non-null values even on deletes; lazy events carry
   `Option` (the engine holds no values to attach).
