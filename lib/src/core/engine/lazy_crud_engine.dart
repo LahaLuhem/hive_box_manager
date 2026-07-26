@@ -128,13 +128,22 @@ final class LazyCrudEngine<T extends Object> {
 
   /// Writes every entry of [rawEntries] in one batch. No semantic keys: the event carries a count.
   ///
-  /// Lazy iterable, consumed eagerly here: the façade's encode fuses into this pass (one
-  /// materialisation, not two) while a bad key still fails before the [Task] exists.
+  /// Lazy iterable, consumed eagerly here: the façade's encode fuses into this pass (one materialisation, not two)
+  /// while a bad key still fails before the [Task] exists.
+  ///
+  /// Two entries encoding to one raw key is an assert, not an error: in release the later entry wins
+  /// (plain `Map` semantics), so a batch that quietly drops rows gets caught in development instead
+  /// of shipping. It means either two values yielded the same key, or the codec is not injective.
   Task<Unit> putAll(Iterable<MapEntry<RawKey, T>> rawEntries) {
     final storableEntries = <Object, Object?>{};
     for (final entry in rawEntries) {
       final rawKey = entry.key.value;
       ensureStorableRawKey(rawKey);
+      assert(
+        !storableEntries.containsKey(rawKey),
+        'putAll: two entries encode to raw key $rawKey, so the later one silently wins. Either '
+        'two values yielded the same key, or the key codec is not injective.',
+      );
       storableEntries[rawKey] = _valueCodec.toStorable(entry.value);
     }
 

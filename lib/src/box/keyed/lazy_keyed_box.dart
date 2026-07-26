@@ -143,6 +143,20 @@ interface class LazyKeyedBox<T extends Object, K extends Object> {
     entries.entries.map((entry) => MapEntry(_rawKeyFor(entry.key), entry.value)),
   );
 
+  /// Writes every value in [values] when run, each under the key [key] extracts from it.
+  ///
+  /// Sugar over [putAll] for values that carry their own key. No intermediate `Map` is built at all:
+  /// [key] is applied inside the same pass that encodes and gates, so this is the cheaper of the two
+  /// as well as the shorter.
+  ///
+  /// Reach for [putAll] when the key is not derivable from the value, which is most of the time:
+  /// primitives, values without an id, or keys that come from somewhere else entirely.
+  ///
+  /// Two values yielding the same key trips an assert in development; in release the later one wins.
+  /// Same throw taxonomy as [putAll] otherwise, gate included.
+  Task<Unit> putAllBy(Iterable<T> values, {required K Function(T value) key}) =>
+      _engine.putAll(values.map((value) => MapEntry(_rawKeyFor(key(value)), value)));
+
   /// Rewrites [key] through [update] when run and returns the new value, mirroring [Map.update]:
   /// an absent [key] is seeded by [ifAbsent], and with no [ifAbsent] the task fails with an
   /// [ArgumentError] at run time. The call-site key gate applies as in [put].

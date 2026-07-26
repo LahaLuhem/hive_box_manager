@@ -164,6 +164,28 @@ void main() {
       check(box.store).isEmpty();
     });
 
+    scenario('putAllBy writes one entry per distinct extracted key', () async {
+      await facade.putAllBy(['a', 'bb', 'ccc'], key: (value) => value.length).run();
+
+      check(box.store).deepEquals({1: 'a', 2: 'bb', 3: 'ccc'});
+      check(observer.calls).deepEquals(['opened:logs', 'writtenAll:logs:3']);
+    });
+
+    scenario('putAllBy trips the duplicate assert before the box even opens', () {
+      check(
+        () => facade.putAllBy(['ant', 'bee'], key: (value) => value.length),
+      ).throws<AssertionError>();
+
+      check(openCalls).equals(0);
+      check(box.store).isEmpty();
+    });
+
+    scenario('putAllBy gates a non-storable extracted key at the call site', () {
+      check(() => facade.putAllBy(['a'], key: (value) => -1)).throws<ArgumentError>();
+
+      check(box.store).isEmpty();
+    });
+
     scenario('update rewrites, seeds via ifAbsent, and mirrors Map.update on absence', () async {
       await facade.put(7, 'v').run();
 
