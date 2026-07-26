@@ -11,8 +11,10 @@ import 'package:meta/meta.dart';
 import '/src/codec/dual/dual_key_codec.dart';
 import '/src/codec/dual/dual_key_codec_adapter.dart';
 import '/src/codec/dual/dual_key_codec_resolution.dart';
+import '/src/codec/key/key_codec.dart';
 import '/src/core/box_provider.dart';
 import '/src/core/engine/lazy_crud_engine.dart';
+import '/src/core/raw_key.dart';
 import '/src/core/value_codec/identity_value_codec.dart';
 import '/src/event/lazy_typed_box_event.dart';
 import '/src/observer/box_observer.dart';
@@ -42,8 +44,12 @@ import '/src/query/scan_query_index.dart';
 ///
 /// `interface class`: implement it for test fakes; extending is reserved to this package.
 interface class LazyDualKeyBox<T extends Object, K1 extends Object, K2 extends Object> {
-  final LazyCrudEngine<T, (K1, K2)> _engine;
+  final LazyCrudEngine<T> _engine;
   final DualKeyCodec<K1, K2> _dualCodec;
+
+  /// On death row, exactly as in `DualKeyBox`: the ~350 ns per op issue #14 removes, kept one
+  /// checkpoint longer so this refactor carries no measurable delta.
+  final KeyCodec<(K1, K2)> _adapter;
 
   /// Wires a box that opens single-flight on first use; construction itself touches nothing.
   ///
@@ -66,7 +72,7 @@ interface class LazyDualKeyBox<T extends Object, K1 extends Object, K2 extends O
 
     // Type arguments stay explicit through this wiring (CODESTYLE #type-safety).
     return LazyDualKeyBox<T, K1, K2>._(
-      engine: LazyCrudEngine<T, (K1, K2)>(
+      engine: LazyCrudEngine<T>(
         boxName: name,
         openBox: () => BoxProvider().openLazyBox(
           name,
@@ -75,17 +81,21 @@ interface class LazyDualKeyBox<T extends Object, K1 extends Object, K2 extends O
           compactionStrategy: compactionStrategy,
           crashRecovery: crashRecovery,
         ),
-        keyCodec: DualKeyCodecAdapter<K1, K2>(dualCodec: dualCodec),
         valueCodec: IdentityValueCodec<T>(),
         observer: observer,
       ),
       dualCodec: dualCodec,
+      adapter: DualKeyCodecAdapter<K1, K2>(dualCodec: dualCodec),
     );
   }
 
   /// Wiring is internal: consumers construct via the unnamed constructor (tests use the seam
   /// below).
-  LazyDualKeyBox._({required this._engine, required this._dualCodec});
+  LazyDualKeyBox._({required this._engine, required this._dualCodec, required this._adapter});
+
+  /// Encodes a two-part key for the engine, which admits only encoded keys.
+  @pragma('vm:prefer-inline')
+  RawKey _rawKeyFor(K1 primary, K2 secondary) => RawKey(_adapter.encode((primary, secondary)));
 
   late final _scanIndex = ScanQueryIndex<K1, K2>(rawKeys: () => _engine.rawKeys, codec: _dualCodec);
 
@@ -107,7 +117,7 @@ interface class LazyDualKeyBox<T extends Object, K1 extends Object, K2 extends O
   /// The stored keys as `(primary, secondary)` records, decoded through the box's
   /// [DualKeyCodec] as they are iterated. Sync carve-out: throws [StateError] before the first
   /// open.
-  Iterable<(K1, K2)> get keys => _engine.keys;
+  Iterable<(K1, K2)> get keys => _engine.rawKeys.map(_dualCodec.decode);
 
   /// Every stored value when run, each read from disk and materialised into one list.
   /// Dispatches one read-all event per run.
@@ -118,16 +128,17 @@ interface class LazyDualKeyBox<T extends Object, K1 extends Object, K2 extends O
 
   /// Whether ([primary], [secondary]) is stored right now. Sync carve-out: throws [StateError]
   /// before the first open.
-  bool contains(K1 primary, K2 secondary) => _engine.contains((primary, secondary));
+  bool contains(K1 primary, K2 secondary) => _engine.contains(_rawKeyFor(primary, secondary));
 
   /// Reads the value under ([primary], [secondary]) from disk when run: `Some` when present,
   /// `None` when absent.
-  TaskOption<T> get(K1 primary, K2 secondary) => _engine.get((primary, secondary));
+  TaskOption<T> get(K1 primary, K2 secondary) =>
+      _engine.get(_rawKeyFor(primary, secondary), (primary, secondary));
 
   /// Reads the value under ([primary], [secondary]) from disk when run, falling back to
   /// [fallback] when absent.
   Task<T> getOr(K1 primary, K2 secondary, T fallback) =>
-      _engine.getOr((primary, secondary), fallback);
+      _engine.getOr(_rawKeyFor(primary, secondary), (primary, secondary), fallback);
 
   /// Every value whose key's primary part equals [primary], as a plain (possibly empty) list
   /// when run: an O(K) scan over the live key set, matches fetched from disk in parallel, one
@@ -142,34 +153,45 @@ interface class LazyDualKeyBox<T extends Object, K1 extends Object, K2 extends O
 
   /// Writes [value] under ([primary], [secondary]) when run; the key gate applies as in
   /// [LazyKeyedBox.put].
-  Task<Unit> put(K1 primary, K2 secondary, T value) =>
-      _engine.put((primary, secondary), value).map((_) => _afterWrite(primary, secondary));
+  Task<Unit> put(K1 primary, K2 secondary, T value) => _engine
+      .put(_rawKeyFor(primary, secondary), (primary, secondary), value)
+      .map((_) => _afterWrite(primary, secondary));
 
   /// Writes every entry of [entries] (keyed by `(primary, secondary)` records) in one batch
   /// when run. All keys are encoded and gated at call time, so a bad key means nothing gets
   /// written.
-  Task<Unit> putAll(Map<(K1, K2), T> entries) => _engine.putAll(entries).map((_) {
-    for (final (primary, secondary) in entries.keys) {
-      _afterWrite(primary, secondary);
-    }
+  Task<Unit> putAll(Map<(K1, K2), T> entries) => _engine
+      .putAll(
+        // Lazy: the engine's own pass consumes this, so the batch is materialised once.
+        entries.entries.map(
+          (entry) => MapEntry(_rawKeyFor(entry.key.$1, entry.key.$2), entry.value),
+        ),
+      )
+      .map((_) {
+        for (final (primary, secondary) in entries.keys) {
+          _afterWrite(primary, secondary);
+        }
 
-    return unit;
-  });
+        return unit;
+      });
 
   /// Rewrites the value under ([primary], [secondary]) through [update] when run and returns
   /// the new value, mirroring [Map.update]: absent is seeded by [ifAbsent], and with no
   /// [ifAbsent] the task fails with an [ArgumentError] at run time.
   Task<T> update(K1 primary, K2 secondary, T Function(T value) update, {T Function()? ifAbsent}) =>
-      _engine.update((primary, secondary), update, ifAbsent: ifAbsent).map((updatedValue) {
-        _afterWrite(primary, secondary);
+      _engine
+          .update(_rawKeyFor(primary, secondary), (primary, secondary), update, ifAbsent: ifAbsent)
+          .map((updatedValue) {
+            _afterWrite(primary, secondary);
 
-        return updatedValue;
-      });
+            return updatedValue;
+          });
 
   /// Deletes ([primary], [secondary]) when run; deleting an absent key is hive's documented
   /// no-op.
-  Task<Unit> delete(K1 primary, K2 secondary) =>
-      _engine.delete((primary, secondary)).map((_) => _afterDelete(primary, secondary));
+  Task<Unit> delete(K1 primary, K2 secondary) => _engine
+      .delete(_rawKeyFor(primary, secondary), (primary, secondary))
+      .map((_) => _afterDelete(primary, secondary));
 
   /// Deletes every `(primary, secondary)` record in [keys] in one batch when run; observers
   /// hear one event per key.
@@ -177,13 +199,17 @@ interface class LazyDualKeyBox<T extends Object, K1 extends Object, K2 extends O
     // Materialised: iterated once for the batch, once for the hooks.
     final keyList = keys.toList(growable: false);
 
-    return _engine.deleteAll(keyList).map((_) {
-      for (final (primary, secondary) in keyList) {
-        _afterDelete(primary, secondary);
-      }
+    return _engine
+        .deleteAll([
+          for (final (primary, secondary) in keyList) _rawKeyFor(primary, secondary),
+        ], keyList)
+        .map((_) {
+          for (final (primary, secondary) in keyList) {
+            _afterDelete(primary, secondary);
+          }
 
-      return unit;
-    });
+          return unit;
+        });
   }
 
   /// Removes every entry when run.
@@ -192,7 +218,14 @@ interface class LazyDualKeyBox<T extends Object, K1 extends Object, K2 extends O
   /// Typed change stream; pass [key] as a `(primary, secondary)` record to watch one composite
   /// key only (the surface's one blessed nullable). Subscribing auto-opens like any effect.
   /// Writes carry `Some`, deletes carry `None` (the lazy engine holds no values).
-  Stream<LazyTypedBoxEvent<T, (K1, K2)>> watch({(K1, K2)? key}) => _engine.watch(key: key);
+  Stream<LazyTypedBoxEvent<T, (K1, K2)>> watch({(K1, K2)? key}) => _engine
+      .watchRaw(key: key == null ? null : _rawKeyFor(key.$1, key.$2))
+      .map(
+        (event) => LazyTypedBoxEvent<T, (K1, K2)>(
+          key: _dualCodec.decode(event.key as Object),
+          value: Option.fromNullable(event.value as Object?).map(_engine.decodeStored),
+        ),
+      );
 
   /// Flushes pending writes to disk when run. Maintenance, not a data event: observers only
   /// hear failures.
@@ -220,7 +253,7 @@ interface class LazyDualKeyBox<T extends Object, K1 extends Object, K2 extends O
     // under concurrent writes mid-fetch.
     final rawKeys = matchingRawKeys().toList(growable: false);
     final maybeValues = await rawKeys
-        .map((rawKey) => _engine.get(_dualCodec.decode(rawKey)).run())
+        .map((rawKey) => _engine.get(RawKey(rawKey), _dualCodec.decode(rawKey)).run())
         .wait;
 
     // Keys that vanish mid-scan read as None and drop out (races are the consumer's timeline).
@@ -260,13 +293,13 @@ lazyDualKeyBoxAround<T extends Object, K1 extends Object, K2 extends Object>(
 
   // Explicit type arguments on purpose; see CODESTYLE #type-safety.
   return LazyDualKeyBox<T, K1, K2>._(
-    engine: LazyCrudEngine<T, (K1, K2)>(
+    engine: LazyCrudEngine<T>(
       boxName: name,
       openBox: openBox,
-      keyCodec: DualKeyCodecAdapter<K1, K2>(dualCodec: dualCodec),
       valueCodec: IdentityValueCodec<T>(),
       observer: observer,
     ),
     dualCodec: dualCodec,
+    adapter: DualKeyCodecAdapter<K1, K2>(dualCodec: dualCodec),
   );
 }

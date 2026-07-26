@@ -1,17 +1,18 @@
 // The lazy engine against the stateful in-memory fake: single-flight auto-open (the named
 // Phase 1 race test), CRUD + absence paths, the sync gate firing before the box even opens,
-// Option-valued watch events, and the terminal-close contract.
+// the raw watch passthrough, and the terminal-close contract.
+//
+// Calls spell out both key halves: the `RawKey` hive stores under, and the semantic key the
+// observer hears. Option-valued watch events moved out to the façades with the key codec.
 @Tags(['unit'])
 library;
 
 import 'dart:async';
 
 import 'package:checks/checks.dart';
-import 'package:fpdart/fpdart.dart';
-import 'package:hive_box_manager/src/codec/key/int_key_codec.dart';
 import 'package:hive_box_manager/src/core/engine/lazy_crud_engine.dart';
+import 'package:hive_box_manager/src/core/raw_key.dart';
 import 'package:hive_box_manager/src/core/value_codec/identity_value_codec.dart';
-import 'package:hive_box_manager/src/event/lazy_typed_box_event.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
@@ -19,12 +20,18 @@ import '../../../support/bdd.dart';
 import '../../../support/doubles/fake_boxes.dart';
 import '../../../support/doubles/recording_box_observer.dart';
 
+/// One batch entry, in the shape the engine takes.
+MapEntry<RawKey, String> entry(int key, String value) => MapEntry(RawKey(key), value);
+
+/// Watch notifications as a comparable value (`BoxEvent` has no `==`).
+(Object?, Object?, bool) shapeOf(BoxEvent event) => (event.key, event.value, event.deleted);
+
 void main() {
   late FakeLazyBox box;
   late RecordingBoxObserver observer;
   late int openCalls;
 
-  LazyCrudEngine<String, int> makeEngine({Future<LazyBox<Object?>> Function()? openBox}) =>
+  LazyCrudEngine<String> makeEngine({Future<LazyBox<Object?>> Function()? openBox}) =>
       LazyCrudEngine(
         boxName: 'logs',
         openBox:
@@ -34,7 +41,6 @@ void main() {
 
               return box;
             },
-        keyCodec: const IntKeyCodec(),
         valueCodec: const IdentityValueCodec(),
         observer: observer,
       );
@@ -49,8 +55,8 @@ void main() {
     scenario('the first effect opens the box exactly once and dispatches it', () async {
       final engine = makeEngine();
 
-      await engine.put(7, 'v').run();
-      await engine.put(8, 'w').run();
+      await engine.put(const RawKey(7), 7, 'v').run();
+      await engine.put(const RawKey(8), 8, 'w').run();
 
       check(openCalls).equals(1);
       check(observer.calls).deepEquals(['opened:logs', 'written:logs:7:v', 'written:logs:8:w']);
@@ -69,9 +75,9 @@ void main() {
 
       // Concurrency is the point here: every op fires before the open completes.
       final racing = [
-        engine.put(1, 'a').run(),
-        engine.put(2, 'b').run(),
-        engine.get(1).run(),
+        engine.put(const RawKey(1), 1, 'a').run(),
+        engine.put(const RawKey(2), 2, 'b').run(),
+        engine.get(const RawKey(1), 1).run(),
         engine.values().run(),
         engine.ensureInitialised().run(),
       ];
@@ -94,8 +100,8 @@ void main() {
         },
       );
 
-      await check(engine.put(7, 'v').run()).throws<HiveError>();
-      await engine.put(7, 'v').run();
+      await check(engine.put(const RawKey(7), 7, 'v').run()).throws<HiveError>();
+      await engine.put(const RawKey(7), 7, 'v').run();
 
       check(attempts).equals(2);
       check(observer.calls).deepEquals([
@@ -110,19 +116,17 @@ void main() {
       final engine = makeEngine();
 
       check(() => engine.length).throws<StateError>();
-      check(() => engine.keys).throws<StateError>();
       check(() => engine.rawKeys).throws<StateError>();
-      check(() => engine.contains(7)).throws<StateError>();
+      check(() => engine.contains(const RawKey(7))).throws<StateError>();
 
       await engine.ensureInitialised().run();
-      await engine.put(7, 'v').run();
+      await engine.put(const RawKey(7), 7, 'v').run();
 
       check(engine.length).equals(1);
       check(engine.isEmpty).isFalse();
       check(engine.isNotEmpty).isTrue();
-      check(engine.keys).deepEquals([7]);
       check(engine.rawKeys).deepEquals([7]);
-      check(engine.contains(7)).isTrue();
+      check(engine.contains(const RawKey(7))).isTrue();
       check(engine.name).equals('logs');
     });
   });
@@ -131,7 +135,7 @@ void main() {
     scenario('an absent key reads as None and dispatches the miss', () async {
       final engine = makeEngine();
 
-      final result = await engine.get(7).run();
+      final result = await engine.get(const RawKey(7), 7).run();
 
       check(result.isNone()).isTrue();
       check(observer.calls).deepEquals(['opened:logs', 'read:logs:7:null']);
@@ -139,9 +143,9 @@ void main() {
 
     scenario('a put value reads back as Some, decoded', () async {
       final engine = makeEngine();
-      await engine.put(7, 'v').run();
+      await engine.put(const RawKey(7), 7, 'v').run();
 
-      final result = await engine.get(7).run();
+      final result = await engine.get(const RawKey(7), 7).run();
 
       check(result.toNullable()).equals('v');
     });
@@ -149,16 +153,16 @@ void main() {
     scenario('getOr falls back on absence and reads through on presence', () async {
       final engine = makeEngine();
 
-      check(await engine.getOr(7, 'fallback').run()).equals('fallback');
+      check(await engine.getOr(const RawKey(7), 7, 'fallback').run()).equals('fallback');
 
-      await engine.put(7, 'v').run();
+      await engine.put(const RawKey(7), 7, 'v').run();
 
-      check(await engine.getOr(7, 'fallback').run()).equals('v');
+      check(await engine.getOr(const RawKey(7), 7, 'fallback').run()).equals('v');
     });
 
     scenario('values materialises every stored value', () async {
       final engine = makeEngine();
-      await engine.putAll({1: 'a', 2: 'b'}).run();
+      await engine.putAll([entry(1, 'a'), entry(2, 'b')]).run();
       observer.calls.clear();
 
       final values = await engine.values().run();
@@ -171,7 +175,7 @@ void main() {
   feature('lazy engine writes and deletes', () {
     scenario('a Task is lazy: nothing opens or writes until run', () async {
       final engine = makeEngine();
-      final write = engine.put(7, 'v');
+      final write = engine.put(const RawKey(7), 7, 'v');
 
       check(openCalls).equals(0);
       check(box.store).isEmpty();
@@ -184,26 +188,30 @@ void main() {
     scenario('the corruption gate fires at the call site, before the box even opens', () {
       final engine = makeEngine();
 
-      check(() => engine.put(-1, 'v')).throws<ArgumentError>();
-      check(() => engine.putAll({1: 'a', -1: 'b'})).throws<ArgumentError>();
+      check(() => engine.put(const RawKey(-1), -1, 'v')).throws<ArgumentError>();
+      check(() => engine.putAll([entry(1, 'a'), entry(-1, 'b')])).throws<ArgumentError>();
       check(openCalls).equals(0);
     });
 
     scenario('update rewrites, seeds via ifAbsent, and mirrors Map.update on absence', () async {
       final engine = makeEngine();
-      await engine.put(7, 'v').run();
+      await engine.put(const RawKey(7), 7, 'v').run();
 
-      check(await engine.update(7, (value) => '$value!').run()).equals('v!');
-      check(await engine.update(9, (value) => value, ifAbsent: () => 'seed').run()).equals('seed');
-      await check(engine.update(8, (value) => value).run()).throws<ArgumentError>();
+      check(await engine.update(const RawKey(7), 7, (value) => '$value!').run()).equals('v!');
+      check(
+        await engine.update(const RawKey(9), 9, (value) => value, ifAbsent: () => 'seed').run(),
+      ).equals('seed');
+      await check(
+        engine.update(const RawKey(8), 8, (value) => value).run(),
+      ).throws<ArgumentError>();
     });
 
     scenario('deleteAll and clear remove batches with per-key and bulk dispatch', () async {
       final engine = makeEngine();
-      await engine.putAll({1: 'a', 2: 'b', 3: 'c'}).run();
+      await engine.putAll([entry(1, 'a'), entry(2, 'b'), entry(3, 'c')]).run();
       observer.calls.clear();
 
-      await engine.deleteAll([1, 2]).run();
+      await engine.deleteAll([const RawKey(1), const RawKey(2)], [1, 2]).run();
       await engine.clear().run();
 
       check(box.store).isEmpty();
@@ -212,35 +220,31 @@ void main() {
   });
 
   feature('lazy engine watch', () {
-    scenario('writes carry Some, deletes carry None (the engine has no value to give)', () async {
+    scenario('raw events pass through; a lazy delete carries no value', () async {
       final engine = makeEngine();
-      final events = <LazyTypedBoxEvent<String, int>>[];
-      final subscription = engine.watch().listen(events.add);
+      final events = <BoxEvent>[];
+      final subscription = engine.watchRaw().listen(events.add);
       await pumpEventQueue();
 
-      await engine.put(7, 'v').run();
-      await engine.delete(7).run();
+      await engine.put(const RawKey(7), 7, 'v').run();
+      await engine.delete(const RawKey(7), 7).run();
       await pumpEventQueue();
       await subscription.cancel();
 
-      check(events).deepEquals(const [
-        LazyTypedBoxEvent<String, int>(key: 7, value: Some('v')),
-        LazyTypedBoxEvent<String, int>(key: 7, value: None()),
-      ]);
-      check(events.last.deleted).isTrue();
+      check(events.map(shapeOf)).deepEquals([(7, 'v', false), (7, null, true)]);
     });
 
     scenario('a key filter narrows the stream to that key', () async {
       final engine = makeEngine();
-      final events = <LazyTypedBoxEvent<String, int>>[];
-      final subscription = engine.watch(key: 2).listen(events.add);
+      final events = <BoxEvent>[];
+      final subscription = engine.watchRaw(key: const RawKey(2)).listen(events.add);
       await pumpEventQueue();
 
-      await engine.putAll({1: 'a', 2: 'b'}).run();
+      await engine.putAll([entry(1, 'a'), entry(2, 'b')]).run();
       await pumpEventQueue();
       await subscription.cancel();
 
-      check(events).deepEquals(const [LazyTypedBoxEvent<String, int>(key: 2, value: Some('b'))]);
+      check(events.map(shapeOf)).deepEquals([(2, 'b', false)]);
     });
   });
 
@@ -263,7 +267,7 @@ void main() {
       check(openCalls).equals(0);
       check(observer.calls).deepEquals(['closed:logs']);
 
-      await check(engine.put(7, 'v').run()).throws<HiveError>();
+      await check(engine.put(const RawKey(7), 7, 'v').run()).throws<HiveError>();
       check(() => engine.length).throws<HiveError>();
       check(observer.calls.last).equals('error:logs:put:HiveError');
     });
@@ -280,12 +284,12 @@ void main() {
 
     scenario('close after use closes the real box and is terminal (tier 3)', () async {
       final engine = makeEngine();
-      await engine.put(7, 'v').run();
+      await engine.put(const RawKey(7), 7, 'v').run();
 
       await engine.close().run();
 
       check(box.isClosed).isTrue();
-      await check(engine.get(7).run()).throws<HiveError>();
+      await check(engine.get(const RawKey(7), 7).run()).throws<HiveError>();
       check(
         observer.calls,
       ).deepEquals(['opened:logs', 'written:logs:7:v', 'closed:logs', 'error:logs:get:HiveError']);
@@ -293,7 +297,7 @@ void main() {
 
     scenario('deleteFromDisk dispatches and empties the store', () async {
       final engine = makeEngine();
-      await engine.put(7, 'v').run();
+      await engine.put(const RawKey(7), 7, 'v').run();
       observer.calls.clear();
 
       await engine.deleteFromDisk().run();

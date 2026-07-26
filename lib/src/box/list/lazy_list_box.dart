@@ -12,6 +12,7 @@ import '/src/codec/key/key_codec.dart';
 import '/src/codec/key/key_codec_resolution.dart';
 import '/src/core/box_provider.dart';
 import '/src/core/engine/lazy_crud_engine.dart';
+import '/src/core/raw_key.dart';
 import '/src/core/value_codec/collection_cast_value_codec.dart';
 import '/src/event/lazy_typed_box_event.dart';
 import '/src/observer/box_observer.dart';
@@ -46,7 +47,7 @@ import 'list_edits.dart';
 ///
 /// `interface class`: implement it for test fakes; extending is reserved to this package.
 interface class LazyListBox<T extends Object, K extends Object> {
-  final LazyCrudEngine<List<T>, K> _engine;
+  final LazyCrudEngine<List<T>> _engine;
 
   /// Wires a box that opens single-flight on first use; construction itself touches nothing.
   ///
@@ -67,7 +68,7 @@ interface class LazyListBox<T extends Object, K extends Object> {
     bool crashRecovery = true,
   }) : this._(
          // Type arguments stay explicit through this wiring (CODESTYLE #type-safety).
-         engine: LazyCrudEngine<List<T>, K>(
+         engine: LazyCrudEngine<List<T>>(
            boxName: name,
            openBox: () => BoxProvider().openLazyBox(
              name,
@@ -76,15 +77,21 @@ interface class LazyListBox<T extends Object, K extends Object> {
              compactionStrategy: compactionStrategy,
              crashRecovery: crashRecovery,
            ),
-           keyCodec: resolveKeyCodec<K>(codec),
            valueCodec: CollectionCastValueCodec<T>(),
            observer: observer,
          ),
+         codec: resolveKeyCodec<K>(codec),
        );
 
   /// Wiring is internal: consumers construct via the unnamed constructor (tests use the seam
   /// below).
-  LazyListBox._({required this._engine});
+  LazyListBox._({required this._engine, required this._codec});
+
+  final KeyCodec<K> _codec;
+
+  /// Encodes [key] for the engine, which admits only encoded keys.
+  @pragma('vm:prefer-inline')
+  RawKey _rawKeyFor(K key) => RawKey(_codec.encode(key));
 
   /// The box name, available before the box ever opens: the observer correlation handle.
   String get name => _engine.name;
@@ -102,7 +109,7 @@ interface class LazyListBox<T extends Object, K extends Object> {
 
   /// The stored keys, decoded through the box's [KeyCodec] as they are iterated. Sync
   /// carve-out: throws [StateError] before the first open.
-  Iterable<K> get keys => _engine.keys;
+  Iterable<K> get keys => _engine.rawKeys.map(_codec.decode);
 
   /// Every stored list when run, each read from disk, materialised, and handed over as an
   /// unmodifiable view. Dispatches one read-all event per run.
@@ -113,27 +120,32 @@ interface class LazyListBox<T extends Object, K extends Object> {
 
   /// Whether [key] is stored right now. Sync carve-out: throws [StateError] before the first
   /// open.
-  bool contains(K key) => _engine.contains(key);
+  bool contains(K key) => _engine.contains(_rawKeyFor(key));
 
   /// Reads the list under [key] from disk when run: `Some` of an unmodifiable view when present
   /// (`Some(empty)` for a stored empty list), `None` when the key is absent.
-  TaskOption<List<T>> get(K key) => _engine.get(key);
+  TaskOption<List<T>> get(K key) => _engine.get(_rawKeyFor(key), key);
 
   /// Reads the list under [key] from disk when run, falling back to an empty list when absent:
   /// the natural default for a collection, so there is no fallback parameter. Absent and
   /// stored-empty read the same here; use [get] to distinguish them.
-  Task<List<T>> getOr(K key) => _engine.get(key).getOrElse(List.empty);
+  Task<List<T>> getOr(K key) => _engine.get(_rawKeyFor(key), key).getOrElse(List.empty);
 
   /// Stores [values] under [key] when run, materialised into a private fixed-length copy: hive
   /// rejects non-`List` iterables at write time, and the copy keeps your original collection
   /// yours. Throws a synchronous [ArgumentError] at the call site when the encoded key leaves
   /// hive's raw domain, exactly like [LazyKeyedBox.put].
-  Task<Unit> put(K key, Iterable<T> values) => _engine.put(key, materialisedCopyOf(values));
+  Task<Unit> put(K key, Iterable<T> values) =>
+      _engine.put(_rawKeyFor(key), key, materialisedCopyOf(values));
 
   /// Stores every entry of [entries] in one batch when run, each list materialised as in [put].
   /// All keys are encoded and gated at call time, so a bad key means nothing gets written.
-  Task<Unit> putAll(Map<K, Iterable<T>> entries) =>
-      _engine.putAll(entries.map((key, values) => MapEntry(key, materialisedCopyOf(values))));
+  Task<Unit> putAll(Map<K, Iterable<T>> entries) => _engine.putAll(
+    // Lazy: the engine's own pass consumes this, so the batch is materialised once.
+    entries.entries.map(
+      (entry) => MapEntry(_rawKeyFor(entry.key), materialisedCopyOf(entry.value)),
+    ),
+  );
 
   /// Rewrites the list under [key] through [update] when run, mirroring [Map.update]: an absent
   /// key is seeded by [ifAbsent], and with no [ifAbsent] the task fails with an [ArgumentError]
@@ -148,6 +160,7 @@ interface class LazyListBox<T extends Object, K extends Object> {
     List<T> Function()? ifAbsent,
   }) => _engine
       .update(
+        _rawKeyFor(key),
         key,
         (values) => materialisedCopyOf(update(values)),
         ifAbsent: ifAbsent == null ? null : () => materialisedCopyOf(ifAbsent()),
@@ -158,13 +171,18 @@ interface class LazyListBox<T extends Object, K extends Object> {
   /// (multimap-natural). Sugar over [update]: a read-modify-write, one disk read plus O(n).
   Task<Unit> add(K key, T value) => _engine
       // Fresh lists by construction, so the sugar paths skip the defensive copy.
-      .update(key, (values) => [...values, value], ifAbsent: () => [value])
+      .update(_rawKeyFor(key), key, (values) => [...values, value], ifAbsent: () => [value])
       .map((_) => unit);
 
   /// Appends every element of [values] to the list under [key] when run; an absent key becomes
   /// a copy of [values]. Sugar over [update]: a read-modify-write, one disk read plus O(n).
   Task<Unit> addAll(K key, Iterable<T> values) => _engine
-      .update(key, (stored) => [...stored, ...values], ifAbsent: () => materialisedCopyOf(values))
+      .update(
+        _rawKeyFor(key),
+        key,
+        (stored) => [...stored, ...values],
+        ifAbsent: () => materialisedCopyOf(values),
+      )
       .map((_) => unit);
 
   /// Removes the **first occurrence** of [value] from the list under [key] when run, mirroring
@@ -172,23 +190,30 @@ interface class LazyListBox<T extends Object, K extends Object> {
   /// element leaves an empty list stored (`Some(empty)`), never a deleted key. A
   /// read-modify-write: one disk read plus O(n) in the stored list.
   Task<Unit> remove(K key, T value) => Task(() async {
-    final storedValues = (await _engine.get(key).run()).toNullable();
+    // Encoded once, reused by both halves of the read-modify-write.
+    final rawKey = _rawKeyFor(key);
+    final storedValues = (await _engine.get(rawKey, key).run()).toNullable();
     if (storedValues == null) return unit;
 
     final index = storedValues.indexOf(value);
     if (index < 0) return unit;
 
-    await _engine.put(key, copyWithoutIndex(storedValues, index)).run();
+    await _engine.put(rawKey, key, copyWithoutIndex(storedValues, index)).run();
 
     return unit;
   });
 
   /// Deletes [key] and its whole list when run; deleting an absent key is hive's documented
   /// no-op.
-  Task<Unit> delete(K key) => _engine.delete(key);
+  Task<Unit> delete(K key) => _engine.delete(_rawKeyFor(key), key);
 
   /// Deletes every key in [keys] in one batch when run; observers hear one event per key.
-  Task<Unit> deleteAll(Iterable<K> keys) => _engine.deleteAll(keys);
+  Task<Unit> deleteAll(Iterable<K> keys) {
+    // Materialised once: the batch needs raw keys, the hooks need semantic ones.
+    final keyList = keys.toList(growable: false);
+
+    return _engine.deleteAll([for (final key in keyList) _rawKeyFor(key)], keyList);
+  }
 
   /// Removes every entry when run.
   Task<Unit> clear() => _engine.clear();
@@ -197,7 +222,14 @@ interface class LazyListBox<T extends Object, K extends Object> {
   /// effect. Write events carry `Some` of the same unmodifiable views reads do; deletes carry
   /// `None` (the lazy engine holds no values), with [LazyTypedBoxEvent.deleted] derived from
   /// that.
-  Stream<LazyTypedBoxEvent<List<T>, K>> watch({K? key}) => _engine.watch(key: key);
+  Stream<LazyTypedBoxEvent<List<T>, K>> watch({K? key}) => _engine
+      .watchRaw(key: key == null ? null : _rawKeyFor(key))
+      .map(
+        (event) => LazyTypedBoxEvent<List<T>, K>(
+          key: _codec.decode(event.key as Object),
+          value: Option.fromNullable(event.value as Object?).map(_engine.decodeStored),
+        ),
+      );
 
   /// Flushes pending writes to disk when run. Maintenance, not a data event: observers only
   /// hear failures.
@@ -231,11 +263,11 @@ LazyListBox<T, K> lazyListBoxAround<T extends Object, K extends Object>(
   BoxObserver? observer,
 }) => LazyListBox<T, K>._(
   // Explicit type arguments on purpose; see CODESTYLE #type-safety.
-  engine: LazyCrudEngine<List<T>, K>(
+  engine: LazyCrudEngine<List<T>>(
     boxName: name,
     openBox: openBox,
-    keyCodec: resolveKeyCodec<K>(codec),
     valueCodec: CollectionCastValueCodec<T>(),
     observer: observer,
   ),
+  codec: resolveKeyCodec<K>(codec),
 );
