@@ -178,6 +178,31 @@ void main() {
       check(facade.isEmpty).isTrue();
     });
 
+    scenario('putAllGrouped collects a flat iterable into one list per extracted key', () async {
+      await facade.putAllGrouped(['ant', 'ape', 'bee', 'cow'], key: (value) => value.length).run();
+
+      check(facade.keys).deepEquals([3]);
+      check(facade.getOr(3)).deepEquals(['ant', 'ape', 'bee', 'cow']);
+    });
+
+    scenario('putAllGrouped keys apart and preserves encounter order', () async {
+      await facade.putAllGrouped(['bb', 'a', 'dd', 'c'], key: (value) => value.length).run();
+
+      // Asserted before the reads below, which dispatch their own events.
+      check(observer.calls).deepEquals(['writtenAll:tags:2']);
+      check(facade.keys).deepEquals([2, 1]);
+      check(facade.getOr(2)).deepEquals(['bb', 'dd']);
+      check(facade.getOr(1)).deepEquals(['a', 'c']);
+    });
+
+    scenario('putAllGrouped replaces the stored list, it does not append', () async {
+      await facade.put(1, ['old']).run();
+
+      await facade.putAllGrouped(['a'], key: (value) => value.length).run();
+
+      check(facade.getOr(1)).deepEquals(['a']);
+    });
+
     scenario('the corruption gate throws at the call site and nothing is written', () {
       check(() => facade.put(-1, ['a'])).throws<ArgumentError>();
       check(
