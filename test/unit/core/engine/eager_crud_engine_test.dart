@@ -180,6 +180,12 @@ void main() {
       check(() => engine.putAll([entry(1, 'a'), entry(-1, 'b')])).throws<ArgumentError>();
       check(box.store).isEmpty();
     });
+
+    scenario('two entries encoding to one raw key trip the duplicate assert', () {
+      check(() => engine.putAll([entry(1, 'a'), entry(1, 'b')])).throws<AssertionError>();
+
+      check(box.store).isEmpty();
+    });
   });
 
   feature('eager engine watch', () {

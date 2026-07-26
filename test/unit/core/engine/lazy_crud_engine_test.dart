@@ -193,6 +193,15 @@ void main() {
       check(openCalls).equals(0);
     });
 
+    scenario('two entries encoding to one raw key trip the duplicate assert', () {
+      final engine = makeEngine();
+
+      check(() => engine.putAll([entry(1, 'a'), entry(1, 'b')])).throws<AssertionError>();
+
+      check(openCalls).equals(0);
+      check(box.store).isEmpty();
+    });
+
     scenario('update rewrites, seeds via ifAbsent, and mirrors Map.update on absence', () async {
       final engine = makeEngine();
       await engine.put(const RawKey(7), 7, 'v').run();
