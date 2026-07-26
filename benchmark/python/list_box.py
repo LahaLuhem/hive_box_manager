@@ -4,9 +4,9 @@
 Reads ``../results/results_list_box.jsonl`` and prints, per element type and elements-per-key, the
 median time for each impl plus two ratios that answer different questions:
 
-* **vs correct** is the wrapper tax. `correct` is the code a consumer writes once they know about the
-  reification trap (a `.cast<T>()` on read, a defensive `List.from` on write), so this ratio prices
-  the façade against a competent hand-roll.
+* **vs correct** is the wrapper tax. `correct` is the code a consumer writes once they know
+  about the reification trap (a `.cast<T>()` on read, a defensive `List.from` on write), so this
+  ratio prices the façade against a competent hand-roll.
 * **vs naive** prices *safety*. `naive` skips both, and on the ``obj`` axis it cannot read data a
   previous process wrote at all: those cells print FAILS, which is the whole argument for the box.
 
@@ -30,15 +30,14 @@ RESULT_FILE = BENCH_DIR / "results" / "results_list_box.jsonl"
 
 IMPLS = ("naive", "correct", "facade")
 MODES = ("get", "put", "putall", "add", "remove", "open")
-ELEMS = (("str", "List<String> (primitive elements)"), ("obj", "List<Person> (custom adapter type)"))
+ELEMS = (
+    ("str", "List<String> (primitive elements)"),
+    ("obj", "List<Person> (custom adapter type)"),
+)
 
 
 def load_rows():
-    return [
-        json.loads(line)
-        for line in RESULT_FILE.read_text().splitlines()
-        if line.strip()
-    ]
+    return [json.loads(line) for line in RESULT_FILE.read_text().splitlines() if line.strip()]
 
 
 def cell(rows, *, mode, impl, elem, list_len):
@@ -113,7 +112,9 @@ def main():
     print("'per element' is (facade - correct) spread over keys x listLen: the wrapper's own cost.")
 
     print("\n=== RSS across the timed window (MB), List<String> ===")
-    print("Reads should be flat across impls (the cast view is documented zero-copy); writes should")
+    print(
+        "Reads should be flat across impls (the cast view is documented zero-copy); writes should"
+    )
     print("show the defensive copy, which `correct` pays too.\n")
     header = f"{'mode':<8} {'len':>5} {'naive':>9} {'correct':>9} {'facade':>9}"
     print(header)
@@ -124,8 +125,7 @@ def main():
             if any(value is None for value in medians):
                 continue
             print(
-                f"{mode:<8} {list_len:>5} "
-                + " ".join(f"{value / 1e6:>9.2f}" for value in medians)
+                f"{mode:<8} {list_len:>5} " + " ".join(f"{value / 1e6:>9.2f}" for value in medians)
             )
 
 
