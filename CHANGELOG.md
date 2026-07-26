@@ -4,6 +4,7 @@
 
 ### Fixed
 - \[#13\] Correct the DualKeyBox overhead figures and name their real cause
+- \[#14\] Reduce DualKeyBox eager reads to near-native Hive speed
 
 ## [1.0.0] - 2026-07-22
 ### Added
