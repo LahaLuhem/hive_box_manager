@@ -9,9 +9,7 @@ import 'package:hive_ce/hive.dart';
 import 'package:meta/meta.dart';
 
 import '/src/codec/dual/dual_key_codec.dart';
-import '/src/codec/dual/dual_key_codec_adapter.dart';
 import '/src/codec/dual/dual_key_codec_resolution.dart';
-import '/src/codec/key/key_codec.dart';
 import '/src/core/box_provider.dart';
 import '/src/core/engine/eager_crud_engine.dart';
 import '/src/core/raw_key.dart';
@@ -45,17 +43,15 @@ interface class DualKeyBox<T extends Object, K1 extends Object, K2 extends Objec
   final EagerCrudEngine<T> _engine;
   final DualKeyCodec<K1, K2> _dualCodec;
 
-  /// On death row: this is the ~350 ns per op issue #14 removes. Kept one checkpoint longer so moving
-  /// codecs out of the engine carries no measurable delta, then swapped for `_dualCodec.encode(primary, secondary)`
-  /// in a diff that does nothing else.
-  final KeyCodec<(K1, K2)> _adapter;
-
   /// Wiring is internal: acquisition goes through [open] (tests use the seam below).
-  DualKeyBox._({required this._engine, required this._dualCodec, required this._adapter});
+  DualKeyBox._({required this._engine, required this._dualCodec});
 
   /// Encodes a two-part key for the engine, which admits only encoded keys.
+  ///
+  /// Two scalar arguments, never a `(K1, K2)` record: a record parameter typed from a class's own
+  /// type parameters costs ~350 ns per call, and was this family's entire overhead. See [RawKey].
   @pragma('vm:prefer-inline')
-  RawKey _rawKeyFor(K1 primary, K2 secondary) => RawKey(_adapter.encode((primary, secondary)));
+  RawKey _rawKeyFor(K1 primary, K2 secondary) => RawKey(_dualCodec.encode(primary, secondary));
 
   late final _scanIndex = ScanQueryIndex<K1, K2>(rawKeys: () => _engine.rawKeys, codec: _dualCodec);
 
@@ -245,7 +241,6 @@ interface class DualKeyBox<T extends Object, K1 extends Object, K2 extends Objec
             observer: observer,
           ),
           dualCodec: dualCodec,
-          adapter: DualKeyCodecAdapter<K1, K2>(dualCodec: dualCodec),
         );
       } on Object catch (error, stackTrace) {
         observer?.onOperationError(name, 'open', error, stackTrace);
@@ -272,6 +267,5 @@ DualKeyBox<T, K1, K2> dualKeyBoxAround<T extends Object, K1 extends Object, K2 e
   return DualKeyBox<T, K1, K2>._(
     engine: EagerCrudEngine<T>(box: box, valueCodec: IdentityValueCodec<T>(), observer: observer),
     dualCodec: dualCodec,
-    adapter: DualKeyCodecAdapter<K1, K2>(dualCodec: dualCodec),
   );
 }
