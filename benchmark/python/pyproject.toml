@@ -28,7 +28,7 @@ dependencies = [
 
 [dependency-groups]
 # Maintainer-only linter / formatter. ruff replaces black + flake8 + isort.
-dev = ["ruff>=0.16.0,<1.0"]
+dev = ["ruff>=0.16.1,<1.0"]
 
 [tool.ruff]
 line-length = 100
