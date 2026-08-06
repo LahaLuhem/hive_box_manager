@@ -72,6 +72,13 @@ Renovate does, so the mechanism is a workflow rather than a setting. The sibling
   requires `repo-ok`, `package-ok`, `example-ok`, `conventions-ok`. Keep `required_signatures` out
   of it: GitHub's rebase-merge emits unsigned commits (`6d0d385` is the evidence), so that rule
   would block every automerge.
+- **`GITHUB_TOKEN` enables the merge, not the changelog App.** The App sits in the ruleset's bypass
+  list so it can push `CHANGELOG.md` straight to `master`, and a bypass covers the ruleset whole,
+  status checks included. Merging as it would skip the gate this whole design rests on.
+  `github-actions[bot]` isn't in that list, so it has to wait like anyone else. The cost is that a
+  `GITHUB_TOKEN` merge triggers no further workflows, so
+  [`package.yml`](./.github/workflows/package.yml)'s push-to-master run is skipped on automerged
+  PRs; for `uv` and `github-actions` bumps that run only re-tests Dart neither ecosystem touches.
 - **Aggregates, not the real job names.** [`repo.yml`](./.github/workflows/repo.yml) fans its lint
   matrix out of [`lint-checks.json`](./.github/lint-checks.json), so those contexts move whenever a
   linter does, and a required context that stops reporting leaves every PR waiting forever. Each
@@ -80,12 +87,9 @@ Renovate does, so the mechanism is a workflow rather than a setting. The sibling
   chrysalis's `images-ok`. They inspect `needs.*.result` by hand because a job skipped by a failed
   upstream reports success, as does one skipped by its own `if` (which is what keeps
   `conventions-ok` green on bot PRs).
-- **The App token, not `GITHUB_TOKEN`,** because a merge performed with the latter triggers no
-  further workflows, silencing [`package.yml`](./.github/workflows/package.yml)'s push-to-master
-  run. Reusing `lahaluhem-ci-bot` needs **Pull requests: read & write** added to it.
-- **`pull_request_target`** because Dependabot's `pull_request` runs get a read-only token and no
-  Actions secrets, so `secrets.APP_PRIVATE_KEY` would arrive empty. Safe for the same reason as
-  `changelog.yml`: the workflow loads from `master` and PR code is never checked out.
+- **`pull_request_target`** because Dependabot's `pull_request` runs get a read-only token, and
+  enabling auto-merge needs write. Safe for the same reason as `changelog.yml`: the workflow loads
+  from `master` and PR code is never checked out.
 
 ---
 

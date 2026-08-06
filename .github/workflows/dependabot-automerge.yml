@@ -13,10 +13,11 @@ concurrency:
   cancel-in-progress: true
 
 # pull_request_target, not pull_request: Dependabot's `pull_request` runs get a
-# read-only token and no Actions secrets. Safe for the same reason as
-# changelog.yml: PR code is never checked out.
+# read-only token. Safe for the same reason as changelog.yml: PR code is never
+# checked out.
 permissions:
-  pull-requests: read
+  contents: write
+  pull-requests: write
 
 jobs:
   automerge:
@@ -49,19 +50,12 @@ jobs:
           echo "eligible=$eligible" >> "$GITHUB_OUTPUT"
           echo "$ECOSYSTEM / $UPDATE_TYPE -> automerge: $eligible"
 
-      # Not GITHUB_TOKEN: a merge it performs triggers no further workflows,
-      # which would silence package.yml's push-to-master run.
-      - uses: actions/create-github-app-token@v3
-        id: app-token
-        if: steps.gate.outputs.eligible == 'true'
-        with:
-          app-id: ${{ vars.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
-
       # `--auto` only queues it; master's required checks decide the rest.
+      # GITHUB_TOKEN deliberately, not the changelog App: the App bypasses the
+      # ruleset, so merging as it would skip the very checks this waits on.
       - name: Enable auto-merge
         if: steps.gate.outputs.eligible == 'true'
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr merge --auto --rebase "$PR_URL"
