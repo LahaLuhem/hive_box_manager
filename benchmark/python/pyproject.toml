@@ -19,7 +19,7 @@ dependencies = [
     "matplotlib>=3.8,<4.0",
     # polars (Rust-backed) for the tidy frames; seaborn takes them directly via the dataframe
     # interchange protocol (0.13+), converting to pandas only at its own boundary.
-    "polars>=1.0,<2.0",
+    "polars>=1.43.2,<2.0",
     # seaborn for the whitegrid theme + multi-series styling; pulls pandas transitively.
     "seaborn>=0.13,<1.0",
     # pyarrow backs the polars -> pandas interchange bridge seaborn uses internally.
@@ -28,7 +28,7 @@ dependencies = [
 
 [dependency-groups]
 # Maintainer-only linter / formatter. ruff replaces black + flake8 + isort.
-dev = ["ruff>=0.16.0,<1.0"]
+dev = ["ruff>=0.16.1,<1.0"]
 
 [tool.ruff]
 line-length = 100
