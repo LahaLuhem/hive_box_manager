@@ -12,6 +12,10 @@
 # Minor + patch bumps are grouped into one PR per ecosystem to cut noise; major
 # bumps still arrive as individual PRs so they can be reviewed in isolation.
 #
+# `uv` and `github-actions` bumps automerge once CI is green
+# (.github/workflows/dependabot-automerge.yml); `pub` and every major stay
+# manual. Rationale: APPENDIX.md#dependabot-automerge.
+#
 # No `/example` entry: the example is a single-file demo with no pubspec of its
 # own, so there is nothing separate for Dependabot to resolve there.
 version: 2

@@ -115,7 +115,12 @@ hold, and nothing internal can leak by accident.
    find-and-replace), and reserves a major bump for a break that needs real restructuring. The
    `IterableBox` → `ListBox` rename is breaking and is planned to ship as `1.1.0`, not `2.0.0`,
    on exactly that reasoning.
-9. **`CHANGELOG.md` is bot-owned. Do not edit any section, including `## Unreleased`.** Release
+9. **`repo-ok`, `package-ok`, `example-ok` and `conventions-ok` are `master`'s required checks.**
+   Each is the closing aggregate job of one PR workflow, and the job id *is* the check context, so
+   renaming one, giving it a `name:`, or dropping it un-gates Dependabot automerge silently. Touch
+   one and update the ruleset in the same pass:
+   [`APPENDIX.md#dependabot-automerge`](./APPENDIX.md#dependabot-automerge).
+10. **`CHANGELOG.md` is bot-owned. Do not edit any section, including `## Unreleased`.** Release
    headers are written by [`scripts/release.sh`](./scripts/release.sh); the `## Unreleased` buffer
    is appended to by [`.github/workflows/changelog.yml`](./.github/workflows/changelog.yml) from the
    merged PR title (governed by its `sem-*` label). Same prohibition on the `version:` field.
