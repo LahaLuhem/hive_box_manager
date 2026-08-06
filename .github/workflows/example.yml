@@ -46,3 +46,26 @@ jobs:
         with:
           working-directory: example
       - run: flutter --no-version-check test
+
+  # master's required check for this workflow; the job id IS the context, so
+  # don't rename it or give it a `name:`. APPENDIX.md#dependabot-automerge
+  example-ok:
+    needs: [analyze, deps, test]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions: {}
+    # The file-level default points at example/, which this job never checks out.
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - name: Fail if any upstream job failed or was cancelled
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        env:
+          RESULTS: >-
+            analyze=${{ needs.analyze.result }}
+            deps=${{ needs.deps.result }}
+            test=${{ needs.test.result }}
+        run: |
+          echo "$RESULTS"
+          exit 1
