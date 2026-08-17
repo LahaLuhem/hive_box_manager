@@ -23,12 +23,12 @@ dependencies = [
     # seaborn for the whitegrid theme + multi-series styling; pulls pandas transitively.
     "seaborn>=0.13,<1.0",
     # pyarrow backs the polars -> pandas interchange bridge seaborn uses internally.
-    "pyarrow>=25.0.0,<26.0",
+    "pyarrow>=25.0.1,<26.0",
 ]
 
 [dependency-groups]
 # Maintainer-only linter / formatter. ruff replaces black + flake8 + isort.
-dev = ["ruff>=0.16.1,<1.0"]
+dev = ["ruff>=0.16.3,<1.0"]
 
 [tool.ruff]
 line-length = 100
