@@ -1,22 +1,12 @@
 formatter:
   page_width: 100
 
-#plugins:
-#  prefer_shorthands: ^0.4.7
-#prefer_shorthands:
-#  convert_implicit_declaration: false
-
-
-
-
-
 analyzer:
   exclude:
     - "bin/cache/**"
     - "**/*.chopper.dart"
     - "**/*.g.dart"
     - "**/*.gr.dart"
-    - "**/*.gform.dart"
     - "**/generated/**"
     - "**/*.freezed.dart"
   language:
@@ -115,7 +105,6 @@ linter:
     avoid_multiple_declarations_per_line: true
     avoid_positional_boolean_parameters: true
     avoid_print: true
-    avoid_private_typedef_functions: true
     avoid_redundant_argument_values: true
     avoid_relative_lib_imports: true
     avoid_renaming_method_parameters: true
@@ -159,12 +148,14 @@ linter:
     document_ignores: true
     empty_catches: true
     empty_constructor_bodies: true
+    empty_container_bodies: true
     empty_statements: true
     eol_at_end_of_file: true
     exhaustive_cases: true
     file_names: true
     flutter_style_todos: true
     hash_and_equals: true
+    initialize_in_field_declaration: true
     implementation_imports: true
     implicit_call_tearoffs: true
     implicit_reopen: true
@@ -198,7 +189,6 @@ linter:
     omit_local_variable_types: true
     omit_obvious_local_variable_types: true
     omit_obvious_property_types: true
-    one_member_abstracts: true
     only_throw_errors: true
     overridden_fields: true
     package_names: true
@@ -248,14 +238,12 @@ linter:
     remove_deprecations_in_breaking_versions: true
     require_trailing_commas: false  # Made obsolete due to the new Dart formatter in 3.7
     secure_pubspec_urls: true
-    simple_directive_paths: true
-    simplify_variable_pattern: true
     sized_box_for_whitespace: true
     sized_box_shrink_expand: true
     slash_for_doc_comments: true
     sort_child_properties_last: true
     sort_constructors_first: true
-    sort_pub_dependencies: true
+    sort_pub_dependencies: false
     sort_unnamed_constructors_first: true
     specify_nonobvious_local_variable_types: false  # Conflicts with omit_local_variable_types
     # Type inference by the plugin + IDE makes this obsolete
@@ -272,10 +260,10 @@ linter:
     unawaited_futures: true
     unintended_html_in_doc_comment: true
     unnecessary_async: true
-    unnecessary_await_in_return: true
     unnecessary_brace_in_string_interps: true
     unnecessary_breaks: true
     unnecessary_const: true
+    unnecessary_const_in_enum_constructor: true
     unnecessary_constructor_name: true
     unnecessary_final: false  # Conflicts with prefer_final_locals
     unnecessary_getters_setters: true
@@ -292,11 +280,13 @@ linter:
     unnecessary_nullable_for_final_variable_declarations: true
     unnecessary_overrides: true
     unnecessary_parenthesis: true
+    unnecessary_primary_constructor_body: true
     unnecessary_raw_strings: true
     unnecessary_statements: true
     unnecessary_string_escapes: true
     unnecessary_string_interpolations: true
     unnecessary_this: true
+    unnecessary_type_name_in_constructor: true
     unnecessary_to_list_in_spreads: true
     unnecessary_unawaited: true
     unnecessary_underscores: true
@@ -305,6 +295,7 @@ linter:
     unsafe_variance: false
     use_build_context_synchronously: true
     use_colored_box: true
+    use_declaring_parameters: true
     use_decorated_box: true
     use_enums: true
     use_full_hex_values_for_flutter_colors: true
@@ -337,64 +328,64 @@ dart_code_metrics:
       unit-type: "EUR"
   rules:
     # Common
-    - avoid-assignments-as-conditions: true
-    - avoid-cascade-after-if-null: true
-    - avoid-casting-to-extension-type: true
-    - avoid-collection-methods-with-unrelated-types: true
-    - avoid-commented-out-code: true
-    - avoid-conditions-with-boolean-literals: true
-    #    - avoid-conditions-with-avoid-double-slash-imports-literals: true
-    - avoid-duplicate-exports: true
-    - avoid-duplicate-mixins: true
-    - avoid-duplicate-named-imports: true
-    - avoid-duplicate-test-assertions: true
-    - avoid-dynamic: true
-    - avoid-empty-spread: true
-    - avoid-explicit-pattern-field-name: true
-    - avoid-generics-shadowing: true
-    - avoid-global-state: true
+    - avoid-assignments-as-conditions
+    - avoid-cascade-after-if-null
+    - avoid-casting-to-extension-type
+    - avoid-collection-methods-with-unrelated-types
+    - avoid-commented-out-code
+    - avoid-conditions-with-boolean-literals
+    #    - avoid-conditions-with-avoid-double-slash-imports-literals
+    - avoid-duplicate-exports
+    - avoid-duplicate-mixins
+    - avoid-duplicate-named-imports
+    - avoid-duplicate-test-assertions
+    - avoid-dynamic
+    - avoid-empty-spread
+    - avoid-explicit-pattern-field-name
+    - avoid-generics-shadowing
+    - avoid-global-state
     - avoid-late-keyword: false
-    - avoid-missed-calls: true
-    - avoid-misused-set-literals: true
-    - avoid-nested-conditional-expressions: true
-    - avoid-nested-records: true
+    - avoid-missed-calls
+    - avoid-misused-set-literals
+    - avoid-nested-conditional-expressions
+    - avoid-nested-records
     - avoid-non-null-assertion: false
-    - avoid-nullable-tostring: true
+    - avoid-nullable-tostring
     - avoid-passing-async-when-sync-expected: false
-    - avoid-passing-self-as-argument: true
-    - avoid-redundant-async: true
-    - avoid-self-assignment: true
-    - avoid-self-compare: true
-    - avoid-substring: true
-    - avoid-throw-in-catch-block: true
+    - avoid-passing-self-as-argument
+    - avoid-redundant-async
+    - avoid-self-assignment
+    - avoid-self-compare
+    - avoid-substring
+    - avoid-throw-in-catch-block
     - avoid-top-level-members-in-tests: false # Tests are going to be rewritten at some point
-    - avoid-unnecessary-conditionals: true
-    - avoid-unnecessary-type-assertions: true
-    - avoid-unnecessary-type-casts: true
-    - avoid-unrelated-type-assertions: true
-    - avoid-unused-parameters: true
-    - binary-expression-operand-order: true
-    - double-literal-format: true
+    - avoid-unnecessary-conditionals
+    - avoid-unnecessary-type-assertions
+    - avoid-unnecessary-type-casts
+    - avoid-unrelated-type-assertions
+    - avoid-unused-parameters
+    - binary-expression-operand-order
+    - double-literal-format
     - member-ordering: false          # To be configured well
     - missing-test-assertion: false   # Cannot use with extenral test assertion libs
-    - newline-before-return: true
-    - no-boolean-literal-compare: true
-    - no-empty-block: true
-    - no-equal-then-else: true
+    - newline-before-return
+    - no-boolean-literal-compare
+    - no-empty-block
+    - no-equal-then-else
     - no-magic-number: false  # Config doesn't work
     #        allowed: [ 2, 4, 8, 12, 16, 20, 24, 32, 40, 48, 56, 64 ]
     #        allow-only-once: true
     #        ignore-instances: true
     - prefer-async-await: false
-    - prefer-commenting-analyzer-ignores: true
-    - prefer-conditional-expressions: true
-    - prefer-correct-test-file-name: true
-    - prefer-enums-by-name: true
-    - prefer-first: true
-    - prefer-immediate-return: true
-    - prefer-iterable-of: true
-    - prefer-last: true
-    - prefer-match-file-name: true
+    - prefer-commenting-analyzer-ignores
+    - prefer-conditional-expressions
+    - prefer-correct-test-file-name
+    - prefer-enums-by-name
+    - prefer-first
+    - prefer-immediate-return
+    - prefer-iterable-of
+    - prefer-last
+    - prefer-match-file-name
     - prefer-moving-to-variable: false    # Config doesn't work
     #        allowed-duplicated-chains: 3
     #        ignored-invocations:
@@ -402,29 +393,28 @@ dart_code_metrics:
     #          - platformIcon
     - prefer-static-class: false  # Too many false positives
     # Flutter
-    - always-remove-listener: true
-    - avoid-border-all: true
-    - avoid-expanded-as-spacer: true
+    - always-remove-listener
+    - avoid-border-all
+    - avoid-expanded-as-spacer
     - avoid-incomplete-copy-with: false
-    - avoid-incorrect-image-opacity: true
-    - avoid-missing-image-alt: true
-    - avoid-returning-widgets: true
-    - avoid-shrink-wrap-in-lists: true
-    - avoid-unnecessary-setstate: true
-    - avoid-unnecessary-stateful-widgets: true
-    - avoid-wrapping-in-padding: true
-    - check-for-equals-in-render-object-setters: true
-    - consistent-update-render-object: true
-    - prefer-const-border-radius: true
-    - prefer-correct-edge-insets-constructor: true
-    - prefer-define-hero-tag: true
+    - avoid-incorrect-image-opacity
+    - avoid-returning-widgets
+    - avoid-shrink-wrap-in-lists
+    - avoid-unnecessary-setstate
+    - avoid-unnecessary-stateful-widgets
+    - avoid-wrapping-in-padding
+    - check-for-equals-in-render-object-setters
+    - consistent-update-render-object
+    - prefer-const-border-radius
+    - prefer-correct-edge-insets-constructor
+    - prefer-define-hero-tag
     - prefer-extracting-callbacks: false  # Config doesn't work
     #        allowed-line-count: 4
     #        ignored-named-arguments:
     #          - onPressed
     - prefer-single-widget-per-file: false  # Config doesn't work
-    #        ignore-visible-for-testing: true
-    #        ignore-private-widgets: true
-    - prefer-text-rich: true
-    - prefer-using-list-view: true
-    - use-setstate-synchronously: true
+    #        ignore-visible-for-testing
+    #        ignore-private-widgets
+    - prefer-text-rich
+    - prefer-using-list-view
+    - use-setstate-synchronously
