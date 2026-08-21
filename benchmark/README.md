@@ -74,16 +74,24 @@ Neither is a performance problem, and quoting either percentage would be a lie b
 `overhead.py` prints a per-op nanosecond column and, below `CHEAP_OP_NS`, says outright that the
 percentage is a fact about the denominator.
 
-The list-box lane has the same hazard from the other direction: its `get` ratio runs 2.4x at one
-element per key and 1.2x at a thousand, which reads like the wrapper getting cheaper at scale. It
-isn't. Fitting the four lengths gives **~198 ns fixed per get + ~2.29 ns per element** (within 4% at
+The list-box lane has the same hazard from the other direction: its `get` ratio runs 3.0x at one
+element per key and 1.1x at a thousand, which reads like the wrapper getting cheaper at scale. It
+isn't. Fitting the four lengths gives **~292 ns fixed per get + ~1.8 ns per element** (within 8% at
 every length), so both terms are real and the ratio only moves because the fixed term stops
 dominating. Quote the two-term model, never the ratio at one list length.
 
-Those two figures come from the 3.12.2 pass. The 3.13.1 re-run of this lane puts the same fit at
-~318 ns fixed + ~2.45 ns per element, with the worst residual up from 5% to 10%, and it moved the
-read lanes more than the write lanes that actually changed. One pass at `reps 5` cannot tell an SDK
-regression from noise, so the model above stands until someone re-runs this lane properly.
+That fixed term is an SDK regression, not a wrapper change, and it is one of only two cross-version
+claims here that survive a controlled check. Compiling this lane's source with both 3.12.2 and
+3.13.1 and alternating the binaries on one host puts the façade at 345 ns per get at one element
+against 450, while `correct` goes 160 to 150 and `naive` stays inside its own sample spread. The
+jump sits on the façade's eager read path alone. 3.12.2 fitted the lane at ~197 ns + ~1.6 ns per
+element; the per-element term is not pinned down at `reps 5`, two passes putting it at 1.8 and 2.5.
+
+Do not read the same story into the other lanes. The matrix lane's eager get looks 40% worse than
+its 2026-07-26 file, but the same alternating check puts the two SDKs within 2% of each other
+today, well inside one SDK's own 27% sample spread. That lane is slower because this host is, not
+because the compiler is. Comparing a lane against an older results file measures the host as much
+as the SDK, so only a two-binary pass on one host settles a version question.
 
 The overhead lane's two readings sort its own lanes cleanly:
 
@@ -187,18 +195,25 @@ a table where one lane moved two variables at once. So the reader states each re
 claim and checks it, and the `PREMISE` line fails loudly if a future SDK starts caching the subtype
 check this whole argument rests on. Numbers alone would let the same mistake happen twice.
 
+3.13.1 moved this lane, and it is the cleanest reading of that SDK's cost change anywhere in the
+suite: the three record-paying lanes went up 6 to 10% (`generic-record` 355 to 388 ns) while every
+free lane got 1 to 4% *faster*. The free lanes are the control, so this is the compiler, not the
+host, and a two-binary alternating pass on one host reproduces it. The shipped shape (`raw-direct`)
+is in the group that got faster.
+
 ## Running the matrix
 
 ```sh
-# Quick JIT sanity pass (ordering only; not for decisions):
-benchmark/driver.sh benchmark/bench_jit.sh /tmp/results_jit.jsonl 3
+# Quick JIT sanity pass (ordering only; not for decisions). The scales are explicit: this lane
+# deliberately stops at 10K, and driver.sh would otherwise default in the 100K scale.
+benchmark/driver.sh benchmark/bench_jit.sh benchmark/results/results_jit.jsonl 3 "1000 10000"
 
-# AOT pass (the numbers that decide anything):
+# AOT pass (the numbers that decide anything). reps 9, not driver.sh's default 5.
 dart compile exe benchmark/bench.dart -o /tmp/hbm_bench
-benchmark/driver.sh /tmp/hbm_bench /tmp/results_aot.jsonl
+benchmark/driver.sh /tmp/hbm_bench benchmark/results/results_aot.jsonl 9
 
 # 1M open-only pass, same executable:
-benchmark/driver_1m.sh /tmp/hbm_bench /tmp/results_1m.jsonl
+benchmark/driver_1m.sh /tmp/hbm_bench benchmark/results/results_1m.jsonl
 ```
 
 Each invocation is one fresh process per measurement; the driver writes one JSON line per run.
@@ -216,14 +231,17 @@ Raw JSONL backing the top-level README's performance tables and codec-crossover 
 | `results_list_box.jsonl` | list-box lane, AOT: three impls x two element types x list length |
 | `results_key_shape.jsonl` | key-shape lane, AOT: which type shape costs what, with its controls |
 
-Environment: macOS 15.7.7 on Apple Silicon (arm64), Dart 3.12.2, hive_ce 2.19.3, 2026-07-26.
-`results_list_box.jsonl` is the exception, re-run on macOS 15.7.8 and Dart 3.13.1 on 2026-08-21, so
-any cross-file comparison against it carries an SDK difference. Values were a constant 1 byte by
-design, isolating key cost; web performance is unmeasured (ordering assumed to follow the VM).
+Environment for all of them: macOS 15.7.8 on Apple Silicon (arm64), Dart 3.13.1, hive_ce 2.19.3,
+2026-08-21, all six re-run in one session. Values were a constant 1 byte by design, isolating key
+cost; web performance is unmeasured (ordering assumed to follow the VM).
 
-`results_overhead.jsonl` carries a load stamp and every lane resolves, but see the precision note
-above before quoting a single figure from it: a repeat pass moved `put` 2x and flipped `get (lazy)`'s
-sign. Re-run before anything from this lane lands in the top-level README:
+`results_overhead.jsonl` carries a load stamp, but see the precision note above before quoting a
+single figure from it: a repeat pass moved `put` 2x and flipped `get (lazy)`'s sign. The 3.13.1
+pass reproduced that and worse. Two passes ten minutes apart, same binary, flipped the sign on four
+lanes (`contains (eager)`, `get (lazy)`, `single get (lazy)`, `deleteAll`), moved `single set
+(eager)` 2x, and each printed CONTAMINATED on a different lazy lane. The file below is one of those
+passes, kept because its load stamp matches the 3.12.2 pass most closely; treat it as unresolved,
+not as percentages. Re-run before anything from this lane lands in the top-level README:
 
 ```sh
 dart compile exe benchmark/overhead_bench.dart -o /tmp/hbm_overhead

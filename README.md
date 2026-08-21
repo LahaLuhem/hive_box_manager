@@ -374,7 +374,7 @@ it. Wrapper cost depends on how expensive the thing being wrapped is, so it spli
 |---------------------------------------------------------------------|---------------------------------------------------------------------|-----------------------------------------------------------|
 | `KeyedBox` / `SingleValueBox`, memory reads (get, contains, values) | 1 to 22 ns per op                                                   | free                                                      |
 | Any effect that reaches disk (put, delete, lazy get)                | 300 to 700 ns per op, 2 to 4%                                       | free, disk dominates                                      |
-| `ListBox` reads                                                     | ~200 ns per `get` + ~2.3 ns per element                             | 2.4x on one-element lists, 1.2x on thousand-element lists |
+| `ListBox` reads                                                     | ~290 ns per `get` + ~1.8 ns per element                             | 3.0x on one-element lists, 1.1x on thousand-element lists |
 | Batch writes (`putAll`, `deleteAll`)                                | 1 to 21 ns per entry                                                | free                                                      |
 | Open time, keystore RAM, file size                                  | no measurable difference                                            | identical                                                 |
 | `DualKeyBox` eager get                                              | 1.02x (+3 to +21 ns per op)                                         | free                                                      |
@@ -430,7 +430,7 @@ relationship, so this stays measured rather than remembered.
 
 **`ListBox` prices differently**, because raw hive has no list-valued box to compare against. Its
 baseline is the code you would hand-write, and there are two of those. Against the version with a
-`.cast<T>()` at the read boundary, `ListBox` costs the ~200 ns plus ~2.3 ns per element above (the
+`.cast<T>()` at the read boundary, `ListBox` costs the ~290 ns plus ~1.8 ns per element above (the
 per-element part is the cast view's type check, one per element you actually touch). Against the
 version without a cast, your hand-roll is *faster and broken*: a stored `List<Person>` reads back as
 `List<dynamic>` after a restart and the cast throws. Memory matches a correct hand-roll on every
