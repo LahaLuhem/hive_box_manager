@@ -5,7 +5,7 @@ Reads ``../results/results_list_box.jsonl`` and prints, per element type and ele
 median time for each impl plus two ratios that answer different questions:
 
 * **vs correct** is the wrapper tax. `correct` is the code a consumer writes once they know
-  about the reification trap (a `.cast<T>()` on read, a defensive `List.from` on write), so this
+  about the reification trap (a `.cast<T>()` on read, a defensive `List.of` on write), so this
   ratio prices the façade against a competent hand-roll.
 * **vs naive** prices *safety*. `naive` skips both, and on the ``obj`` axis it cannot read data a
   previous process wrote at all: those cells print FAILS, which is the whole argument for the box.

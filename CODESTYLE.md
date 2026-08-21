@@ -63,6 +63,20 @@ renames don't break callers.
   runtime `TypeError`. Drop the `const` and name the argument's type (`IdentityValueCodec<T>()`),
   and prefer explicit arguments down the whole wiring chain (`EagerCrudEngine<T>(…)`): the
   façade wiring in `lib/src/box/` shows the shape.
+- **Copy collections with `.of`, never `.from`.** `List.from` and its `Set` / `Map` siblings take
+  `Iterable<dynamic>` and cast at runtime; `.of` takes `Iterable<E>` and is checked at compile
+  time. Same shape as the `cast_nullable_to_non_nullable` rule above: don't launder a type through
+  a constructor that accepts anything. Note that DCM's `prefer-iterable-of` only catches part of
+  this, staying quiet when the source is already typed `Iterable<E>`, so a clean `dcm analyze` is
+  not evidence the codebase is free of `.from`.
+
+  ```dart
+  // Prefer:
+  List<E>.of(values, growable: false)
+  // Over:
+  List<E>.from(values, growable: false)
+  ```
+
 - **No Java ceremony.** No getter-only abstract base classes, no `AbstractFooFactory`, no
   interface-per-class. Use mixins, sealed classes, records, extension types, and enums where they
   add clarity, not weight.

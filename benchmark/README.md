@@ -28,7 +28,7 @@ baseline is code a consumer writes, and there are two versions of it:
 | impl | what it does |
 |---|---|
 | `naive` | `box.get(k) as List<T>`, `box.put(k, list)`. What you write first |
-| `correct` | plus `.cast<T>()` on read and a defensive `List.from` on write. What you write after being bitten |
+| `correct` | plus `.cast<T>()` on read and a defensive `List.of` on write. What you write after being bitten |
 | `facade` | `ListBox` |
 
 `facade` vs `correct` prices the wrapper. `facade` vs `naive` prices **safety**. Reporting one
@@ -79,6 +79,11 @@ element per key and 1.2x at a thousand, which reads like the wrapper getting che
 isn't. Fitting the four lengths gives **~198 ns fixed per get + ~2.29 ns per element** (within 4% at
 every length), so both terms are real and the ratio only moves because the fixed term stops
 dominating. Quote the two-term model, never the ratio at one list length.
+
+Those two figures come from the 3.12.2 pass. The 3.13.1 re-run of this lane puts the same fit at
+~318 ns fixed + ~2.45 ns per element, with the worst residual up from 5% to 10%, and it moved the
+read lanes more than the write lanes that actually changed. One pass at `reps 5` cannot tell an SDK
+regression from noise, so the model above stands until someone re-runs this lane properly.
 
 The overhead lane's two readings sort its own lanes cleanly:
 
@@ -211,9 +216,10 @@ Raw JSONL backing the top-level README's performance tables and codec-crossover 
 | `results_list_box.jsonl` | list-box lane, AOT: three impls x two element types x list length |
 | `results_key_shape.jsonl` | key-shape lane, AOT: which type shape costs what, with its controls |
 
-Environment for all of them: macOS 15.7.7 on Apple Silicon (arm64), Dart 3.12.2, hive_ce 2.19.3,
-2026-07-26. Values were a constant 1 byte by design, isolating key cost; web performance is
-unmeasured (ordering assumed to follow the VM).
+Environment: macOS 15.7.7 on Apple Silicon (arm64), Dart 3.12.2, hive_ce 2.19.3, 2026-07-26.
+`results_list_box.jsonl` is the exception, re-run on macOS 15.7.8 and Dart 3.13.1 on 2026-08-21, so
+any cross-file comparison against it carries an SDK difference. Values were a constant 1 byte by
+design, isolating key cost; web performance is unmeasured (ordering assumed to follow the VM).
 
 `results_overhead.jsonl` carries a load stamp and every lane resolves, but see the precision note
 above before quoting a single figure from it: a repeat pass moved `put` 2x and flipped `get (lazy)`'s
