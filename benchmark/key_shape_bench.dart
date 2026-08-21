@@ -38,6 +38,8 @@ const keySampleSize = 4096;
 const sampleSeed = 7;
 
 /// Stands in for a consumer's adapter-registered class.
+// This file is a worker entrypoint (`key_shape_bench`, per key_shape_driver.sh)
+// ignore: prefer-match-file-name
 final class Payload {
   /// Summed into the checksum, so no lane can be optimised away silently.
   final int id;

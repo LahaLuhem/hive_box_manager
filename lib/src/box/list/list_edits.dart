@@ -3,7 +3,7 @@
 /// cache. The read side pairs this with the unmodifiable cast view, closing the aliasing hole
 /// from both directions.
 List<E> materialisedCopyOf<E extends Object>(Iterable<E> values) =>
-    List<E>.from(values, growable: false);
+    List<E>.of(values, growable: false);
 
 /// A fresh copy of [values] without the element at [index]: the `List.remove` shape, with the
 /// first-occurrence index already computed by the caller.
