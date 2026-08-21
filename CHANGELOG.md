@@ -1,3 +1,7 @@
+## [Unreleased]
+### Changed
+- Bump Dart SDK to ^3.13
+
 ## [1.1.0] - 2026-07-27
 ### Added
 - \[#17\] Bring back `putAllBy`/`putAllGrouped`, the 0.0.x self-keying batch write
@@ -80,6 +84,7 @@
 - Collection BoxManagers
 - (Lazy) Dual Int Index LazyBoxManager
 
+[Unreleased]: https://github.com/LahaLuhem/hive_box_manager/compare/1.1.0...HEAD
 [1.1.0]: https://github.com/LahaLuhem/hive_box_manager/compare/1.0.0...1.1.0
 [1.0.0]: https://github.com/LahaLuhem/hive_box_manager/compare/0.0.8...1.0.0
 [0.0.8]: https://github.com/LahaLuhem/hive_box_manager/compare/0.0.7...0.0.8
