@@ -4,6 +4,7 @@ import 'package:hive_ce/hive.dart';
 import '/src/observer/box_observer.dart';
 import '../raw_key.dart';
 import '../raw_key_gate.dart';
+import '../undecodable_value_exception.dart';
 import '../value_codec/value_codec.dart';
 
 /// The lazy CRUD engine: every lazy façade delegates here, so CRUD is written exactly once.
@@ -92,17 +93,63 @@ final class LazyCrudEngine<T extends Object>({
   );
 
   /// Reads every value; materialised, so completion means every disk read already happened.
-  Task<List<T>> values() => Task(
+  /// [semanticKeyOf] decodes a raw key for failure reports only.
+  Task<List<T>> values(Object Function(Object rawKey) semanticKeyOf) => Task(
     () => _guarded('values', () async {
       final box = await _obtainBox();
       _observer?.onReadAll(name, box.length);
-      final storedValues = await box.keys.map(box.get).wait;
 
-      return storedValues
-          .map((storedValue) => _valueCodec.fromStored(storedValue!))
-          .toList(growable: false);
+      return _readEach(
+        box.keys.map((rawKey) => rawKey as Object).toList(growable: false),
+        (rawKey) async => _valueCodec.fromStored((await box.get(rawKey))!),
+        semanticKeyOf,
+      );
     }),
   );
+
+  /// Reads each of [rawKeys], `None` for any that vanished mid-scan. See [values] for [semanticKeyOf].
+  Task<List<Option<T>>> getEach(
+    List<RawKey> rawKeys,
+    Object Function(Object rawKey) semanticKeyOf,
+  ) => Task(
+    () => _readEach(
+      rawKeys.map((rawKey) => rawKey.value).toList(growable: false),
+      (rawKey) => get(RawKey(rawKey), semanticKeyOf(rawKey)).run(),
+      semanticKeyOf,
+    ),
+  );
+
+  /// Awaits one [read] per raw key concurrently, rethrowing the first failure **in key order** as an
+  /// [UndecodableValueException]. `.wait` would fold every outcome into one keyless error instead.
+  Future<List<R>> _readEach<R>(
+    List<Object> rawKeys,
+    Future<R> Function(Object rawKey) read,
+    Object Function(Object rawKey) semanticKeyOf,
+  ) async {
+    final failures = List<(Object, StackTrace)?>.filled(rawKeys.length, null);
+    final values = await rawKeys.indexed.map((entry) async {
+      final (index, rawKey) = entry;
+      try {
+        return await read(rawKey);
+      } on Object catch (error, stackTrace) {
+        failures[index] = (error, stackTrace);
+
+        return null;
+      }
+    }).wait;
+
+    for (final (index, failure) in failures.indexed) {
+      if (failure == null) continue;
+
+      final (error, stackTrace) = failure;
+      Error.throwWithStackTrace(
+        UndecodableValueException(boxName: name, key: semanticKeyOf(rawKeys[index]), cause: error),
+        stackTrace,
+      );
+    }
+
+    return values.cast<R>().toList(growable: false);
+  }
 
   /// Writes [value] under [rawKey].
   Task<Unit> put(RawKey rawKey, Object semanticKey, T value) {

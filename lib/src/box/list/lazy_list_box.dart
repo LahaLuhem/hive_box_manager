@@ -103,7 +103,7 @@ interface class LazyListBox<T extends Object, K extends Object>._({
 
   /// Every stored list when run, each read from disk, materialised, and handed over as an unmodifiable
   /// view. Dispatches one read-all event per run.
-  Task<List<List<T>>> get values => _engine.values();
+  Task<List<List<T>>> get values => _engine.values(_codec.decode);
 
   /// Warms the box up compositionally when run; any effect performs the same open implicitly.
   Task<Unit> ensureInitialised() => _engine.ensureInitialised();
