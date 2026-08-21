@@ -42,9 +42,10 @@ import '/src/observer/box_observer.dart';
 /// yet still leaves the handle terminal.
 ///
 /// `interface class`: implement it for test fakes; extending is reserved to this package.
-interface class LazyKeyedBox<T extends Object, K extends Object> {
-  final LazyCrudEngine<T> _engine;
-
+interface class LazyKeyedBox<T extends Object, K extends Object>._({
+  required final LazyCrudEngine<T> _engine,
+  required final KeyCodec<K> _codec,
+}) {
   /// Wires a box that opens single-flight on first use; construction itself touches nothing.
   ///
   /// One-time engine setup stays hive_ce's, exactly as it documents: `Hive.init(path)` (or
@@ -82,12 +83,6 @@ interface class LazyKeyedBox<T extends Object, K extends Object> {
          ),
          codec: resolveKeyCodec<K>(codec),
        );
-
-  /// Wiring is internal: consumers construct via the unnamed constructor (tests use the seam
-  /// below).
-  new _({required this._engine, required this._codec});
-
-  final KeyCodec<K> _codec;
 
   /// Encodes [key] for the engine, which admits only encoded keys.
   @pragma('vm:prefer-inline')

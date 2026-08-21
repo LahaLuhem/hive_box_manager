@@ -7,14 +7,11 @@ import 'query_index_strategy.dart';
 /// O(K) per query and honestly documented as such; free until called, which is why the query surface
 /// folds into the dual façades instead of being its own family. Maintains no side state, so its hooks
 /// are deliberate no-ops. The keys come through a closure so the strategy always scans the box's *current* keystore.
-final class ScanQueryIndex<K1 extends Object, K2 extends Object>
-    implements QueryIndexStrategy<K1, K2> {
-  final Iterable<Object> Function() _rawKeys;
-  final DualKeyCodec<K1, K2> _codec;
-
-  /// Wires the scan over [_rawKeys] (the live key set) decoded by [_codec].
-  new({required this._rawKeys, required this._codec});
-
+// ignore: public_member_api_docs -- a primary constructor has nowhere to hang a doc comment.
+final class ScanQueryIndex<K1 extends Object, K2 extends Object>({
+  required final Iterable<Object> Function() _rawKeys,
+  required final DualKeyCodec<K1, K2> _codec,
+}) implements QueryIndexStrategy<K1, K2> {
   /// Scan maintains no side state; queries decode the live key set instead.
   @override
   void afterWrite(Object rawKey, K1 primary, K2 secondary) => noop();

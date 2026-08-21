@@ -38,9 +38,7 @@ import 'single_value_slot_key.dart';
 /// never opens the box yet still leaves the handle terminal.
 ///
 /// `interface class`: implement it for test fakes; extending is reserved to this package.
-interface class LazySingleValueBox<T extends Object> {
-  final LazyCrudEngine<T> _engine;
-
+interface class LazySingleValueBox<T extends Object>._({required final LazyCrudEngine<T> _engine}) {
   /// Wires a box that opens single-flight on first use; construction itself touches nothing.
   ///
   /// One-time engine setup stays hive_ce's, exactly as it documents: `Hive.init(path)` (or
@@ -71,10 +69,6 @@ interface class LazySingleValueBox<T extends Object> {
            observer: observer,
          ),
        );
-
-  /// Wiring is internal: consumers construct via the unnamed constructor (tests use the seam
-  /// below).
-  new _({required this._engine});
 
   /// The box name, available before the box ever opens: the observer correlation handle.
   String get name => _engine.name;

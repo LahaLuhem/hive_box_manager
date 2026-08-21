@@ -37,12 +37,7 @@ import 'single_value_slot_key.dart';
 /// means a new [open].
 ///
 /// `interface class`: implement it for test fakes; extending is reserved to this package.
-interface class SingleValueBox<T extends Object> {
-  final EagerCrudEngine<T> _engine;
-
-  /// Wiring is internal: acquisition goes through [open] (tests use the seam below).
-  new _({required this._engine});
-
+interface class SingleValueBox<T extends Object>._({required final EagerCrudEngine<T> _engine}) {
   /// The box name: the correlation handle observers receive with every event.
   String get name => _engine.name;
 

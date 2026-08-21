@@ -163,9 +163,11 @@ packages.
 <a id="sdk-floor"></a>
 ## SDK floor & dependency set
 
-The floor is **Dart ≥ 3.12** (`pubspec.yaml`), raised from 3.9 for the 1.0 rewrite in two steps:
-3.10 for static dot shorthands (a CODESTYLE idiom), then 3.12 for private named parameters
-(`Foo({required this._bar})`), used across the internal constructors. One floor serves consumers
+The floor is **Dart ≥ 3.13** (`pubspec.yaml`), raised from 3.9 for the 1.0 rewrite in three steps:
+3.10 for static dot shorthands (a CODESTYLE idiom), 3.12 for private named parameters
+(`Foo({required this._bar})`), and 3.13 for primary constructors, which superseded that spelling and
+now declare the constructor-assigned fields on every façade, both engines, and both watch events
+([`CODESTYLE.md#class-structure`](./CODESTYLE.md#class-structure)). One floor serves consumers
 and contributors alike: the test toolchain (`test`, `build_runner`) floors at 3.11, inside the
 package floor. 1.0 was the sanctioned breaking release, so the bump rode it; since a floor can only
 be raised without a breaking change, any further bump is recorded here.

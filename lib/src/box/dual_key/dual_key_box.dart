@@ -39,13 +39,10 @@ import '/src/query/scan_query_index.dart';
 /// failures surface unwrapped inside tasks, and [close] / [deleteFromDisk] are terminal.
 ///
 /// `interface class`: implement it for test fakes; extending is reserved to this package.
-interface class DualKeyBox<T extends Object, K1 extends Object, K2 extends Object> {
-  final EagerCrudEngine<T> _engine;
-  final DualKeyCodec<K1, K2> _dualCodec;
-
-  /// Wiring is internal: acquisition goes through [open] (tests use the seam below).
-  new _({required this._engine, required this._dualCodec});
-
+interface class DualKeyBox<T extends Object, K1 extends Object, K2 extends Object>._({
+  required final EagerCrudEngine<T> _engine,
+  required final DualKeyCodec<K1, K2> _dualCodec,
+}) {
   /// Encodes a two-part key for the engine, which admits only encoded keys.
   ///
   /// Two scalar arguments, never a `(K1, K2)` record: a record parameter typed from a class's own
