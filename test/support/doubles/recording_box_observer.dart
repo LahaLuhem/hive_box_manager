@@ -7,7 +7,7 @@ final class RecordingBoxObserver extends BoxObserver {
   final calls = <String>[];
 
   /// Non-const: [calls] is per-instance mutable state.
-  RecordingBoxObserver();
+  new();
 
   @override
   void onOpened(String boxName) => calls.add('opened:$boxName');

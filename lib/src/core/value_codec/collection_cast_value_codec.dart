@@ -10,7 +10,7 @@ import 'value_codec.dart';
 /// per read (the scenario call CODESTYLE's unmodifiable-collections idiom sanctions).
 final class CollectionCastValueCodec<E extends Object> implements ValueCodec<List<E>> {
   /// Const so engines can default to it without an allocation per box.
-  const CollectionCastValueCodec();
+  const new();
 
   @override
   Object toStorable(List<E> value) => value;

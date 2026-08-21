@@ -59,62 +59,60 @@ class MockHiveInterface extends _i1.Mock implements _i2.HiveInterface {
     _i6.Uint8List? bytes,
     String? collection,
     List<int>? encryptionKey,
-  }) =>
-      (super.noSuchMethod(
-            Invocation.method(
-              #openBox,
-              [name],
-              {
-                #encryptionCipher: encryptionCipher,
-                #keyComparator: keyComparator,
-                #compactionStrategy: compactionStrategy,
-                #crashRecovery: crashRecovery,
-                #path: path,
-                #bytes: bytes,
-                #collection: collection,
-                #encryptionKey: encryptionKey,
-              },
-            ),
-            returnValue: _i3.Future<_i2.Box<E>>.value(
-              _FakeBox_0<E>(
-                this,
-                Invocation.method(
-                  #openBox,
-                  [name],
-                  {
-                    #encryptionCipher: encryptionCipher,
-                    #keyComparator: keyComparator,
-                    #compactionStrategy: compactionStrategy,
-                    #crashRecovery: crashRecovery,
-                    #path: path,
-                    #bytes: bytes,
-                    #collection: collection,
-                    #encryptionKey: encryptionKey,
-                  },
-                ),
-              ),
-            ),
-            returnValueForMissingStub: _i3.Future<_i2.Box<E>>.value(
-              _FakeBox_0<E>(
-                this,
-                Invocation.method(
-                  #openBox,
-                  [name],
-                  {
-                    #encryptionCipher: encryptionCipher,
-                    #keyComparator: keyComparator,
-                    #compactionStrategy: compactionStrategy,
-                    #crashRecovery: crashRecovery,
-                    #path: path,
-                    #bytes: bytes,
-                    #collection: collection,
-                    #encryptionKey: encryptionKey,
-                  },
-                ),
-              ),
-            ),
-          )
-          as _i3.Future<_i2.Box<E>>);
+  }) => (super.noSuchMethod(
+    Invocation.method(
+      #openBox,
+      [name],
+      {
+        #encryptionCipher: encryptionCipher,
+        #keyComparator: keyComparator,
+        #compactionStrategy: compactionStrategy,
+        #crashRecovery: crashRecovery,
+        #path: path,
+        #bytes: bytes,
+        #collection: collection,
+        #encryptionKey: encryptionKey,
+      },
+    ),
+    returnValue: _i3.Future<_i2.Box<E>>.value(
+      _FakeBox_0<E>(
+        this,
+        Invocation.method(
+          #openBox,
+          [name],
+          {
+            #encryptionCipher: encryptionCipher,
+            #keyComparator: keyComparator,
+            #compactionStrategy: compactionStrategy,
+            #crashRecovery: crashRecovery,
+            #path: path,
+            #bytes: bytes,
+            #collection: collection,
+            #encryptionKey: encryptionKey,
+          },
+        ),
+      ),
+    ),
+    returnValueForMissingStub: _i3.Future<_i2.Box<E>>.value(
+      _FakeBox_0<E>(
+        this,
+        Invocation.method(
+          #openBox,
+          [name],
+          {
+            #encryptionCipher: encryptionCipher,
+            #keyComparator: keyComparator,
+            #compactionStrategy: compactionStrategy,
+            #crashRecovery: crashRecovery,
+            #path: path,
+            #bytes: bytes,
+            #collection: collection,
+            #encryptionKey: encryptionKey,
+          },
+        ),
+      ),
+    ),
+  ) as _i3.Future<_i2.Box<E>>);
 
   @override
   _i3.Future<_i2.LazyBox<E>> openLazyBox<E>(
@@ -126,131 +124,113 @@ class MockHiveInterface extends _i1.Mock implements _i2.HiveInterface {
     String? path,
     String? collection,
     List<int>? encryptionKey,
-  }) =>
-      (super.noSuchMethod(
-            Invocation.method(
-              #openLazyBox,
-              [name],
-              {
-                #encryptionCipher: encryptionCipher,
-                #keyComparator: keyComparator,
-                #compactionStrategy: compactionStrategy,
-                #crashRecovery: crashRecovery,
-                #path: path,
-                #collection: collection,
-                #encryptionKey: encryptionKey,
-              },
-            ),
-            returnValue: _i3.Future<_i2.LazyBox<E>>.value(
-              _FakeLazyBox_1<E>(
-                this,
-                Invocation.method(
-                  #openLazyBox,
-                  [name],
-                  {
-                    #encryptionCipher: encryptionCipher,
-                    #keyComparator: keyComparator,
-                    #compactionStrategy: compactionStrategy,
-                    #crashRecovery: crashRecovery,
-                    #path: path,
-                    #collection: collection,
-                    #encryptionKey: encryptionKey,
-                  },
-                ),
-              ),
-            ),
-            returnValueForMissingStub: _i3.Future<_i2.LazyBox<E>>.value(
-              _FakeLazyBox_1<E>(
-                this,
-                Invocation.method(
-                  #openLazyBox,
-                  [name],
-                  {
-                    #encryptionCipher: encryptionCipher,
-                    #keyComparator: keyComparator,
-                    #compactionStrategy: compactionStrategy,
-                    #crashRecovery: crashRecovery,
-                    #path: path,
-                    #collection: collection,
-                    #encryptionKey: encryptionKey,
-                  },
-                ),
-              ),
-            ),
-          )
-          as _i3.Future<_i2.LazyBox<E>>);
+  }) => (super.noSuchMethod(
+    Invocation.method(
+      #openLazyBox,
+      [name],
+      {
+        #encryptionCipher: encryptionCipher,
+        #keyComparator: keyComparator,
+        #compactionStrategy: compactionStrategy,
+        #crashRecovery: crashRecovery,
+        #path: path,
+        #collection: collection,
+        #encryptionKey: encryptionKey,
+      },
+    ),
+    returnValue: _i3.Future<_i2.LazyBox<E>>.value(
+      _FakeLazyBox_1<E>(
+        this,
+        Invocation.method(
+          #openLazyBox,
+          [name],
+          {
+            #encryptionCipher: encryptionCipher,
+            #keyComparator: keyComparator,
+            #compactionStrategy: compactionStrategy,
+            #crashRecovery: crashRecovery,
+            #path: path,
+            #collection: collection,
+            #encryptionKey: encryptionKey,
+          },
+        ),
+      ),
+    ),
+    returnValueForMissingStub: _i3.Future<_i2.LazyBox<E>>.value(
+      _FakeLazyBox_1<E>(
+        this,
+        Invocation.method(
+          #openLazyBox,
+          [name],
+          {
+            #encryptionCipher: encryptionCipher,
+            #keyComparator: keyComparator,
+            #compactionStrategy: compactionStrategy,
+            #crashRecovery: crashRecovery,
+            #path: path,
+            #collection: collection,
+            #encryptionKey: encryptionKey,
+          },
+        ),
+      ),
+    ),
+  ) as _i3.Future<_i2.LazyBox<E>>);
 
   @override
-  _i2.Box<E> box<E>(String? name) =>
-      (super.noSuchMethod(
-            Invocation.method(#box, [name]),
-            returnValue: _FakeBox_0<E>(this, Invocation.method(#box, [name])),
-            returnValueForMissingStub: _FakeBox_0<E>(this, Invocation.method(#box, [name])),
-          )
-          as _i2.Box<E>);
+  _i2.Box<E> box<E>(String? name) => (super.noSuchMethod(
+    Invocation.method(#box, [name]),
+    returnValue: _FakeBox_0<E>(this, Invocation.method(#box, [name])),
+    returnValueForMissingStub: _FakeBox_0<E>(this, Invocation.method(#box, [name])),
+  ) as _i2.Box<E>);
 
   @override
-  _i2.LazyBox<E> lazyBox<E>(String? name) =>
-      (super.noSuchMethod(
-            Invocation.method(#lazyBox, [name]),
-            returnValue: _FakeLazyBox_1<E>(this, Invocation.method(#lazyBox, [name])),
-            returnValueForMissingStub: _FakeLazyBox_1<E>(this, Invocation.method(#lazyBox, [name])),
-          )
-          as _i2.LazyBox<E>);
+  _i2.LazyBox<E> lazyBox<E>(String? name) => (super.noSuchMethod(
+    Invocation.method(#lazyBox, [name]),
+    returnValue: _FakeLazyBox_1<E>(this, Invocation.method(#lazyBox, [name])),
+    returnValueForMissingStub: _FakeLazyBox_1<E>(this, Invocation.method(#lazyBox, [name])),
+  ) as _i2.LazyBox<E>);
 
   @override
-  bool isBoxOpen(String? name) =>
-      (super.noSuchMethod(
-            Invocation.method(#isBoxOpen, [name]),
-            returnValue: false,
-            returnValueForMissingStub: false,
-          )
-          as bool);
+  bool isBoxOpen(String? name) => (super.noSuchMethod(
+    Invocation.method(#isBoxOpen, [name]),
+    returnValue: false,
+    returnValueForMissingStub: false,
+  ) as bool);
 
   @override
-  _i3.Future<void> close() =>
-      (super.noSuchMethod(
-            Invocation.method(#close, []),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+  _i3.Future<void> close() => (super.noSuchMethod(
+    Invocation.method(#close, []),
+    returnValue: _i3.Future<void>.value(),
+    returnValueForMissingStub: _i3.Future<void>.value(),
+  ) as _i3.Future<void>);
 
   @override
-  _i3.Future<void> deleteBoxFromDisk(String? name, {String? path}) =>
-      (super.noSuchMethod(
-            Invocation.method(#deleteBoxFromDisk, [name], {#path: path}),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+  _i3.Future<void> deleteBoxFromDisk(String? name, {String? path}) => (super.noSuchMethod(
+    Invocation.method(#deleteBoxFromDisk, [name], {#path: path}),
+    returnValue: _i3.Future<void>.value(),
+    returnValueForMissingStub: _i3.Future<void>.value(),
+  ) as _i3.Future<void>);
 
   @override
-  _i3.Future<void> deleteFromDisk() =>
-      (super.noSuchMethod(
-            Invocation.method(#deleteFromDisk, []),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+  _i3.Future<void> deleteFromDisk() => (super.noSuchMethod(
+    Invocation.method(#deleteFromDisk, []),
+    returnValue: _i3.Future<void>.value(),
+    returnValueForMissingStub: _i3.Future<void>.value(),
+  ) as _i3.Future<void>);
 
   @override
-  List<int> generateSecureKey() =>
-      (super.noSuchMethod(
-            Invocation.method(#generateSecureKey, []),
-            returnValue: <int>[],
-            returnValueForMissingStub: <int>[],
-          )
-          as List<int>);
+  List<int> generateSecureKey() => (super.noSuchMethod(
+    Invocation.method(#generateSecureKey, []),
+    returnValue: <int>[],
+    returnValueForMissingStub: <int>[],
+  ) as List<int>);
 
   @override
-  _i3.Future<bool> boxExists(String? name, {String? path}) =>
-      (super.noSuchMethod(
-            Invocation.method(#boxExists, [name], {#path: path}),
-            returnValue: _i3.Future<bool>.value(false),
-            returnValueForMissingStub: _i3.Future<bool>.value(false),
-          )
-          as _i3.Future<bool>);
+  _i3.Future<bool> boxExists(String? name, {String? path}) => (super.noSuchMethod(
+    Invocation.method(#boxExists, [name], {#path: path}),
+    returnValue: _i3.Future<bool>.value(false),
+    returnValueForMissingStub: _i3.Future<bool>.value(false),
+  ) as _i3.Future<bool>);
 
   @override
   void resetAdapters() =>
@@ -267,13 +247,11 @@ class MockHiveInterface extends _i1.Mock implements _i2.HiveInterface {
   );
 
   @override
-  bool isAdapterRegistered(int? typeId) =>
-      (super.noSuchMethod(
-            Invocation.method(#isAdapterRegistered, [typeId]),
-            returnValue: false,
-            returnValueForMissingStub: false,
-          )
-          as bool);
+  bool isAdapterRegistered(int? typeId) => (super.noSuchMethod(
+    Invocation.method(#isAdapterRegistered, [typeId]),
+    returnValue: false,
+    returnValueForMissingStub: false,
+  ) as bool);
 
   @override
   void ignoreTypeId<T>(int? typeId) => super.noSuchMethod(
@@ -287,49 +265,39 @@ class MockHiveInterface extends _i1.Mock implements _i2.HiveInterface {
 /// See the documentation for Mockito's code generation for more information.
 class MockBox extends _i1.Mock implements _i2.Box<Object?> {
   @override
-  Iterable<Object?> get values =>
-      (super.noSuchMethod(
-            Invocation.getter(#values),
-            returnValue: <Object?>[],
-            returnValueForMissingStub: <Object?>[],
-          )
-          as Iterable<Object?>);
+  Iterable<Object?> get values => (super.noSuchMethod(
+    Invocation.getter(#values),
+    returnValue: <Object?>[],
+    returnValueForMissingStub: <Object?>[],
+  ) as Iterable<Object?>);
 
   @override
-  String get name =>
-      (super.noSuchMethod(
-            Invocation.getter(#name),
-            returnValue: _i7.dummyValue<String>(this, Invocation.getter(#name)),
-            returnValueForMissingStub: _i7.dummyValue<String>(this, Invocation.getter(#name)),
-          )
-          as String);
+  String get name => (super.noSuchMethod(
+    Invocation.getter(#name),
+    returnValue: _i7.dummyValue<String>(this, Invocation.getter(#name)),
+    returnValueForMissingStub: _i7.dummyValue<String>(this, Invocation.getter(#name)),
+  ) as String);
 
   @override
-  bool get isOpen =>
-      (super.noSuchMethod(
-            Invocation.getter(#isOpen),
-            returnValue: false,
-            returnValueForMissingStub: false,
-          )
-          as bool);
+  bool get isOpen => (super.noSuchMethod(
+    Invocation.getter(#isOpen),
+    returnValue: false,
+    returnValueForMissingStub: false,
+  ) as bool);
 
   @override
-  bool get lazy =>
-      (super.noSuchMethod(
-            Invocation.getter(#lazy),
-            returnValue: false,
-            returnValueForMissingStub: false,
-          )
-          as bool);
+  bool get lazy => (super.noSuchMethod(
+    Invocation.getter(#lazy),
+    returnValue: false,
+    returnValueForMissingStub: false,
+  ) as bool);
 
   @override
-  Iterable<dynamic> get keys =>
-      (super.noSuchMethod(
-            Invocation.getter(#keys),
-            returnValue: <dynamic>[],
-            returnValueForMissingStub: <dynamic>[],
-          )
-          as Iterable<dynamic>);
+  Iterable<dynamic> get keys => (super.noSuchMethod(
+    Invocation.getter(#keys),
+    returnValue: <dynamic>[],
+    returnValueForMissingStub: <dynamic>[],
+  ) as Iterable<dynamic>);
 
   @override
   int get length =>
@@ -337,31 +305,25 @@ class MockBox extends _i1.Mock implements _i2.Box<Object?> {
           as int);
 
   @override
-  bool get isEmpty =>
-      (super.noSuchMethod(
-            Invocation.getter(#isEmpty),
-            returnValue: false,
-            returnValueForMissingStub: false,
-          )
-          as bool);
+  bool get isEmpty => (super.noSuchMethod(
+    Invocation.getter(#isEmpty),
+    returnValue: false,
+    returnValueForMissingStub: false,
+  ) as bool);
 
   @override
-  bool get isNotEmpty =>
-      (super.noSuchMethod(
-            Invocation.getter(#isNotEmpty),
-            returnValue: false,
-            returnValueForMissingStub: false,
-          )
-          as bool);
+  bool get isNotEmpty => (super.noSuchMethod(
+    Invocation.getter(#isNotEmpty),
+    returnValue: false,
+    returnValueForMissingStub: false,
+  ) as bool);
 
   @override
-  Iterable<Object?> valuesBetween({dynamic startKey, dynamic endKey}) =>
-      (super.noSuchMethod(
-            Invocation.method(#valuesBetween, [], {#startKey: startKey, #endKey: endKey}),
-            returnValue: <Object?>[],
-            returnValueForMissingStub: <Object?>[],
-          )
-          as Iterable<Object?>);
+  Iterable<Object?> valuesBetween({dynamic startKey, dynamic endKey}) => (super.noSuchMethod(
+    Invocation.method(#valuesBetween, [], {#startKey: startKey, #endKey: endKey}),
+    returnValue: <Object?>[],
+    returnValueForMissingStub: <Object?>[],
+  ) as Iterable<Object?>);
 
   @override
   Object? getAt(int? index) =>
@@ -369,152 +331,120 @@ class MockBox extends _i1.Mock implements _i2.Box<Object?> {
           as Object?);
 
   @override
-  Map<dynamic, Object?> toMap() =>
-      (super.noSuchMethod(
-            Invocation.method(#toMap, []),
-            returnValue: <dynamic, Object?>{},
-            returnValueForMissingStub: <dynamic, Object?>{},
-          )
-          as Map<dynamic, Object?>);
+  Map<dynamic, Object?> toMap() => (super.noSuchMethod(
+    Invocation.method(#toMap, []),
+    returnValue: <dynamic, Object?>{},
+    returnValueForMissingStub: <dynamic, Object?>{},
+  ) as Map<dynamic, Object?>);
 
   @override
   dynamic keyAt(int? index) =>
       super.noSuchMethod(Invocation.method(#keyAt, [index]), returnValueForMissingStub: null);
 
   @override
-  _i3.Stream<_i2.BoxEvent> watch({dynamic key}) =>
-      (super.noSuchMethod(
-            Invocation.method(#watch, [], {#key: key}),
-            returnValue: _i3.Stream<_i2.BoxEvent>.empty(),
-            returnValueForMissingStub: _i3.Stream<_i2.BoxEvent>.empty(),
-          )
-          as _i3.Stream<_i2.BoxEvent>);
+  _i3.Stream<_i2.BoxEvent> watch({dynamic key}) => (super.noSuchMethod(
+    Invocation.method(#watch, [], {#key: key}),
+    returnValue: _i3.Stream<_i2.BoxEvent>.empty(),
+    returnValueForMissingStub: _i3.Stream<_i2.BoxEvent>.empty(),
+  ) as _i3.Stream<_i2.BoxEvent>);
 
   @override
-  bool containsKey(dynamic key) =>
-      (super.noSuchMethod(
-            Invocation.method(#containsKey, [key]),
-            returnValue: false,
-            returnValueForMissingStub: false,
-          )
-          as bool);
+  bool containsKey(dynamic key) => (super.noSuchMethod(
+    Invocation.method(#containsKey, [key]),
+    returnValue: false,
+    returnValueForMissingStub: false,
+  ) as bool);
 
   @override
-  _i3.Future<void> put(dynamic key, Object? value) =>
-      (super.noSuchMethod(
-            Invocation.method(#put, [key, value]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+  _i3.Future<void> put(dynamic key, Object? value) => (super.noSuchMethod(
+    Invocation.method(#put, [key, value]),
+    returnValue: _i3.Future<void>.value(),
+    returnValueForMissingStub: _i3.Future<void>.value(),
+  ) as _i3.Future<void>);
 
   @override
-  _i3.Future<void> putAt(int? index, Object? value) =>
-      (super.noSuchMethod(
-            Invocation.method(#putAt, [index, value]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+  _i3.Future<void> putAt(int? index, Object? value) => (super.noSuchMethod(
+    Invocation.method(#putAt, [index, value]),
+    returnValue: _i3.Future<void>.value(),
+    returnValueForMissingStub: _i3.Future<void>.value(),
+  ) as _i3.Future<void>);
 
   @override
-  _i3.Future<void> putAll(Map<dynamic, Object?>? entries) =>
-      (super.noSuchMethod(
-            Invocation.method(#putAll, [entries]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+  _i3.Future<void> putAll(Map<dynamic, Object?>? entries) => (super.noSuchMethod(
+    Invocation.method(#putAll, [entries]),
+    returnValue: _i3.Future<void>.value(),
+    returnValueForMissingStub: _i3.Future<void>.value(),
+  ) as _i3.Future<void>);
 
   @override
-  _i3.Future<int> add(Object? value) =>
-      (super.noSuchMethod(
-            Invocation.method(#add, [value]),
-            returnValue: _i3.Future<int>.value(0),
-            returnValueForMissingStub: _i3.Future<int>.value(0),
-          )
-          as _i3.Future<int>);
+  _i3.Future<int> add(Object? value) => (super.noSuchMethod(
+    Invocation.method(#add, [value]),
+    returnValue: _i3.Future<int>.value(0),
+    returnValueForMissingStub: _i3.Future<int>.value(0),
+  ) as _i3.Future<int>);
 
   @override
-  _i3.Future<Iterable<int>> addAll(Iterable<Object?>? values) =>
-      (super.noSuchMethod(
-            Invocation.method(#addAll, [values]),
-            returnValue: _i3.Future<Iterable<int>>.value(<int>[]),
-            returnValueForMissingStub: _i3.Future<Iterable<int>>.value(<int>[]),
-          )
-          as _i3.Future<Iterable<int>>);
+  _i3.Future<Iterable<int>> addAll(Iterable<Object?>? values) => (super.noSuchMethod(
+    Invocation.method(#addAll, [values]),
+    returnValue: _i3.Future<Iterable<int>>.value(<int>[]),
+    returnValueForMissingStub: _i3.Future<Iterable<int>>.value(<int>[]),
+  ) as _i3.Future<Iterable<int>>);
 
   @override
-  _i3.Future<void> delete(dynamic key) =>
-      (super.noSuchMethod(
-            Invocation.method(#delete, [key]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+  _i3.Future<void> delete(dynamic key) => (super.noSuchMethod(
+    Invocation.method(#delete, [key]),
+    returnValue: _i3.Future<void>.value(),
+    returnValueForMissingStub: _i3.Future<void>.value(),
+  ) as _i3.Future<void>);
 
   @override
-  _i3.Future<void> deleteAt(int? index) =>
-      (super.noSuchMethod(
-            Invocation.method(#deleteAt, [index]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+  _i3.Future<void> deleteAt(int? index) => (super.noSuchMethod(
+    Invocation.method(#deleteAt, [index]),
+    returnValue: _i3.Future<void>.value(),
+    returnValueForMissingStub: _i3.Future<void>.value(),
+  ) as _i3.Future<void>);
 
   @override
-  _i3.Future<void> deleteAll(Iterable<dynamic>? keys) =>
-      (super.noSuchMethod(
-            Invocation.method(#deleteAll, [keys]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+  _i3.Future<void> deleteAll(Iterable<dynamic>? keys) => (super.noSuchMethod(
+    Invocation.method(#deleteAll, [keys]),
+    returnValue: _i3.Future<void>.value(),
+    returnValueForMissingStub: _i3.Future<void>.value(),
+  ) as _i3.Future<void>);
 
   @override
-  _i3.Future<void> compact() =>
-      (super.noSuchMethod(
-            Invocation.method(#compact, []),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+  _i3.Future<void> compact() => (super.noSuchMethod(
+    Invocation.method(#compact, []),
+    returnValue: _i3.Future<void>.value(),
+    returnValueForMissingStub: _i3.Future<void>.value(),
+  ) as _i3.Future<void>);
 
   @override
-  _i3.Future<int> clear() =>
-      (super.noSuchMethod(
-            Invocation.method(#clear, []),
-            returnValue: _i3.Future<int>.value(0),
-            returnValueForMissingStub: _i3.Future<int>.value(0),
-          )
-          as _i3.Future<int>);
+  _i3.Future<int> clear() => (super.noSuchMethod(
+    Invocation.method(#clear, []),
+    returnValue: _i3.Future<int>.value(0),
+    returnValueForMissingStub: _i3.Future<int>.value(0),
+  ) as _i3.Future<int>);
 
   @override
-  _i3.Future<void> close() =>
-      (super.noSuchMethod(
-            Invocation.method(#close, []),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+  _i3.Future<void> close() => (super.noSuchMethod(
+    Invocation.method(#close, []),
+    returnValue: _i3.Future<void>.value(),
+    returnValueForMissingStub: _i3.Future<void>.value(),
+  ) as _i3.Future<void>);
 
   @override
-  _i3.Future<void> deleteFromDisk() =>
-      (super.noSuchMethod(
-            Invocation.method(#deleteFromDisk, []),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+  _i3.Future<void> deleteFromDisk() => (super.noSuchMethod(
+    Invocation.method(#deleteFromDisk, []),
+    returnValue: _i3.Future<void>.value(),
+    returnValueForMissingStub: _i3.Future<void>.value(),
+  ) as _i3.Future<void>);
 
   @override
-  _i3.Future<void> flush() =>
-      (super.noSuchMethod(
-            Invocation.method(#flush, []),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+  _i3.Future<void> flush() => (super.noSuchMethod(
+    Invocation.method(#flush, []),
+    returnValue: _i3.Future<void>.value(),
+    returnValueForMissingStub: _i3.Future<void>.value(),
+  ) as _i3.Future<void>);
 }
 
 /// A class which mocks [LazyBox].
@@ -522,40 +452,32 @@ class MockBox extends _i1.Mock implements _i2.Box<Object?> {
 /// See the documentation for Mockito's code generation for more information.
 class MockLazyBox extends _i1.Mock implements _i2.LazyBox<Object?> {
   @override
-  String get name =>
-      (super.noSuchMethod(
-            Invocation.getter(#name),
-            returnValue: _i7.dummyValue<String>(this, Invocation.getter(#name)),
-            returnValueForMissingStub: _i7.dummyValue<String>(this, Invocation.getter(#name)),
-          )
-          as String);
+  String get name => (super.noSuchMethod(
+    Invocation.getter(#name),
+    returnValue: _i7.dummyValue<String>(this, Invocation.getter(#name)),
+    returnValueForMissingStub: _i7.dummyValue<String>(this, Invocation.getter(#name)),
+  ) as String);
 
   @override
-  bool get isOpen =>
-      (super.noSuchMethod(
-            Invocation.getter(#isOpen),
-            returnValue: false,
-            returnValueForMissingStub: false,
-          )
-          as bool);
+  bool get isOpen => (super.noSuchMethod(
+    Invocation.getter(#isOpen),
+    returnValue: false,
+    returnValueForMissingStub: false,
+  ) as bool);
 
   @override
-  bool get lazy =>
-      (super.noSuchMethod(
-            Invocation.getter(#lazy),
-            returnValue: false,
-            returnValueForMissingStub: false,
-          )
-          as bool);
+  bool get lazy => (super.noSuchMethod(
+    Invocation.getter(#lazy),
+    returnValue: false,
+    returnValueForMissingStub: false,
+  ) as bool);
 
   @override
-  Iterable<dynamic> get keys =>
-      (super.noSuchMethod(
-            Invocation.getter(#keys),
-            returnValue: <dynamic>[],
-            returnValueForMissingStub: <dynamic>[],
-          )
-          as Iterable<dynamic>);
+  Iterable<dynamic> get keys => (super.noSuchMethod(
+    Invocation.getter(#keys),
+    returnValue: <dynamic>[],
+    returnValueForMissingStub: <dynamic>[],
+  ) as Iterable<dynamic>);
 
   @override
   int get length =>
@@ -563,177 +485,139 @@ class MockLazyBox extends _i1.Mock implements _i2.LazyBox<Object?> {
           as int);
 
   @override
-  bool get isEmpty =>
-      (super.noSuchMethod(
-            Invocation.getter(#isEmpty),
-            returnValue: false,
-            returnValueForMissingStub: false,
-          )
-          as bool);
+  bool get isEmpty => (super.noSuchMethod(
+    Invocation.getter(#isEmpty),
+    returnValue: false,
+    returnValueForMissingStub: false,
+  ) as bool);
 
   @override
-  bool get isNotEmpty =>
-      (super.noSuchMethod(
-            Invocation.getter(#isNotEmpty),
-            returnValue: false,
-            returnValueForMissingStub: false,
-          )
-          as bool);
+  bool get isNotEmpty => (super.noSuchMethod(
+    Invocation.getter(#isNotEmpty),
+    returnValue: false,
+    returnValueForMissingStub: false,
+  ) as bool);
 
   @override
-  _i3.Future<Object?> get(dynamic key, {Object? defaultValue}) =>
-      (super.noSuchMethod(
-            Invocation.method(#get, [key], {#defaultValue: defaultValue}),
-            returnValue: _i3.Future<Object?>.value(),
-            returnValueForMissingStub: _i3.Future<Object?>.value(),
-          )
-          as _i3.Future<Object?>);
+  _i3.Future<Object?> get(dynamic key, {Object? defaultValue}) => (super.noSuchMethod(
+    Invocation.method(#get, [key], {#defaultValue: defaultValue}),
+    returnValue: _i3.Future<Object?>.value(),
+    returnValueForMissingStub: _i3.Future<Object?>.value(),
+  ) as _i3.Future<Object?>);
 
   @override
-  _i3.Future<Object?> getAt(int? index) =>
-      (super.noSuchMethod(
-            Invocation.method(#getAt, [index]),
-            returnValue: _i3.Future<Object?>.value(),
-            returnValueForMissingStub: _i3.Future<Object?>.value(),
-          )
-          as _i3.Future<Object?>);
+  _i3.Future<Object?> getAt(int? index) => (super.noSuchMethod(
+    Invocation.method(#getAt, [index]),
+    returnValue: _i3.Future<Object?>.value(),
+    returnValueForMissingStub: _i3.Future<Object?>.value(),
+  ) as _i3.Future<Object?>);
 
   @override
   dynamic keyAt(int? index) =>
       super.noSuchMethod(Invocation.method(#keyAt, [index]), returnValueForMissingStub: null);
 
   @override
-  _i3.Stream<_i2.BoxEvent> watch({dynamic key}) =>
-      (super.noSuchMethod(
-            Invocation.method(#watch, [], {#key: key}),
-            returnValue: _i3.Stream<_i2.BoxEvent>.empty(),
-            returnValueForMissingStub: _i3.Stream<_i2.BoxEvent>.empty(),
-          )
-          as _i3.Stream<_i2.BoxEvent>);
+  _i3.Stream<_i2.BoxEvent> watch({dynamic key}) => (super.noSuchMethod(
+    Invocation.method(#watch, [], {#key: key}),
+    returnValue: _i3.Stream<_i2.BoxEvent>.empty(),
+    returnValueForMissingStub: _i3.Stream<_i2.BoxEvent>.empty(),
+  ) as _i3.Stream<_i2.BoxEvent>);
 
   @override
-  bool containsKey(dynamic key) =>
-      (super.noSuchMethod(
-            Invocation.method(#containsKey, [key]),
-            returnValue: false,
-            returnValueForMissingStub: false,
-          )
-          as bool);
+  bool containsKey(dynamic key) => (super.noSuchMethod(
+    Invocation.method(#containsKey, [key]),
+    returnValue: false,
+    returnValueForMissingStub: false,
+  ) as bool);
 
   @override
-  _i3.Future<void> put(dynamic key, Object? value) =>
-      (super.noSuchMethod(
-            Invocation.method(#put, [key, value]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+  _i3.Future<void> put(dynamic key, Object? value) => (super.noSuchMethod(
+    Invocation.method(#put, [key, value]),
+    returnValue: _i3.Future<void>.value(),
+    returnValueForMissingStub: _i3.Future<void>.value(),
+  ) as _i3.Future<void>);
 
   @override
-  _i3.Future<void> putAt(int? index, Object? value) =>
-      (super.noSuchMethod(
-            Invocation.method(#putAt, [index, value]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+  _i3.Future<void> putAt(int? index, Object? value) => (super.noSuchMethod(
+    Invocation.method(#putAt, [index, value]),
+    returnValue: _i3.Future<void>.value(),
+    returnValueForMissingStub: _i3.Future<void>.value(),
+  ) as _i3.Future<void>);
 
   @override
-  _i3.Future<void> putAll(Map<dynamic, Object?>? entries) =>
-      (super.noSuchMethod(
-            Invocation.method(#putAll, [entries]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+  _i3.Future<void> putAll(Map<dynamic, Object?>? entries) => (super.noSuchMethod(
+    Invocation.method(#putAll, [entries]),
+    returnValue: _i3.Future<void>.value(),
+    returnValueForMissingStub: _i3.Future<void>.value(),
+  ) as _i3.Future<void>);
 
   @override
-  _i3.Future<int> add(Object? value) =>
-      (super.noSuchMethod(
-            Invocation.method(#add, [value]),
-            returnValue: _i3.Future<int>.value(0),
-            returnValueForMissingStub: _i3.Future<int>.value(0),
-          )
-          as _i3.Future<int>);
+  _i3.Future<int> add(Object? value) => (super.noSuchMethod(
+    Invocation.method(#add, [value]),
+    returnValue: _i3.Future<int>.value(0),
+    returnValueForMissingStub: _i3.Future<int>.value(0),
+  ) as _i3.Future<int>);
 
   @override
-  _i3.Future<Iterable<int>> addAll(Iterable<Object?>? values) =>
-      (super.noSuchMethod(
-            Invocation.method(#addAll, [values]),
-            returnValue: _i3.Future<Iterable<int>>.value(<int>[]),
-            returnValueForMissingStub: _i3.Future<Iterable<int>>.value(<int>[]),
-          )
-          as _i3.Future<Iterable<int>>);
+  _i3.Future<Iterable<int>> addAll(Iterable<Object?>? values) => (super.noSuchMethod(
+    Invocation.method(#addAll, [values]),
+    returnValue: _i3.Future<Iterable<int>>.value(<int>[]),
+    returnValueForMissingStub: _i3.Future<Iterable<int>>.value(<int>[]),
+  ) as _i3.Future<Iterable<int>>);
 
   @override
-  _i3.Future<void> delete(dynamic key) =>
-      (super.noSuchMethod(
-            Invocation.method(#delete, [key]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+  _i3.Future<void> delete(dynamic key) => (super.noSuchMethod(
+    Invocation.method(#delete, [key]),
+    returnValue: _i3.Future<void>.value(),
+    returnValueForMissingStub: _i3.Future<void>.value(),
+  ) as _i3.Future<void>);
 
   @override
-  _i3.Future<void> deleteAt(int? index) =>
-      (super.noSuchMethod(
-            Invocation.method(#deleteAt, [index]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+  _i3.Future<void> deleteAt(int? index) => (super.noSuchMethod(
+    Invocation.method(#deleteAt, [index]),
+    returnValue: _i3.Future<void>.value(),
+    returnValueForMissingStub: _i3.Future<void>.value(),
+  ) as _i3.Future<void>);
 
   @override
-  _i3.Future<void> deleteAll(Iterable<dynamic>? keys) =>
-      (super.noSuchMethod(
-            Invocation.method(#deleteAll, [keys]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+  _i3.Future<void> deleteAll(Iterable<dynamic>? keys) => (super.noSuchMethod(
+    Invocation.method(#deleteAll, [keys]),
+    returnValue: _i3.Future<void>.value(),
+    returnValueForMissingStub: _i3.Future<void>.value(),
+  ) as _i3.Future<void>);
 
   @override
-  _i3.Future<void> compact() =>
-      (super.noSuchMethod(
-            Invocation.method(#compact, []),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+  _i3.Future<void> compact() => (super.noSuchMethod(
+    Invocation.method(#compact, []),
+    returnValue: _i3.Future<void>.value(),
+    returnValueForMissingStub: _i3.Future<void>.value(),
+  ) as _i3.Future<void>);
 
   @override
-  _i3.Future<int> clear() =>
-      (super.noSuchMethod(
-            Invocation.method(#clear, []),
-            returnValue: _i3.Future<int>.value(0),
-            returnValueForMissingStub: _i3.Future<int>.value(0),
-          )
-          as _i3.Future<int>);
+  _i3.Future<int> clear() => (super.noSuchMethod(
+    Invocation.method(#clear, []),
+    returnValue: _i3.Future<int>.value(0),
+    returnValueForMissingStub: _i3.Future<int>.value(0),
+  ) as _i3.Future<int>);
 
   @override
-  _i3.Future<void> close() =>
-      (super.noSuchMethod(
-            Invocation.method(#close, []),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+  _i3.Future<void> close() => (super.noSuchMethod(
+    Invocation.method(#close, []),
+    returnValue: _i3.Future<void>.value(),
+    returnValueForMissingStub: _i3.Future<void>.value(),
+  ) as _i3.Future<void>);
 
   @override
-  _i3.Future<void> deleteFromDisk() =>
-      (super.noSuchMethod(
-            Invocation.method(#deleteFromDisk, []),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+  _i3.Future<void> deleteFromDisk() => (super.noSuchMethod(
+    Invocation.method(#deleteFromDisk, []),
+    returnValue: _i3.Future<void>.value(),
+    returnValueForMissingStub: _i3.Future<void>.value(),
+  ) as _i3.Future<void>);
 
   @override
-  _i3.Future<void> flush() =>
-      (super.noSuchMethod(
-            Invocation.method(#flush, []),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
+  _i3.Future<void> flush() => (super.noSuchMethod(
+    Invocation.method(#flush, []),
+    returnValue: _i3.Future<void>.value(),
+    returnValueForMissingStub: _i3.Future<void>.value(),
+  ) as _i3.Future<void>);
 }

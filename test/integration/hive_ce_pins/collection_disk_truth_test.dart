@@ -95,9 +95,8 @@ void main() {
     scenario('opening a typed collection box is refused outright while asserts are on', () async {
       // Future.sync folds the guard's synchronous throw into the checked future.
       await check(Future.sync(() => Hive.openBox<List<Person>>('typed'))).throws<AssertionError>();
-      await check(
-        Future.sync(() => Hive.openLazyBox<List<Person>>('typed')),
-      ).throws<AssertionError>();
+      await check(Future.sync(() => Hive.openLazyBox<List<Person>>('typed')))
+          .throws<AssertionError>();
     });
 
     scenario('a dynamic-parameterised lazy box + cast at the read boundary works', () async {

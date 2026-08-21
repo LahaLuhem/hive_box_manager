@@ -8,7 +8,7 @@ import 'key_codec.dart';
 /// file.
 final class StringKeyCodec implements KeyCodec<String> {
   /// Const so façades can default to it without an allocation per box.
-  const StringKeyCodec();
+  const new();
 
   @override
   Object encode(String key) => key;

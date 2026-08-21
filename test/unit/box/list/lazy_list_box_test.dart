@@ -44,9 +44,8 @@ void main() {
     });
 
     scenario('a key type without an identity default and no codec fails the wiring assert', () {
-      check(
-        () => lazyListBoxAround<String, DateTime>('tags', () async => box),
-      ).throws<AssertionError>();
+      check(() => lazyListBoxAround<String, DateTime>('tags', () async => box))
+          .throws<AssertionError>();
     });
 
     scenario('the sync inspectors throw StateError before the first open, then work', () async {

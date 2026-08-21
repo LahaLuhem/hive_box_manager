@@ -20,7 +20,7 @@ final class LazyTypedBoxEvent<T extends Object, K extends Object> {
   final Option<T> value;
 
   /// Wraps one watch notification.
-  const LazyTypedBoxEvent({required this.key, required this.value});
+  const new({required this.key, required this.value});
 
   /// Whether this change removed [key] from the box; equivalently, whether [value] is `None`.
   bool get deleted => value.isNone();

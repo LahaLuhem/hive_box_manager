@@ -207,12 +207,10 @@ void main() {
       await engine.put(const RawKey(7), 7, 'v').run();
 
       check(await engine.update(const RawKey(7), 7, (value) => '$value!').run()).equals('v!');
-      check(
-        await engine.update(const RawKey(9), 9, (value) => value, ifAbsent: () => 'seed').run(),
-      ).equals('seed');
-      await check(
-        engine.update(const RawKey(8), 8, (value) => value).run(),
-      ).throws<ArgumentError>();
+      check(await engine.update(const RawKey(9), 9, (value) => value, ifAbsent: () => 'seed').run())
+          .equals('seed');
+      await check(engine.update(const RawKey(8), 8, (value) => value).run())
+          .throws<ArgumentError>();
     });
 
     scenario('deleteAll and clear remove batches with per-key and bulk dispatch', () async {

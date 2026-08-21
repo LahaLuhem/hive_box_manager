@@ -13,7 +13,7 @@ final class ScanQueryIndex<K1 extends Object, K2 extends Object>
   final DualKeyCodec<K1, K2> _codec;
 
   /// Wires the scan over [_rawKeys] (the live key set) decoded by [_codec].
-  ScanQueryIndex({required this._rawKeys, required this._codec});
+  new({required this._rawKeys, required this._codec});
 
   /// Scan maintains no side state; queries decode the live key set instead.
   @override

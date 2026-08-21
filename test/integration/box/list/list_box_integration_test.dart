@@ -116,9 +116,8 @@ void main() {
     scenario('update seeds, rewrites, and mirrors Map.update on absence', () async {
       final facade = await ListBox.open<String, int>('tags').run();
 
-      check(
-        await facade.update(1, (values) => values, ifAbsent: () => ['seed']).run(),
-      ).deepEquals(['seed']);
+      check(await facade.update(1, (values) => values, ifAbsent: () => ['seed']).run())
+          .deepEquals(['seed']);
       check(await facade.update(1, (values) => [...values, 'b']).run()).deepEquals(['seed', 'b']);
       await check(facade.update(9, (values) => values).run()).throws<ArgumentError>();
     });

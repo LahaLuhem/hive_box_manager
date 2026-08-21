@@ -53,9 +53,8 @@ void main() {
     });
 
     scenario('non-(int, int) parts without a codec fail the wiring assert', () {
-      check(
-        () => lazyDualKeyBoxAround<String, DateTime, int>('grid', () async => box),
-      ).throws<AssertionError>();
+      check(() => lazyDualKeyBoxAround<String, DateTime, int>('grid', () async => box))
+          .throws<AssertionError>();
     });
 
     scenario('the sync inspectors throw StateError before the first open, then work', () async {
@@ -116,9 +115,8 @@ void main() {
       await facade.put(1, 1, 'v').run();
 
       check(await facade.update(1, 1, (value) => '$value!').run()).equals('v!');
-      check(
-        await facade.update(9, 9, (value) => value, ifAbsent: () => 'seed').run(),
-      ).equals('seed');
+      check(await facade.update(9, 9, (value) => value, ifAbsent: () => 'seed').run())
+          .equals('seed');
       await check(facade.update(8, 8, (value) => value).run()).throws<ArgumentError>();
     });
 

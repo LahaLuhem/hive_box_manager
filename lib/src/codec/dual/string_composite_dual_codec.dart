@@ -14,7 +14,7 @@ import 'dual_key_codec.dart';
 /// matter and both parts fit 16 bits.
 final class StringCompositeDualCodec implements DualKeyCodec<int, int> {
   /// Const so façades can default to it without an allocation per box.
-  const StringCompositeDualCodec();
+  const new();
 
   /// Separates the two decimal parts inside the raw key.
   static const partSeparator = ':';

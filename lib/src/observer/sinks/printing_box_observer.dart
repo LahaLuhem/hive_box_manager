@@ -15,7 +15,7 @@ final class PrintingBoxObserver extends BoxObserver {
   final String name;
 
   /// Creates a sink logging under [name].
-  const PrintingBoxObserver({this.name = 'hive_box_manager'});
+  const new({this.name = 'hive_box_manager'});
 
   /// SEVERE on `package:logging`'s level scale, minus the dependency.
   static const _errorLevel = 900;

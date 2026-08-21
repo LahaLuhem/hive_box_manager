@@ -8,7 +8,7 @@ import '/features/core/widgets/demo_scaffold.dart';
 import 'single_value_view_model.dart';
 
 class SingleValueView extends StatelessWidget {
-  const SingleValueView({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) => MVVM.builder(

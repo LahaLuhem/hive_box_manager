@@ -51,7 +51,7 @@ class Person {
   final String name;
   final int age;
 
-  const Person(this.name, this.age);
+  const new(this.name, this.age);
 
   @override
   bool operator ==(Object other) => other is Person && other.name == name && other.age == age;
@@ -91,7 +91,7 @@ class ElementSpec<T extends Object> {
   final T Function(int index) at;
   final int Function(T element) weigh;
 
-  const ElementSpec({required this.at, required this.weigh});
+  const new({required this.at, required this.weigh});
 
   List<T> list(int listLen) => List<T>.generate(listLen, at, growable: false);
 

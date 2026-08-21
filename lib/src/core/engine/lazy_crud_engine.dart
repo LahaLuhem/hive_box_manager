@@ -32,12 +32,7 @@ final class LazyCrudEngine<T extends Object> {
   final BoxObserver? _observer;
 
   /// Wires the engine around [_openBox], which is invoked at most once (single-flight).
-  LazyCrudEngine({
-    required this._boxName,
-    required this._openBox,
-    required this._valueCodec,
-    this._observer,
-  });
+  new({required this._boxName, required this._openBox, required this._valueCodec, this._observer});
 
   Future<LazyBox<Object?>>? _boxFuture;
   LazyBox<Object?>? _box;

@@ -39,7 +39,7 @@ interface class KeyedBox<T extends Object, K extends Object> {
   final KeyCodec<K> _codec;
 
   /// Wiring is internal: acquisition goes through [open] (tests use the seam below).
-  KeyedBox._({required this._engine, required this._codec});
+  new _({required this._engine, required this._codec});
 
   /// Encodes [key] for the engine, which admits only encoded keys.
   // Inlined: sits on the read path, in front of an engine get that is itself inlined.

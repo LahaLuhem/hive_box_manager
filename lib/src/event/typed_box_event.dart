@@ -21,7 +21,7 @@ final class TypedBoxEvent<T extends Object, K extends Object> {
   final bool deleted;
 
   /// Wraps one watch notification.
-  const TypedBoxEvent({required this.key, required this.value, required this.deleted});
+  const new({required this.key, required this.value, required this.deleted});
 
   @override
   bool operator ==(Object other) =>

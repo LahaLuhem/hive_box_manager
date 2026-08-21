@@ -161,9 +161,8 @@ void main() {
         await box.putAll({1: 'a', 2: 'b'}).run();
       });
 
-      check(
-        events,
-      ).deepEquals(const [TypedBoxEvent<String, int>(key: 2, value: 'b', deleted: false)]);
+      check(events)
+          .deepEquals(const [TypedBoxEvent<String, int>(key: 2, value: 'b', deleted: false)]);
     });
   });
 

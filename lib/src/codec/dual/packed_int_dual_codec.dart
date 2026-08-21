@@ -19,7 +19,7 @@ import 'dual_key_codec.dart';
 /// semantics without leaning on web bitwise guarantees.
 final class PackedIntDualCodec implements DualKeyCodec<int, int> {
   /// Const so façades can default to it without an allocation per box.
-  const PackedIntDualCodec();
+  const new();
 
   /// Each part gets half of a u32 hive int key.
   static const bitsPerPart = 16;

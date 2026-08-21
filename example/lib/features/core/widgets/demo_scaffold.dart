@@ -11,7 +11,7 @@ class DemoScaffold extends StatelessWidget {
   final Widget body;
   final LogPanelObserver? observer;
 
-  const DemoScaffold({required this.title, required this.body, this.observer, super.key});
+  const new({required this.title, required this.body, this.observer, super.key});
 
   @override
   Widget build(BuildContext context) {

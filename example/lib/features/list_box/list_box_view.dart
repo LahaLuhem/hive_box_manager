@@ -9,7 +9,7 @@ import '/features/core/widgets/demo_scaffold.dart';
 import 'list_box_view_model.dart';
 
 class ListBoxView extends StatelessWidget {
-  const ListBoxView({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) => MVVM.builder(

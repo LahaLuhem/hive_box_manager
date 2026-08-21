@@ -5,7 +5,7 @@ import 'package:material_ui/material_ui.dart' show Theme;
 class DemoIntro extends StatelessWidget {
   final String text;
 
-  const DemoIntro({required this.text, super.key});
+  const new({required this.text, super.key});
 
   @override
   Widget build(BuildContext context) => Padding(

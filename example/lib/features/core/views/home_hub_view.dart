@@ -11,7 +11,7 @@ import '/features/single_value/single_value_view.dart';
 
 /// The demo hub: one tile per box family.
 class HomeHubView extends StatelessWidget {
-  const HomeHubView({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) => PlatformScaffold(
@@ -55,7 +55,7 @@ class _DemoTile extends StatelessWidget {
   final String subtitle;
   final WidgetBuilder builder;
 
-  const _DemoTile({
+  const new({
     required this.icon,
     required this.title,
     required this.subtitle,

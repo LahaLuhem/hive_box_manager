@@ -11,7 +11,7 @@ class Person {
   final String name;
   final int age;
 
-  const Person(this.name, this.age);
+  const new(this.name, this.age);
 
   @override
   bool operator ==(Object other) => other is Person && other.name == name && other.age == age;

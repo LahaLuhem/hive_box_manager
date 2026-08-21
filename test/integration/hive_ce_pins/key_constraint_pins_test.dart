@@ -108,9 +108,9 @@ void main() {
         'int 2^53 + 1 wraps to 1': (label: 'pow53plus1', storedKey: 1),
       },
       outline: (example) {
-        check(
-          verdicts['${example.label}StoredKeys'],
-        ).isA<List<dynamic>>().deepEquals([example.storedKey]);
+        check(verdicts['${example.label}StoredKeys'])
+            .isA<List<dynamic>>()
+            .deepEquals([example.storedKey]);
         check(verdicts['${example.label}GetOriginalIsNull']).equals(true);
         check(verdicts['${example.label}GetStoredValue']).equals('stored-value');
       },

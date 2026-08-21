@@ -399,7 +399,7 @@ Future<void> runScanRead(String impl, String keyKind, int n, String boxKind, Str
 // detail, not the file's subject.
 // ignore: prefer-match-file-name
 class _PackUnpackBenchmark extends BenchmarkBase {
-  _PackUnpackBenchmark(this.impl, this.keyKind) : super('micro-$impl-$keyKind');
+  new(this.impl, this.keyKind) : super('micro-$impl-$keyKind');
 
   final String impl;
   final String keyKind;

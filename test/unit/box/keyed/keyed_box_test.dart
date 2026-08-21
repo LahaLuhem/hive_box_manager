@@ -107,9 +107,8 @@ void main() {
     });
 
     scenario('putAllBy trips the duplicate assert before anything is written', () {
-      check(
-        () => facade.putAllBy(['ant', 'bee'], key: (value) => value.length),
-      ).throws<AssertionError>();
+      check(() => facade.putAllBy(['ant', 'bee'], key: (value) => value.length))
+          .throws<AssertionError>();
 
       check(box.store).isEmpty();
     });
@@ -137,9 +136,8 @@ void main() {
       await facade.clear().run();
 
       check(box.store).isEmpty();
-      check(
-        observer.calls,
-      ).deepEquals(['deleted:users:1', 'deleted:users:2', 'deleted:users:3', 'cleared:users']);
+      check(observer.calls)
+          .deepEquals(['deleted:users:1', 'deleted:users:2', 'deleted:users:3', 'cleared:users']);
     });
   });
 
@@ -169,9 +167,8 @@ void main() {
       await pumpEventQueue();
       await subscription.cancel();
 
-      check(
-        events,
-      ).deepEquals(const [TypedBoxEvent<String, int>(key: 2, value: 'b', deleted: false)]);
+      check(events)
+          .deepEquals(const [TypedBoxEvent<String, int>(key: 2, value: 'b', deleted: false)]);
     });
   });
 

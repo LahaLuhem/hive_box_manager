@@ -14,12 +14,12 @@ import '../../support/doubles/recording_box_observer.dart';
 // A test-helper double, not this file's subject (which is the suite itself).
 // ignore: prefer-match-file-name
 final class _SilentObserver extends BoxObserver {
-  const _SilentObserver();
+  const new();
 }
 
 /// Overrides a single event: the partial-override consumer shape.
 final class _WritesOnlyObserver extends BoxObserver {
-  _WritesOnlyObserver();
+  new();
 
   final writes = <String>[];
 

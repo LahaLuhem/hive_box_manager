@@ -13,7 +13,7 @@ Future<void> main() async {
 }
 
 class HbmExampleApp extends StatelessWidget {
-  const HbmExampleApp({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) => PlatformApp(

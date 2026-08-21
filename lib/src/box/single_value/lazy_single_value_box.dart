@@ -49,7 +49,7 @@ interface class LazySingleValueBox<T extends Object> {
   /// untouched at the eventual open. [observer] hears every event of this box, starting with
   /// that open; a failed open dispatches an operation error and rethrows inside the failing
   /// effect's task.
-  LazySingleValueBox(
+  new(
     String name, {
     HiveCipher? cipher,
     BoxObserver? observer,
@@ -74,7 +74,7 @@ interface class LazySingleValueBox<T extends Object> {
 
   /// Wiring is internal: consumers construct via the unnamed constructor (tests use the seam
   /// below).
-  LazySingleValueBox._({required this._engine});
+  new _({required this._engine});
 
   /// The box name, available before the box ever opens: the observer correlation handle.
   String get name => _engine.name;

@@ -11,7 +11,7 @@ import '/src/core/utils/no_op.dart';
 /// `boxName` leads every signature so a single observer instance can serve every box in an app.
 abstract base class BoxObserver {
   /// Const so subclasses can be const-constructed and shared freely.
-  const BoxObserver();
+  const new();
 
   /// The box finished opening (an eager open, or a lazy box's first-use auto-open).
   void onOpened(String boxName) => noop();
