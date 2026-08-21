@@ -82,10 +82,20 @@ dominating. Quote the two-term model, never the ratio at one list length.
 
 That fixed term is an SDK regression, not a wrapper change, and it is one of only two cross-version
 claims here that survive a controlled check. Compiling this lane's source with both 3.12.2 and
-3.13.1 and alternating the binaries on one host puts the façade at 345 ns per get at one element
-against 450, while `correct` goes 160 to 150 and `naive` stays inside its own sample spread. The
-jump sits on the façade's eager read path alone. 3.12.2 fitted the lane at ~197 ns + ~1.6 ns per
-element; the per-element term is not pinned down at `reps 5`, two passes putting it at 1.8 and 2.5.
+3.13.1 and alternating the binaries on one host, seven interleaved rounds at one element per key,
+puts the façade at 310 ns per get against 390 by min (345 against 430 by median) while `correct`
+goes 140 to 125 and `naive` stays inside its own spread. Measured as the wrapper's own cost over
+`correct`, that is **+170 ns growing to +265 ns, up 56%**. 3.12.2 fitted the lane at ~197 ns + ~1.6
+ns per element; the per-element term is not pinned down at `reps 5`, two passes putting it at 1.8
+and 2.5.
+
+The mechanism is not identified, and it is not in the obvious places. Isolated on the same two SDKs,
+the cast view's construction, iterating it through the extra `UnmodifiableListView` layer, the
+engine's type argument (`Engine<T>` against `Engine<List<T>>`), and fpdart's `Option` in the real
+box path all come out *faster* on 3.13.1 or flat, and `KeyedBox` reads do not move at all. So the
+cost is emergent in the whole compiled `getOr` chain rather than in any one component, and the next
+step is disassembly or VM profiling, not another black-box probe. Those five are ruled out; do not
+spend the afternoon re-testing them.
 
 Do not read the same story into the other lanes. The matrix lane's eager get looks 40% worse than
 its 2026-07-26 file, but the same alternating check puts the two SDKs within 2% of each other
