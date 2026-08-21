@@ -101,13 +101,20 @@ nothing newly falling out of the inliner. The compiled chain is the same shape a
 simply runs slower, which points at runtime type-check behaviour rather than generated code, and
 matches the key-shape lane moving only its subtype-paying lanes.
 
-Going further needs a non-product SDK build. `--print-flow-graph` and `--trace-inlining` are
+That non-product SDK build is done, and it named the mechanism for the key-shape lane while ruling
+itself out for this one. See
+[The record cliff, and what 3.13.1 added to it](#the-record-cliff-and-what-3131-added-to-it).
+
+Three traps for whoever picks that up again. `--print-flow-graph` and `--trace-inlining` are
 registered in the shipped `gen_snapshot`, which does reject genuinely unknown flags, but they are
-compiled out: they accept silently and emit nothing. One trap for whoever picks this up. 3.13.1's
+compiled out: they accept silently and emit nothing. 3.13.1's
 `--print-instructions-sizes-to` reports ~96 stubs that 3.12.2's omits, `FfiCallbackTrampoline` and
 `WriteBarrier` among them, so the stub section looks 30 KB bigger and the `SubtypeNTestCache`
 entries look brand new. They are not, and reading them as a finding is a mistake this file has
-already made once. Separate stubs from Dart functions before trusting that diff.
+already made once. Separate stubs from Dart functions before trusting that diff. And `--mode
+product` leaves the flags compiled out, so the build has to be `--mode release`; a self-built
+`dartaotruntime` is signed without `allow-jit` / `allow-unsigned-executable-memory` and SIGKILLs on
+loading any snapshot until you re-sign it with the entitlements the shipped one carries.
 
 Do not read the same story into the other lanes. The matrix lane's eager get looks 40% worse than
 its 2026-07-26 file, but the same alternating check puts the two SDKs within 2% of each other
@@ -145,6 +152,92 @@ So: the two groups above are solid, and most lanes land within a factor of two. 
 `get (lazy)` are not: they moved 2x and flipped sign respectively, and `put` tripped the 5% target
 in B while clearing it in A. Treat any single figure from this lane as an order of magnitude, and
 don't quote a lane to two significant figures without a third pass agreeing.
+
+## The record cliff, and what 3.13.1 added to it
+
+Both tags built from source at `--mode release` (`is_product = false`, so the flags and the VM's own
+symbols survive) and driven through `gen_snapshot` directly rather than `dart compile exe`. Two
+separate things came out, and only the second is a 3.13.1 story.
+
+### An `as` against a record type built from class type parameters costs ~340 ns
+
+The flow graph for `generic-record`, and for the cut-down
+[`record_tts_repro.dart`](record_tts_repro.dart), emits one `AssertAssignable` per op:
+
+```
+AssertAssignable(v31 T{_Record}, v25 T{_RecordType}, 'key', instantiator_type_args(v22), ...)
+```
+
+with `v25 = #(X0, X1)`, an uninstantiated record type. The same instruction against a plain type
+parameter costs 3.2 ns. Against `(X0, X1)` it costs 339. Two VM facts stack up:
+
+- `HierarchyInfo::CanUseRecordSubtypeRangeCheckFor` requires every field type to pass
+  `CanUseSubtypeRangeCheckFor`, which rejects type parameters outright, so no specialised type
+  testing stub is built. Upstream's framing is that type testing stubs are not composable.
+- `UpdateTypeTestCache` in `runtime/vm/runtime_entry.cc` then bails on record instances by name,
+  because "they don't have a valid key (type of a record depends on types of all its fields)". So
+  the subtype test cache stays empty forever.
+
+No stub and no cache means every op enters `DRT_TypeCheck` in C++. A symbolised profile puts
+`VMHandles::AllocateHandle` at 25% of self time, then `Object::HandleImpl`, `Class::IsSubtypeOf`,
+`Instance::RuntimeTypeIsSubtypeOf`, `RecordType::InstantiateFrom`, and GC. The tell is that cost
+scales per field: 339 ns for a pair, 431 for a triple, 520 for a quad, fitting 158 ns + 90 ns per
+field to within 0.3%.
+
+This is longstanding, with the same guard and the same cost in 3.12.2, and already filed as
+[dart-lang/sdk#61970](https://github.com/dart-lang/sdk/issues/61970) (open, P2, `area-vm`). It is
+what #14 priced, seen from the VM side.
+
+### 3.13.1's extra 5 to 6% is `Object::null()` becoming a TLS read
+
+The subtype logic itself did not change. `DEFINE_RUNTIME_ENTRY(TypeCheck)` is byte-identical between
+the tags, as are `Instance::GetType`, `RecordType::IsSubtypeOf` and `RecordType::InstantiateFrom`;
+`AbstractType::IsSubtypeOf` and `Class::IsSubtypeOf` differ only by an `IsTopTypeForSubtyping` to
+`IsTopType` rename. What changed is underneath. `e98e6a1198c` "[vm] Per isolate group roots accessed
+via TLS", which is not in 3.12.2 and first ships in 3.13.0, moved `Roots` from a static global to a
+`thread_local` pointer:
+
+```cpp
+// 3.12.2
+#define DECL(type, name) static type name() { return roots_.raw_.name##_; }
+// 3.13.1
+#define DECL(type, name) static type name() { return current_->raw_.name##_; }
+```
+
+`Object::null()` is `Roots::null_obj()`, and every VM handle is initialised to null. macOS has no
+fast TLS model, so each access becomes an indirect call through the TLV descriptor.
+`Type::Handle(Zone*)` goes from a four-instruction leaf to a thirteen-instruction non-leaf with a
+`blr` in the middle of it.
+
+The record path allocates handles by the dozen per check, so it pays that a lot and nothing else in
+the suite does. `_tlv_get_addr` goes from 2.5% to 5.8% of busy samples, which is +10 ns of the
++22 ns per op; the rest is the call-site overhead around it, charged to the callers. Every other
+symbol in the profile moves by under 1.7 points, in both directions. It lands on the per-field term
+rather than the fixed one: 158 + 90.3 ns/field on 3.12.2 against 162 + 97.2 on 3.13.1, so fixed +2%
+and per field +7.6%.
+
+Two things follow. It only bites where a hot loop makes a C++ runtime call per op, which in this
+suite is the record lanes and nothing else. And it is probably macOS-shaped: macOS resolves every
+`thread_local` through a descriptor call, where ELF's initial-exec model is a couple of
+instructions. Unverified on Linux, so do not quote that half.
+
+Filed upstream as [dart-lang/sdk#64103](https://github.com/dart-lang/sdk/issues/64103), with the
+measurement, the profile diff and the before/after disassembly.
+
+### It does not explain the list-box lane
+
+Same tooling, opposite answer. `ListBox`'s facade get spends 93% of its samples in Dart snapshot
+code and 6% in the VM, with `_tlv_get_addr` at 0.5%. It is not runtime-call bound, so a change that
+taxes runtime calls cannot be worth +26% there. That lane's mechanism is still open.
+
+### Running the repro
+
+```sh
+dart compile exe benchmark/record_tts_repro.dart -o /tmp/record_tts && /tmp/record_tts
+```
+
+It compiles on 3.12.2 as well as 3.13.1, which is the point of it, so alternate the two binaries
+within each round the way every other cross-version claim here was checked.
 
 ## The `impl` axis
 
@@ -219,9 +312,13 @@ check this whole argument rests on. Numbers alone would let the same mistake hap
 
 3.13.1 moved this lane, and it is the cleanest reading of that SDK's cost change anywhere in the
 suite: the three record-paying lanes went up 6 to 10% (`generic-record` 355 to 388 ns) while every
-free lane got 1 to 4% *faster*. The free lanes are the control, so this is the compiler, not the
-host, and a two-binary alternating pass on one host reproduces it. The shipped shape (`raw-direct`)
+free lane got 1 to 4% *faster*. The free lanes are the control, so this is the SDK, not the host,
+and a two-binary alternating pass on one host reproduces it. The shipped shape (`raw-direct`)
 is in the group that got faster.
+
+Both halves of that are now traced, and it is the runtime rather than the compiler:
+[The record cliff, and what 3.13.1 added to it](#the-record-cliff-and-what-3131-added-to-it).
+Upstream's eventual fix for #61970 is what would trip the `PREMISE` line.
 
 ## Running the matrix
 
