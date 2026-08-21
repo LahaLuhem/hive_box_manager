@@ -108,7 +108,7 @@ interface class LazyKeyedBox<T extends Object, K extends Object>._({
 
   /// Every stored value when run, each read from disk and materialised into one list:
   /// completion means every disk read already happened. Dispatches one read-all event per run.
-  Task<List<T>> get values => _engine.values();
+  Task<List<T>> get values => _engine.values(_codec.decode);
 
   /// Warms the box up compositionally when run; any effect performs the same open implicitly.
   Task<Unit> ensureInitialised() => _engine.ensureInitialised();

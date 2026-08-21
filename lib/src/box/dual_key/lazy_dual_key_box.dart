@@ -107,7 +107,7 @@ interface class LazyDualKeyBox<T extends Object, K1 extends Object, K2 extends O
 
   /// Every stored value when run, each read from disk and materialised into one list.
   /// Dispatches one read-all event per run.
-  Task<List<T>> get values => _engine.values();
+  Task<List<T>> get values => _engine.values(_dualCodec.decode);
 
   /// Warms the box up compositionally when run; any effect performs the same open implicitly.
   Task<Unit> ensureInitialised() => _engine.ensureInitialised();
@@ -265,10 +265,9 @@ interface class LazyDualKeyBox<T extends Object, K1 extends Object, K2 extends O
 
     // Materialised before the awaits: the strategy scans the live key view, which would mutate under
     // concurrent writes mid-fetch.
-    final rawKeys = matchingRawKeys().toList(growable: false);
-    final maybeValues = await rawKeys
-        .map((rawKey) => _engine.get(RawKey(rawKey), _dualCodec.decode(rawKey)).run())
-        .wait;
+    final rawKeys = matchingRawKeys().map(RawKey.new).toList(growable: false);
+    // Delegated so one bad record names its own key.
+    final maybeValues = await _engine.getEach(rawKeys, _dualCodec.decode).run();
 
     // Keys that vanish mid-scan read as None and drop out (races are the consumer's timeline).
     return maybeValues

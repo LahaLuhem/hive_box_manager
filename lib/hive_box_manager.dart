@@ -21,6 +21,7 @@ export 'src/codec/dual/string_composite_dual_codec.dart' show StringCompositeDua
 export 'src/codec/key/int_key_codec.dart' show IntKeyCodec;
 export 'src/codec/key/key_codec.dart' show KeyCodec;
 export 'src/codec/key/string_key_codec.dart' show StringKeyCodec;
+export 'src/core/undecodable_value_exception.dart' show UndecodableValueException;
 export 'src/event/lazy_typed_box_event.dart' show LazyTypedBoxEvent;
 export 'src/event/typed_box_event.dart' show TypedBoxEvent;
 export 'src/observer/box_observer.dart' show BoxObserver;
