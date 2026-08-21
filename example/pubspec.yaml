@@ -7,7 +7,7 @@ environment:
   sdk: ^3.13.0
 
 dependencies:
-  cupertino_ui: ^0.0.1
+  cupertino_ui: ^1.0.0
   flutter:
     sdk: flutter
   fpdart: ^1.2.0
@@ -16,8 +16,8 @@ dependencies:
   hive_ce: ^2.19.3
   hive_ce_flutter: ^2.3.4
   listenable_collections: ^3.0.0
-  material_ui: ^0.0.1
-  platform_adaptive_widgets: ^2.1.0
+  material_ui: ^1.0.1
+  platform_adaptive_widgets: ^2.1.2
   platform_icons: ^0.1.1
   pmvvm: ^4.0.1
 
