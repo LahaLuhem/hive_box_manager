@@ -47,6 +47,9 @@ const boxName = 'ibench';
 /// A custom element type, so one axis of this lane exercises the reification trap that only fires
 /// for adapter-registered types. Mirrors the pin suite's fixture (hand-written, no codegen).
 @immutable
+// A harness fixture, not this file's subject: the file is a worker entrypoint (`list_box_bench`,
+// per list_box_driver.sh).
+// ignore: prefer-match-file-name
 class Person {
   final String name;
   final int age;
@@ -164,8 +167,8 @@ Future<void> main(List<String> args) async {
     ('add', _) => await runAdd(stringSpec, impl, elem, keys, listLen),
     ('remove', 'obj') => await runRemove(personSpec, impl, elem, keys, listLen),
     ('remove', _) => await runRemove(stringSpec, impl, elem, keys, listLen),
-    ('open', 'obj') => await runOpen(personSpec, impl, elem, keys, workDir),
-    ('open', _) => await runOpen(stringSpec, impl, elem, keys, workDir),
+    ('open', 'obj') => await runOpen(personSpec, impl, elem, workDir),
+    ('open', _) => await runOpen(stringSpec, impl, elem, workDir),
     _ => throw ArgumentError('unknown mode: $mode'),
   };
 
@@ -242,13 +245,13 @@ Future<LaneResult> runPut<T extends Object>(
     if (batched) {
       // The defensive copy is the whole difference between the two baselines on the write path.
       await box.putAll(
-        impl == 'correct'
-            ? batch.map((key, list) => MapEntry(key, List<T>.from(list, growable: false)))
-            : batch,
+        impl != 'correct'
+            ? batch
+            : batch.map((key, list) => MapEntry(key, List<T>.of(list, growable: false))),
       );
     } else {
       for (var key = 0; key < keys; key++) {
-        await box.put(key, impl == 'correct' ? List<T>.from(values, growable: false) : values);
+        await box.put(key, impl == 'correct' ? List<T>.of(values, growable: false) : values);
       }
     }
     stopwatch.stop();
@@ -444,10 +447,11 @@ Future<LaneResult> runRemove<T extends Object>(
 /// Open cost and the RSS the eager value cache costs, per impl. The façade wraps the same hive box, so
 /// this lane exists to confirm it adds nothing rather than to find something.
 Future<LaneResult> runOpen<T extends Object>(
-  ElementSpec<T> spec,
+  // Unread: the spec is here only to infer `T` for `ListBox.open<T, int>` below. The box this lane
+  // opens is seeded out of process by the prep lane, so the key count is not this lane's business.
+  ElementSpec<T> _,
   String impl,
   String elem,
-  int keys,
   String workDir,
 ) async {
   initHive(workDir, elem);
