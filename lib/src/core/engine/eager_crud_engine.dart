@@ -23,7 +23,7 @@ final class EagerCrudEngine<T extends Object> {
   final BoxObserver? _observer;
 
   /// Wires the engine around an open [_box].
-  EagerCrudEngine({required this._box, required this._valueCodec, this._observer});
+  new({required this._box, required this._valueCodec, this._observer});
 
   /// The underlying box name: the observer correlation handle.
   String get name => _box.name;

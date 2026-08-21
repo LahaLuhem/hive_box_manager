@@ -29,9 +29,8 @@ void main() {
       const codec = PackedIntDualCodec();
       for (final primary in boundaryParts) {
         for (final secondary in boundaryParts) {
-          check(
-            codec.encode(primary, secondary),
-          ).equals((primary << PackedIntDualCodec.bitsPerPart) | secondary);
+          check(codec.encode(primary, secondary))
+              .equals((primary << PackedIntDualCodec.bitsPerPart) | secondary);
         }
       }
     });

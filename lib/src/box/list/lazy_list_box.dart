@@ -55,7 +55,7 @@ interface class LazyListBox<T extends Object, K extends Object> {
   /// fails an assert at wiring time). [cipher], [keyComparator], [compactionStrategy], and [crashRecovery]
   /// pass through to hive_ce untouched at the eventual open. [observer] hears every event of this box,
   /// starting with that open.
-  LazyListBox(
+  new(
     String name, {
     KeyCodec<K>? codec,
     HiveCipher? cipher,
@@ -81,7 +81,7 @@ interface class LazyListBox<T extends Object, K extends Object> {
        );
 
   /// Wiring is internal: consumers construct via the unnamed constructor (tests use the seam below).
-  LazyListBox._({required this._engine, required this._codec});
+  new _({required this._engine, required this._codec});
 
   final KeyCodec<K> _codec;
 

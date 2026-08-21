@@ -53,7 +53,7 @@ interface class LazyDualKeyBox<T extends Object, K1 extends Object, K2 extends O
   /// assert at wiring time. [cipher], [keyComparator], [compactionStrategy], and [crashRecovery] pass
   /// through to hive_ce untouched at the eventual open. [observer] hears every event of this box,
   /// starting with that open.
-  factory LazyDualKeyBox(
+  factory(
     String name, {
     DualKeyCodec<K1, K2>? codec,
     HiveCipher? cipher,
@@ -83,7 +83,7 @@ interface class LazyDualKeyBox<T extends Object, K1 extends Object, K2 extends O
   }
 
   /// Wiring is internal: consumers construct via the unnamed constructor (tests use the seam below).
-  LazyDualKeyBox._({required this._engine, required this._dualCodec});
+  new _({required this._engine, required this._dualCodec});
 
   /// Encodes a two-part key for the engine, which admits only encoded keys. Two scalar arguments,
   /// never a `(K1, K2)` record; see [DualKeyBox] and [RawKey] for what that record used to cost.

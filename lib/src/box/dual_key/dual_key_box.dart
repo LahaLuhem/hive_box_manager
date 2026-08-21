@@ -44,7 +44,7 @@ interface class DualKeyBox<T extends Object, K1 extends Object, K2 extends Objec
   final DualKeyCodec<K1, K2> _dualCodec;
 
   /// Wiring is internal: acquisition goes through [open] (tests use the seam below).
-  DualKeyBox._({required this._engine, required this._dualCodec});
+  new _({required this._engine, required this._dualCodec});
 
   /// Encodes a two-part key for the engine, which admits only encoded keys.
   ///

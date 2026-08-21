@@ -12,4 +12,4 @@ library;
 /// Encoded is not storable: `ensureStorableRawKey` still gates the write paths.
 ///
 /// Never exported: consumers deal in semantic keys and [KeyCodec]s.
-extension type const RawKey(Object value) {}
+extension type const RawKey(Object value);

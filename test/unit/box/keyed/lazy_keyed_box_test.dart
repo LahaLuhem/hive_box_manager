@@ -59,9 +59,8 @@ void main() {
     });
 
     scenario('a key type without an identity default and no codec fails the wiring assert', () {
-      check(
-        () => lazyKeyedBoxAround<String, DateTime>('logs', () async => box),
-      ).throws<AssertionError>();
+      check(() => lazyKeyedBoxAround<String, DateTime>('logs', () async => box))
+          .throws<AssertionError>();
     });
   });
 
@@ -172,9 +171,8 @@ void main() {
     });
 
     scenario('putAllBy trips the duplicate assert before the box even opens', () {
-      check(
-        () => facade.putAllBy(['ant', 'bee'], key: (value) => value.length),
-      ).throws<AssertionError>();
+      check(() => facade.putAllBy(['ant', 'bee'], key: (value) => value.length))
+          .throws<AssertionError>();
 
       check(openCalls).equals(0);
       check(box.store).isEmpty();
@@ -203,9 +201,8 @@ void main() {
       await facade.clear().run();
 
       check(box.store).isEmpty();
-      check(
-        observer.calls,
-      ).deepEquals(['deleted:logs:1', 'deleted:logs:2', 'deleted:logs:3', 'cleared:logs']);
+      check(observer.calls)
+          .deepEquals(['deleted:logs:1', 'deleted:logs:2', 'deleted:logs:3', 'cleared:logs']);
     });
   });
 

@@ -55,7 +55,7 @@ interface class ListBox<T extends Object, K extends Object> {
   final KeyCodec<K> _codec;
 
   /// Wiring is internal: acquisition goes through [open] (tests use the seam below).
-  ListBox._({required this._engine, required this._codec});
+  new _({required this._engine, required this._codec});
 
   /// Encodes [key] for the engine, which admits only encoded keys.
   @pragma('vm:prefer-inline')

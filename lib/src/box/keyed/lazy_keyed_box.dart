@@ -56,7 +56,7 @@ interface class LazyKeyedBox<T extends Object, K extends Object> {
   /// untouched at the eventual open. [observer] hears every event of this box, starting with
   /// that open; a failed open dispatches an operation error and rethrows inside the failing
   /// effect's task.
-  LazyKeyedBox(
+  new(
     String name, {
     KeyCodec<K>? codec,
     HiveCipher? cipher,
@@ -85,7 +85,7 @@ interface class LazyKeyedBox<T extends Object, K extends Object> {
 
   /// Wiring is internal: consumers construct via the unnamed constructor (tests use the seam
   /// below).
-  LazyKeyedBox._({required this._engine, required this._codec});
+  new _({required this._engine, required this._codec});
 
   final KeyCodec<K> _codec;
 

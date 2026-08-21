@@ -9,7 +9,7 @@ import '../observers/log_panel_observer.dart';
 class LogPanel extends StatelessWidget {
   final LogPanelObserver observer;
 
-  const LogPanel({required this.observer, super.key});
+  const new({required this.observer, super.key});
 
   static const _panelHeight = 180.0;
 

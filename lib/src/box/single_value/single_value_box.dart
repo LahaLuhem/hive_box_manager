@@ -41,7 +41,7 @@ interface class SingleValueBox<T extends Object> {
   final EagerCrudEngine<T> _engine;
 
   /// Wiring is internal: acquisition goes through [open] (tests use the seam below).
-  SingleValueBox._({required this._engine});
+  new _({required this._engine});
 
   /// The box name: the correlation handle observers receive with every event.
   String get name => _engine.name;

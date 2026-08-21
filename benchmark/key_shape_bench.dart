@@ -43,7 +43,7 @@ final class Payload {
   final int id;
 
   /// Wraps [id].
-  const Payload(this.id);
+  const new(this.id);
 }
 
 /// Stand-in for fpdart's `Some`: one allocation per hit, identical in every lane.
@@ -52,7 +52,7 @@ final class Hit {
   final Payload? value;
 
   /// Wraps [value].
-  const Hit(this.value);
+  const new(this.value);
 }
 
 /// Mirrors the package's real `KeyCodec`: encodes a semantic key into hive's raw domain.
@@ -76,7 +76,7 @@ abstract interface class DualKeyCodec<K1 extends Object, K2 extends Object> {
 /// Identity codec for `int` keys.
 final class IntKeyCodec implements KeyCodec<int> {
   /// Const, matching the shape the shipped codecs present at the call site.
-  const IntKeyCodec();
+  const new();
 
   @override
   Object encode(int key) => key;
@@ -88,7 +88,7 @@ final class IntKeyCodec implements KeyCodec<int> {
 /// Identity codec for `String` keys.
 final class StringKeyCodec implements KeyCodec<String> {
   /// Const, as above.
-  const StringKeyCodec();
+  const new();
 
   @override
   Object encode(String key) => key;
@@ -100,7 +100,7 @@ final class StringKeyCodec implements KeyCodec<String> {
 /// Replicates the shipped `PackedIntDualCodec`: two 16-bit parts packed into one int.
 final class PackedIntDualCodec implements DualKeyCodec<int, int> {
   /// Const, as above.
-  const PackedIntDualCodec();
+  const new();
 
   @override
   Object encode(int primary, int secondary) => (primary << 16) | secondary;
@@ -119,7 +119,7 @@ final class GenericDualAdapter<K1 extends Object, K2 extends Object> implements 
   final DualKeyCodec<K1, K2> _dualCodec;
 
   /// Wraps [_dualCodec].
-  const GenericDualAdapter(this._dualCodec);
+  const new(this._dualCodec);
 
   @override
   Object encode((K1, K2) key) => _dualCodec.encode(key.$1, key.$2);
@@ -134,7 +134,7 @@ final class ConcreteDualAdapter implements KeyCodec<(int, int)> {
   final DualKeyCodec<int, int> _dualCodec;
 
   /// Wraps [_dualCodec].
-  const ConcreteDualAdapter(this._dualCodec);
+  const new(this._dualCodec);
 
   @override
   Object encode((int, int) key) => _dualCodec.encode(key.$1, key.$2);
@@ -149,7 +149,7 @@ final class WidenedDualAdapter<K1 extends Object, K2 extends Object> implements 
   final DualKeyCodec<K1, K2> _dualCodec;
 
   /// Wraps [_dualCodec].
-  const WidenedDualAdapter(this._dualCodec);
+  const new(this._dualCodec);
 
   @override
   Object encode(Object key) {
@@ -169,7 +169,7 @@ final class ObjectRecordDualAdapter<K1 extends Object, K2 extends Object>
   final DualKeyCodec<K1, K2> _dualCodec;
 
   /// Wraps [_dualCodec].
-  const ObjectRecordDualAdapter(this._dualCodec);
+  const new(this._dualCodec);
 
   @override
   Object encode((Object, Object) key) => _dualCodec.encode(key.$1 as K1, key.$2 as K2);
@@ -184,7 +184,7 @@ final class SemanticKeyEngine<T extends Object, K extends Object> {
   final KeyCodec<K> _keyCodec;
 
   /// Wires the engine over [_store] with [_keyCodec].
-  SemanticKeyEngine(this._store, this._keyCodec);
+  new(this._store, this._keyCodec);
 
   /// Reads [key], encoding through the codec first.
   // Inlined to match the shipped engine's pragma.
@@ -201,7 +201,7 @@ final class RawKeyEngine<T extends Object> {
   final Map<Object, Object?> _store;
 
   /// Wires the engine over [_store].
-  RawKeyEngine(this._store);
+  new(this._store);
 
   /// Reads [rawKey] directly.
   @pragma('vm:prefer-inline')

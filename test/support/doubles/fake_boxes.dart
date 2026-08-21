@@ -74,7 +74,7 @@ mixin _FakeBoxCore on Fake {
 
 /// In-memory stand-in for an open eager [Box].
 final class FakeEagerBox extends Fake with _FakeBoxCore implements Box<Object?> {
-  FakeEagerBox({this.name = 'fake_eager'});
+  new({this.name = 'fake_eager'});
 
   @override
   final String name;
@@ -155,7 +155,7 @@ final class FakeEagerBox extends Fake with _FakeBoxCore implements Box<Object?> 
 
 /// In-memory stand-in for an open [LazyBox].
 final class FakeLazyBox extends Fake with _FakeBoxCore implements LazyBox<Object?> {
-  FakeLazyBox({this.name = 'fake_lazy'});
+  new({this.name = 'fake_lazy'});
 
   @override
   final String name;

@@ -6,7 +6,7 @@ import 'key_codec.dart';
 /// call site where release-mode hive_ce would silently wrap the key and corrupt the write.
 final class IntKeyCodec implements KeyCodec<int> {
   /// Const so façades can default to it without an allocation per box.
-  const IntKeyCodec();
+  const new();
 
   @override
   Object encode(int key) => key;

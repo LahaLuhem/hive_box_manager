@@ -135,9 +135,8 @@ void main() {
       await facade.put(1, 1, 'v').run();
 
       check(await facade.update(1, 1, (value) => '$value!').run()).equals('v!');
-      check(
-        await facade.update(9, 9, (value) => value, ifAbsent: () => 'seed').run(),
-      ).equals('seed');
+      check(await facade.update(9, 9, (value) => value, ifAbsent: () => 'seed').run())
+          .equals('seed');
       await check(facade.update(8, 8, (value) => value).run()).throws<ArgumentError>();
     });
 
