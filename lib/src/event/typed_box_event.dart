@@ -10,19 +10,17 @@ import 'package:meta/meta.dart';
 /// cache (pinned against 2.19.3), so consumers never null-check and the 0.0.x delete-event crash is
 /// unrepresentable. The lazy axis cannot make the same promise; its stream carries [LazyTypedBoxEvent] instead.
 @immutable
-final class TypedBoxEvent<T extends Object, K extends Object> {
+// ignore: public_member_api_docs -- a primary constructor has nowhere to hang a doc comment.
+final class const TypedBoxEvent<T extends Object, K extends Object>({
   /// The consumer-facing key, decoded by the box's key codec.
-  final K key;
+  required final K key,
 
   /// The written value, or the just-deleted value when [deleted] is true.
-  final T value;
+  required final T value,
 
   /// Whether this change removed [key] from the box.
-  final bool deleted;
-
-  /// Wraps one watch notification.
-  const new({required this.key, required this.value, required this.deleted});
-
+  required final bool deleted,
+}) {
   @override
   bool operator ==(Object other) =>
       other is TypedBoxEvent<T, K> &&

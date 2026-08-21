@@ -10,13 +10,11 @@ import '../box_observer.dart';
 /// Pure-Dart-safe (`debugPrint` is Flutter-only), `avoid_print`-compliant, and dependency-free.
 /// Errors log at level 900 (SEVERE on `package:logging`'s scale, without the dependency).
 /// Everything else logs at the default level.
-final class PrintingBoxObserver extends BoxObserver {
+// ignore: public_member_api_docs -- a primary constructor has nowhere to hang a doc comment.
+final class const PrintingBoxObserver({
   /// The DevTools-filterable logger name.
-  final String name;
-
-  /// Creates a sink logging under [name].
-  const new({this.name = 'hive_box_manager'});
-
+  final String name = 'hive_box_manager',
+}) extends BoxObserver {
   /// SEVERE on `package:logging`'s level scale, minus the dependency.
   static const _errorLevel = 900;
 

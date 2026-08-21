@@ -17,14 +17,12 @@ import '../value_codec/value_codec.dart';
 /// `close()` / `deleteFromDisk()` are terminal, after which operations surface the engine's own
 /// already-closed error (tier 3: no wrapper pre-check). A codec emitting a non-storable raw key
 /// throws at the call site, before any [Task] is built.
-final class EagerCrudEngine<T extends Object> {
-  final Box<Object?> _box;
-  final ValueCodec<T> _valueCodec;
-  final BoxObserver? _observer;
-
-  /// Wires the engine around an open [_box].
-  new({required this._box, required this._valueCodec, this._observer});
-
+// ignore: public_member_api_docs -- a primary constructor has nowhere to hang a doc comment.
+final class EagerCrudEngine<T extends Object>({
+  required final Box<Object?> _box,
+  required final ValueCodec<T> _valueCodec,
+  final BoxObserver? _observer,
+}) {
   /// The underlying box name: the observer correlation handle.
   String get name => _box.name;
 

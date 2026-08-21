@@ -12,16 +12,14 @@ import 'package:meta/meta.dart';
 /// is derived from that instead of being stored twice. This is the honest lazy counterpart of
 /// [TypedBoxEvent]'s non-null guarantee, mirroring how reads split across the axes (`Option` vs `TaskOption`).
 @immutable
-final class LazyTypedBoxEvent<T extends Object, K extends Object> {
+// ignore: public_member_api_docs -- a primary constructor has nowhere to hang a doc comment.
+final class const LazyTypedBoxEvent<T extends Object, K extends Object>({
   /// The consumer-facing key, decoded by the box's key codec.
-  final K key;
+  required final K key,
 
   /// The written value, or `None` on a delete, where the engine has no value to hand over.
-  final Option<T> value;
-
-  /// Wraps one watch notification.
-  const new({required this.key, required this.value});
-
+  required final Option<T> value,
+}) {
   /// Whether this change removed [key] from the box; equivalently, whether [value] is `None`.
   bool get deleted => value.isNone();
 

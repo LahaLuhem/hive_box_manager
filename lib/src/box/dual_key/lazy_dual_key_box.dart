@@ -41,10 +41,10 @@ import '/src/query/scan_query_index.dart';
 /// close no-op.
 ///
 /// `interface class`: implement it for test fakes; extending is reserved to this package.
-interface class LazyDualKeyBox<T extends Object, K1 extends Object, K2 extends Object> {
-  final LazyCrudEngine<T> _engine;
-  final DualKeyCodec<K1, K2> _dualCodec;
-
+interface class LazyDualKeyBox<T extends Object, K1 extends Object, K2 extends Object>._({
+  required final LazyCrudEngine<T> _engine,
+  required final DualKeyCodec<K1, K2> _dualCodec,
+}) {
   /// Wires a box that opens single-flight on first use; construction itself touches nothing.
   ///
   /// One-time engine setup stays hive_ce's, exactly as it documents: `Hive.init(path)` (or `Hive.initFlutter()`)
@@ -81,9 +81,6 @@ interface class LazyDualKeyBox<T extends Object, K1 extends Object, K2 extends O
       dualCodec: dualCodec,
     );
   }
-
-  /// Wiring is internal: consumers construct via the unnamed constructor (tests use the seam below).
-  new _({required this._engine, required this._dualCodec});
 
   /// Encodes a two-part key for the engine, which admits only encoded keys. Two scalar arguments,
   /// never a `(K1, K2)` record; see [DualKeyBox] and [RawKey] for what that record used to cost.

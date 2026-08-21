@@ -25,15 +25,13 @@ import '../value_codec/value_codec.dart';
 /// engine was never engaged. `deleteFromDisk()` before first use still opens then deletes: it must
 /// reach storage. A codec emitting a non-storable raw key throws at the call site, before any
 /// [Task] is built.
-final class LazyCrudEngine<T extends Object> {
-  final String _boxName;
-  final Future<LazyBox<Object?>> Function() _openBox;
-  final ValueCodec<T> _valueCodec;
-  final BoxObserver? _observer;
-
-  /// Wires the engine around [_openBox], which is invoked at most once (single-flight).
-  new({required this._boxName, required this._openBox, required this._valueCodec, this._observer});
-
+// ignore: public_member_api_docs -- a primary constructor has nowhere to hang a doc comment.
+final class LazyCrudEngine<T extends Object>({
+  required final String _boxName,
+  required final Future<LazyBox<Object?>> Function() _openBox,
+  required final ValueCodec<T> _valueCodec,
+  final BoxObserver? _observer,
+}) {
   Future<LazyBox<Object?>>? _boxFuture;
   LazyBox<Object?>? _box;
   var _wasClosedBeforeFirstUse = false;
