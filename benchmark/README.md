@@ -89,13 +89,25 @@ goes 140 to 125 and `naive` stays inside its own spread. Measured as the wrapper
 ns per element; the per-element term is not pinned down at `reps 5`, two passes putting it at 1.8
 and 2.5.
 
-The mechanism is not identified, and it is not in the obvious places. Isolated on the same two SDKs,
-the cast view's construction, iterating it through the extra `UnmodifiableListView` layer, the
+The mechanism is not identified, and it is in none of the obvious places. Isolated on the same two
+SDKs, the cast view's construction, walking it through the extra `UnmodifiableListView` layer, the
 engine's type argument (`Engine<T>` against `Engine<List<T>>`), and fpdart's `Option` in the real
-box path all come out *faster* on 3.13.1 or flat, and `KeyedBox` reads do not move at all. So the
-cost is emergent in the whole compiled `getOr` chain rather than in any one component, and the next
-step is disassembly or VM profiling, not another black-box probe. Those five are ruled out; do not
-spend the afternoon re-testing them.
+box path all come out flat or *faster* on 3.13.1, and `KeyedBox` reads do not move at all.
+
+Codegen does not explain it either. Per-function instruction sizes from both compilers leave
+`CollectionCastValueCodec.fromStored` byte-identical at 172, the bench's own `runGet` 24 bytes
+*smaller* on 3.13.1, the emitted function count one lower, and non-stub code +0.33% overall, with
+nothing newly falling out of the inliner. The compiled chain is the same shape and the same size and
+simply runs slower, which points at runtime type-check behaviour rather than generated code, and
+matches the key-shape lane moving only its subtype-paying lanes.
+
+Going further needs a non-product SDK build. `--print-flow-graph` and `--trace-inlining` are
+registered in the shipped `gen_snapshot`, which does reject genuinely unknown flags, but they are
+compiled out: they accept silently and emit nothing. One trap for whoever picks this up. 3.13.1's
+`--print-instructions-sizes-to` reports ~96 stubs that 3.12.2's omits, `FfiCallbackTrampoline` and
+`WriteBarrier` among them, so the stub section looks 30 KB bigger and the `SubtypeNTestCache`
+entries look brand new. They are not, and reading them as a finding is a mistake this file has
+already made once. Separate stubs from Dart functions before trusting that diff.
 
 Do not read the same story into the other lanes. The matrix lane's eager get looks 40% worse than
 its 2026-07-26 file, but the same alternating check puts the two SDKs within 2% of each other
