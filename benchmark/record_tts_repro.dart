@@ -18,9 +18,9 @@ import 'dart:io';
 // since comparing the two SDKs is the point of it.
 // ignore_for_file: unnecessary_type_name_in_constructor
 
-// This file is a worker entrypoint, and the lanes are the point rather than any one class
+/// One-argument codec interface. Three copies, so each lane has one implementation behind its call.
+// The lanes are the point here, not any one class
 // ignore: prefer-match-file-name
-/// One-argument codec interface. Three copies exist so each lane's call site stays monomorphic.
 abstract interface class Codec1<K extends Object> {
   /// Encodes [key].
   Object encode(K key);
