@@ -64,6 +64,11 @@ before the seeding was equalised and the RSS window moved after the seed.
 > `python/overhead.py` cross-checks median against min and refuses to stand behind a run where they
 > diverge. Read its verdict before quoting any number from this lane.
 
+> **On a phone, warm up first.** The first timed pass absorbs the CPU frequency ramp, which is enough
+> to make a plain global load measure *slower* than a thread-local one. Burn a full pass before
+> timing anything. Pinning with `taskset` helps until the governor offlines the core you picked, and
+> then it just fails, so treat it as a bonus rather than the plan.
+
 ### Percentages lie on cheap operations
 
 Some ops here are so cheap that one extra call frame is a double-digit percentage. A same-slot
@@ -217,9 +222,23 @@ rather than the fixed one: 158 + 90.3 ns/field on 3.12.2 against 162 + 97.2 on 3
 and per field +7.6%.
 
 Two things follow. It only bites where a hot loop makes a C++ runtime call per op, which in this
-suite is the record lanes and nothing else. And it is probably macOS-shaped: macOS resolves every
-`thread_local` through a descriptor call, where ELF's initial-exec model is a couple of
-instructions. Unverified on Linux, so do not quote that half.
+suite is the record lanes and nothing else. And it is not macOS-only, which is what this section
+guessed first and guessed wrong. Cost of one read, measured against a plain global load on the same
+machine:
+
+| platform | plain global | `thread_local` | penalty |
+|---|---|---|---|
+| macOS arm64 (M3 Pro) | 0.75 ns | 1.31 ns | +0.55 |
+| iOS 26.2 arm64 (simulator) | 0.75 ns | 1.33 ns | +0.58 |
+| Android arm64 phone, executable | 0.71 ns | 0.78 ns | +0.07 |
+| Android arm64 phone, shared library | 1.06 ns | 1.77 ns | +0.71 |
+
+Android measured on a Sony XQ-BQ52 (API 33) over adb, warmed up first because the first timed pass
+otherwise absorbs the frequency ramp. Darwin resolves every `thread_local` through a descriptor
+call and has no cheaper model to pick. ELF does, but only a standalone executable gets it by
+default: a shared library, which is the shape an engine embeds the runtime as, pays a call and is
+the worst of the four at +0.71. `-ftls-model=initial-exec` takes that back to exactly zero and does
+nothing on Darwin.
 
 Filed upstream as [dart-lang/sdk#64103](https://github.com/dart-lang/sdk/issues/64103), with the
 measurement, the profile diff and the before/after disassembly.
