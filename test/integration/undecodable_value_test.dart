@@ -126,6 +126,41 @@ void main() {
     });
   });
 
+  feature('an eager read-all names the key that failed to decode', () {
+    /// Written as `String` and reopened as `int`, so hive opens fine and the identity codec's cast
+    /// is what refuses. Anything the *adapter* rejects takes the whole open down first instead.
+    Future<void> seedMistyped() async {
+      final wrote = await KeyedBox.open<String, int>('mixed').run();
+      await wrote.put(1, 'one').run();
+      await wrote.put(2, 'two').run();
+      await Hive.close();
+    }
+
+    scenario('the failure names its key instead of surfacing a bare cast error', () async {
+      await seedMistyped();
+      final box = await KeyedBox.open<int, int>('mixed').run();
+
+      final failure = await captureUndecodable(() async => box.values.toList());
+
+      check(failure.boxName).equals('mixed');
+      check(failure.key).equals(1);
+      check(failure.cause).isA<TypeError>();
+    });
+
+    scenario('a box whose values all decode reads through untouched', () async {
+      final wrote = await KeyedBox.open<String, int>('fine').run();
+      await wrote.put(1, 'one').run();
+      await wrote.put(2, 'two').run();
+      await Hive.close();
+
+      final box = await KeyedBox.open<String, int>('fine').run();
+
+      check(box.values.toList()).deepEquals(['one', 'two']);
+      // Twice on purpose: the view tracks its position per iteration.
+      check(box.values.toList()).deepEquals(['one', 'two']);
+    });
+  });
+
   feature('the eager axis still cannot open over an undecodable record', () {
     scenario('the open fails inside hive, before the package holds a box', () async {
       await seedKeyed();

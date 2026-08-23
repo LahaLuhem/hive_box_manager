@@ -26,6 +26,9 @@ MapEntry<RawKey, String> entry(int key, String value) => MapEntry(RawKey(key), v
 /// Watch notifications as a comparable value (`BoxEvent` has no `==`).
 (Object?, Object?, bool) shapeOf(BoxEvent event) => (event.key, event.value, event.deleted);
 
+/// Raw keys are the semantic keys here, so failure reports need no decode.
+Object identityKey(Object rawKey) => rawKey;
+
 void main() {
   late FakeEagerBox box;
   late RecordingBoxObserver observer;
@@ -74,7 +77,7 @@ void main() {
       await engine.putAll([entry(1, 'a'), entry(2, 'b')]).run();
       observer.calls.clear();
 
-      check(engine.values).deepEquals(['a', 'b']);
+      check(engine.values(identityKey)).deepEquals(['a', 'b']);
       check(observer.calls).deepEquals(['readAll:users:2']);
     });
 

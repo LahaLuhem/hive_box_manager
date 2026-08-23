@@ -75,7 +75,7 @@ interface class ListBox<T extends Object, K extends Object>._({
 
   /// The stored lists, each an unmodifiable view, decoded as they are iterated. Dispatches one read-all
   /// event at call time.
-  Iterable<List<T>> get values => _engine.values;
+  Iterable<List<T>> get values => _engine.values(_codec.decode);
 
   /// Reads the list under [key] synchronously from memory: `Some` of an unmodifiable zero-copy view
   /// when present (`Some(empty)` for a stored empty list), `None` when the key is absent.

@@ -70,7 +70,7 @@ interface class DualKeyBox<T extends Object, K1 extends Object, K2 extends Objec
 
   /// The stored values, served from the in-memory cache, decoded as they are iterated.
   /// Dispatches one read-all event at call time.
-  Iterable<T> get values => _engine.values;
+  Iterable<T> get values => _engine.values(_dualCodec.decode);
 
   /// Reads the value under ([primary], [secondary]) synchronously from memory: `Some` when present,
   /// `None` when absent.

@@ -60,7 +60,7 @@ interface class KeyedBox<T extends Object, K extends Object>._({
 
   /// The stored values, served from the in-memory cache and decoded as they are iterated.
   /// Dispatches one read-all event at call time.
-  Iterable<T> get values => _engine.values;
+  Iterable<T> get values => _engine.values(_codec.decode);
 
   /// Reads [key] synchronously from memory: `Some` when present, `None` when absent.
   // Inlined into callers; see the engine's get for why.
