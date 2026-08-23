@@ -235,14 +235,16 @@ interface class LazyDualKeyBox<T extends Object, K1 extends Object, K2 extends O
   /// Typed change stream; pass [key] as a `(primary, secondary)` record to watch one composite key
   /// only (the surface's one blessed nullable). Subscribing auto-opens like any effect.
   /// Writes carry `Some`, deletes carry `None` (the lazy engine holds no values).
-  Stream<LazyTypedBoxEvent<T, (K1, K2)>> watch({(K1, K2)? key}) => _engine
-      .watchRaw(key: key == null ? null : _rawKeyFor(key.$1, key.$2))
-      .map(
-        (event) => LazyTypedBoxEvent<T, (K1, K2)>(
-          key: _dualCodec.decode(event.key as Object),
-          value: Option.fromNullable(event.value as Object?).map(_engine.decodeStored),
-        ),
-      );
+  Stream<LazyTypedBoxEvent<T, (K1, K2)>> watch({(K1, K2)? key}) =>
+      _engine.watchRaw(key: key == null ? null : _rawKeyFor(key.$1, key.$2)).map((event) {
+        final semanticKey = _dualCodec.decode(event.key as Object);
+
+        return LazyTypedBoxEvent<T, (K1, K2)>(
+          key: semanticKey,
+          value: Option.fromNullable(event.value as Object?)
+              .map((storedValue) => _engine.decodeStored(storedValue, semanticKey)),
+        );
+      });
 
   /// Flushes pending writes to disk when run. Maintenance, not a data event: observers only hear failures.
   Task<Unit> flush() => _engine.flush();

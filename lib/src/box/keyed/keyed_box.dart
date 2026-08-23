@@ -128,15 +128,16 @@ interface class KeyedBox<T extends Object, K extends Object>._({
   ///
   /// Events carry a **non-null** [TypedBoxEvent.value] even for deletes: eager hive_ce delivers the
   /// just-deleted value from its cache (pinned behaviour), so consumers never null-check.
-  Stream<TypedBoxEvent<T, K>> watch({K? key}) => _engine
-      .watchRaw(key: key == null ? null : _rawKeyFor(key))
-      .map(
-        (event) => TypedBoxEvent<T, K>(
-          key: _codec.decode(event.key as Object),
-          value: _engine.decodeStored(event.value as Object),
+  Stream<TypedBoxEvent<T, K>> watch({K? key}) =>
+      _engine.watchRaw(key: key == null ? null : _rawKeyFor(key)).map((event) {
+        final semanticKey = _codec.decode(event.key as Object);
+
+        return TypedBoxEvent<T, K>(
+          key: semanticKey,
+          value: _engine.decodeStored(event.value as Object, semanticKey),
           deleted: event.deleted,
-        ),
-      );
+        );
+      });
 
   /// Flushes pending writes to disk when run. Maintenance, not a data event: observers only hear failures.
   Task<Unit> flush() => _engine.flush();

@@ -74,7 +74,9 @@ interface class SingleValueBox<T extends Object>._({required final EagerCrudEngi
   Stream<Option<T>> watch() => _engine
       .watchRaw(key: singleValueRawSlotKey)
       .map(
-        (event) => event.deleted ? const None() : Some(_engine.decodeStored(event.value as Object)),
+        (event) => event.deleted
+            ? const None()
+            : Some(_engine.decodeStored(event.value as Object, singleValueSlotKey)),
       );
 
   /// Flushes pending writes to disk when run. Maintenance, not a data event: observers only

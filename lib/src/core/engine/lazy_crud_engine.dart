@@ -58,7 +58,17 @@ final class LazyCrudEngine<T extends Object>({
   Iterable<Object> get rawKeys => _requireOpened.keys.map((rawKey) => rawKey as Object);
 
   /// Restores a stored value through the value codec, for façades assembling their watch events.
-  T decodeStored(Object storedValue) => _valueCodec.fromStored(storedValue);
+  /// [semanticKey] names the record if the codec refuses it.
+  T decodeStored(Object storedValue, Object semanticKey) {
+    try {
+      return _valueCodec.fromStored(storedValue);
+    } on Object catch (error, stackTrace) {
+      Error.throwWithStackTrace(
+        UndecodableValueException(boxName: name, key: semanticKey, cause: error),
+        stackTrace,
+      );
+    }
+  }
 
   /// Warms the box up compositionally; any effect does the same implicitly.
   Task<Unit> ensureInitialised() => Task(() async {

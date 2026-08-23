@@ -161,6 +161,40 @@ void main() {
     });
   });
 
+  feature('a watch event names the key whose value failed to decode', () {
+    /// Two handles disagreeing about the value type: the writer stores a `String`, the watcher
+    /// wants an `int`, so the codec refuses on the way through the stream.
+    scenario('the stream error names the key rather than a bare cast error', () async {
+      final writer = await KeyedBox.open<String, int>('watched').run();
+      final watcher = await KeyedBox.open<int, int>('watched').run();
+
+      final events = <TypedBoxEvent<int, int>>[];
+      final failures = <Object>[];
+      final subscription = watcher.watch().listen(events.add, onError: failures.add);
+      await writer.put(7, 'seven').run();
+      await pumpEventQueue();
+      await subscription.cancel();
+
+      check(events).isEmpty();
+      check(failures).length.equals(1);
+      final failure = failures.single as UndecodableValueException;
+      check(failure.key).equals(7);
+      check(failure.cause).isA<TypeError>();
+    });
+
+    scenario('a matching handle still receives its events untouched', () async {
+      final box = await KeyedBox.open<String, int>('agreed').run();
+
+      final events = <String>[];
+      final subscription = box.watch().listen((event) => events.add(event.value));
+      await box.put(7, 'seven').run();
+      await pumpEventQueue();
+      await subscription.cancel();
+
+      check(events).deepEquals(['seven']);
+    });
+  });
+
   feature('the eager axis still cannot open over an undecodable record', () {
     scenario('the open fails inside hive, before the package holds a box', () async {
       await seedKeyed();

@@ -179,14 +179,16 @@ interface class LazyKeyedBox<T extends Object, K extends Object>._({
   /// Writes carry `Some`, deletes carry `None`: a lazy box retains no values in memory, so the
   /// engine has nothing to attach on deletes (pinned behaviour); [LazyTypedBoxEvent.deleted] is
   /// derived from exactly that.
-  Stream<LazyTypedBoxEvent<T, K>> watch({K? key}) => _engine
-      .watchRaw(key: key == null ? null : _rawKeyFor(key))
-      .map(
-        (event) => LazyTypedBoxEvent<T, K>(
-          key: _codec.decode(event.key as Object),
-          value: Option.fromNullable(event.value as Object?).map(_engine.decodeStored),
-        ),
-      );
+  Stream<LazyTypedBoxEvent<T, K>> watch({K? key}) =>
+      _engine.watchRaw(key: key == null ? null : _rawKeyFor(key)).map((event) {
+        final semanticKey = _codec.decode(event.key as Object);
+
+        return LazyTypedBoxEvent<T, K>(
+          key: semanticKey,
+          value: Option.fromNullable(event.value as Object?)
+              .map((storedValue) => _engine.decodeStored(storedValue, semanticKey)),
+        );
+      });
 
   /// Flushes pending writes to disk when run. Maintenance, not a data event: observers only hear
   /// failures.

@@ -175,15 +175,16 @@ interface class ListBox<T extends Object, K extends Object>._({
 
   /// Typed change stream; pass [key] to watch one key only. Event payloads carry the same unmodifiable
   /// views reads do, non-null even on deletes (the eager promise).
-  Stream<TypedBoxEvent<List<T>, K>> watch({K? key}) => _engine
-      .watchRaw(key: key == null ? null : _rawKeyFor(key))
-      .map(
-        (event) => TypedBoxEvent<List<T>, K>(
-          key: _codec.decode(event.key as Object),
-          value: _engine.decodeStored(event.value as Object),
+  Stream<TypedBoxEvent<List<T>, K>> watch({K? key}) =>
+      _engine.watchRaw(key: key == null ? null : _rawKeyFor(key)).map((event) {
+        final semanticKey = _codec.decode(event.key as Object);
+
+        return TypedBoxEvent<List<T>, K>(
+          key: semanticKey,
+          value: _engine.decodeStored(event.value as Object, semanticKey),
           deleted: event.deleted,
-        ),
-      );
+        );
+      });
 
   /// Writes every value in [values] when run, grouped into one stored list per key [key] extracts.
   ///
