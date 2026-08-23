@@ -4,6 +4,7 @@ import 'package:hive_ce/hive.dart';
 import '/src/observer/box_observer.dart';
 import '../raw_key.dart';
 import '../raw_key_gate.dart';
+import '../undecodable_value_exception.dart';
 import '../value_codec/value_codec.dart';
 
 /// The eager CRUD engine: every eager façade delegates here, so CRUD is written exactly once.
@@ -39,10 +40,11 @@ final class EagerCrudEngine<T extends Object>({
   Iterable<Object> get rawKeys => _box.keys.map((rawKey) => rawKey as Object);
 
   /// The stored values, decoded lazily; dispatches one read-all event at call time.
-  Iterable<T> get values {
+  /// [semanticKeyOf] decodes a raw key for failure reports only.
+  Iterable<T> values(Object Function(Object rawKey) semanticKeyOf) {
     _observer?.onReadAll(name, _box.length);
 
-    return _box.values.map((storedValue) => _valueCodec.fromStored(storedValue!));
+    return _AttributedValues(_box, _valueCodec, name, semanticKeyOf);
   }
 
   /// Restores a stored value through the value codec, for façades assembling their watch events.
@@ -209,4 +211,60 @@ final class EagerCrudEngine<T extends Object>({
       rethrow;
     }
   });
+}
+
+/// The eager read-all view: decodes each stored value and names the key when one refuses.
+///
+/// Hand-rolled rather than `values.indexed.map`, whose per-element record cost 4 ns on the
+/// wrapper-overhead lane.
+final class _AttributedValues<T extends Object> extends Iterable<T> {
+  const new(this._box, this._valueCodec, this._boxName, this._semanticKeyOf);
+
+  final Box<Object?> _box;
+  final ValueCodec<T> _valueCodec;
+  final String _boxName;
+  final Object Function(Object rawKey) _semanticKeyOf;
+
+  @override
+  Iterator<T> get iterator =>
+      _AttributedValuesIterator(_box, _valueCodec, _boxName, _semanticKeyOf);
+}
+
+final class _AttributedValuesIterator<T extends Object> implements Iterator<T> {
+  new(this._box, this._valueCodec, this._boxName, this._semanticKeyOf)
+    : _storedValues = _box.values.iterator;
+
+  final Box<Object?> _box;
+  final ValueCodec<T> _valueCodec;
+  final String _boxName;
+  final Object Function(Object rawKey) _semanticKeyOf;
+  final Iterator<Object?> _storedValues;
+
+  var _index = -1;
+  late T _current;
+
+  @override
+  T get current => _current;
+
+  @override
+  bool moveNext() {
+    if (!_storedValues.moveNext()) return false;
+    _index++;
+
+    try {
+      _current = _valueCodec.fromStored(_storedValues.current!);
+    } on Object catch (error, stackTrace) {
+      // Looked up only now, so the keystore search stays off the read path.
+      Error.throwWithStackTrace(
+        UndecodableValueException(
+          boxName: _boxName,
+          key: _semanticKeyOf(_box.keys.elementAt(_index) as Object),
+          cause: error,
+        ),
+        stackTrace,
+      );
+    }
+
+    return true;
+  }
 }

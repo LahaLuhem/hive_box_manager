@@ -1,6 +1,13 @@
 ## [Unreleased]
+### Added
+- `UndecodableValueException`, naming the key whose stored value failed to decode
+
 ### Changed
 - Bump Dart SDK to ^3.13
+
+### Fixed
+- \[#20\] `values` and the dual `queryBy*` no longer fold one undecodable record into an opaque `ParallelWaitError`. They throw `UndecodableValueException` naming the key as your codec reports it, so the record can be deleted and compacted away. An eager box still cannot open over one at all: that is hive\_ce decoding every value inside `openBox`, tracked in [hive\_ce#318](https://github.com/IO-Design-Team/hive_ce/issues/318) with a fix in [hive\_ce#321](https://github.com/IO-Design-Team/hive_ce/pull/321)
+- Eager whole-box reads name the key whose value failed to decode, rather than surfacing a bare cast error that says nothing about which record caused it
 
 ## [1.1.0] - 2026-07-27
 ### Added
