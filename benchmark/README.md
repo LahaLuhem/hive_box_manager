@@ -64,6 +64,8 @@ before the seeding was equalised and the RSS window moved after the seed.
 > `python/overhead.py` cross-checks median against min and refuses to stand behind a run where they
 > diverge. Read its verdict before quoting any number from this lane.
 
+<!-- -->
+
 > **On a phone, warm up first.** The first timed pass absorbs the CPU frequency ramp, which is enough
 > to make a plain global load measure *slower* than a thread-local one. Burn a full pass before
 > timing anything. Pinning with `taskset` helps until the governor offlines the core you picked, and
@@ -169,7 +171,7 @@ separate things came out, and only the second is a 3.13.1 story.
 The flow graph for `generic-record`, and for the cut-down
 [`record_tts_repro.dart`](record_tts_repro.dart), emits one `AssertAssignable` per op:
 
-```
+```text
 AssertAssignable(v31 T{_Record}, v25 T{_RecordType}, 'key', instantiator_type_args(v22), ...)
 ```
 

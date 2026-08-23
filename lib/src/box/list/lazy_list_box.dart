@@ -208,14 +208,16 @@ interface class LazyListBox<T extends Object, K extends Object>._({
   /// Typed change stream; pass [key] to watch one key only. Subscribing auto-opens like any effect.
   /// Write events carry `Some` of the same unmodifiable views reads do; deletes carry `None`
   /// (the lazy engine holds no values), with [LazyTypedBoxEvent.deleted] derived from that.
-  Stream<LazyTypedBoxEvent<List<T>, K>> watch({K? key}) => _engine
-      .watchRaw(key: key == null ? null : _rawKeyFor(key))
-      .map(
-        (event) => LazyTypedBoxEvent<List<T>, K>(
-          key: _codec.decode(event.key as Object),
-          value: Option.fromNullable(event.value as Object?).map(_engine.decodeStored),
-        ),
-      );
+  Stream<LazyTypedBoxEvent<List<T>, K>> watch({K? key}) =>
+      _engine.watchRaw(key: key == null ? null : _rawKeyFor(key)).map((event) {
+        final semanticKey = _codec.decode(event.key as Object);
+
+        return LazyTypedBoxEvent<List<T>, K>(
+          key: semanticKey,
+          value: Option.fromNullable(event.value as Object?)
+              .map((storedValue) => _engine.decodeStored(storedValue, semanticKey)),
+        );
+      });
 
   /// Writes every value in [values] when run, grouped into one stored list per key [key] extracts.
   ///

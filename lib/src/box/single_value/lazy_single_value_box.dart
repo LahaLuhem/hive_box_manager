@@ -112,7 +112,11 @@ interface class LazySingleValueBox<T extends Object>._({required final LazyCrudE
   /// auto-opens like any effect; no replay, so pair with [get] for the current value.
   Stream<Option<T>> watch() => _engine
       .watchRaw(key: singleValueRawSlotKey)
-      .map((event) => Option.fromNullable(event.value as Object?).map(_engine.decodeStored));
+      .map(
+        (event) =>
+            Option.fromNullable(event.value as Object?)
+                .map((storedValue) => _engine.decodeStored(storedValue, singleValueSlotKey)),
+      );
 
   /// Flushes pending writes to disk when run. Maintenance, not a data event: observers only
   /// hear failures.

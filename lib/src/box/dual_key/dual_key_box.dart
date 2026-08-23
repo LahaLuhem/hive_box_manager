@@ -190,15 +190,16 @@ interface class DualKeyBox<T extends Object, K1 extends Object, K2 extends Objec
   /// Typed change stream; pass [key] as a `(primary, secondary)` record to watch one composite
   /// key only (the surface's one blessed nullable). Events carry record keys and non-null values,
   /// even on deletes (the eager promise).
-  Stream<TypedBoxEvent<T, (K1, K2)>> watch({(K1, K2)? key}) => _engine
-      .watchRaw(key: key == null ? null : _rawKeyFor(key.$1, key.$2))
-      .map(
-        (event) => TypedBoxEvent<T, (K1, K2)>(
-          key: _dualCodec.decode(event.key as Object),
-          value: _engine.decodeStored(event.value as Object),
+  Stream<TypedBoxEvent<T, (K1, K2)>> watch({(K1, K2)? key}) =>
+      _engine.watchRaw(key: key == null ? null : _rawKeyFor(key.$1, key.$2)).map((event) {
+        final semanticKey = _dualCodec.decode(event.key as Object);
+
+        return TypedBoxEvent<T, (K1, K2)>(
+          key: semanticKey,
+          value: _engine.decodeStored(event.value as Object, semanticKey),
           deleted: event.deleted,
-        ),
-      );
+        );
+      });
 
   /// Flushes pending writes to disk when run. Maintenance, not a data event: observers only hear failures.
   Task<Unit> flush() => _engine.flush();
