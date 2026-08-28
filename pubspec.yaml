@@ -2,7 +2,7 @@ name: hive_box_manager
 description: >-
   Type-safe, FP-style abstraction layers for Hive's boxes. Provides Managers for almost all
   conceivable use-cases and scenarios.
-version: 1.1.0
+version: 1.1.1
 repository: https://github.com/LahaLuhem/hive_box_manager
 
 
