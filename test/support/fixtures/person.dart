@@ -1,5 +1,5 @@
-/// Minimal hand-written custom type + adapter for the hive_ce behaviour pins: collections of a custom
-/// type need a registered [TypeAdapter], and the pins assert exactly what the engine hands back for them.
+/// A minimal custom type and adapter for the hive_ce pins, which need a registered [TypeAdapter] to
+/// assert what the engine hands back for one.
 library;
 
 import 'package:hive_ce/hive.dart';

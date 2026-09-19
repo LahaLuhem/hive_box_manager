@@ -1,5 +1,5 @@
-// Smoke-only, matching the sibling precedent: the sink is one-line forwards to dart:developer,
-// whose output is not capturable from here; the suite pins that dispatch never throws.
+// Smoke only, like the sibling packages. The sink forwards one-liners to dart:developer, whose output
+// can't be captured from here, so this pins that dispatch never throws.
 @Tags(['unit'])
 library;
 

@@ -14,34 +14,27 @@ import 'single_value_slot_key.dart';
 
 /// A typed, fpdart-first façade over an **eager** hive box holding exactly one [T] value.
 ///
-/// The lone-setting / token / config-blob scenario: no keys on the surface, just the value.
-/// Internally it sits under one fixed slot, the same slot the 0.0.x single managers used, so
-/// that data reads in place. Eager means the value lives in memory once the box is open: reads
-/// are synchronous and disk-free, writes are lazy [Task]s that only touch disk when run.
-/// Acquisition is [open] alone: there is no public constructor, so holding a [SingleValueBox]
-/// *implies* its box is open. Prefer [LazySingleValueBox] when the value is large or read
-/// rarely.
+/// For the lone setting, the token, the config blob: no keys on the surface, just the value. It sits
+/// under one fixed slot internally, the same one the 0.0.x single managers used, so that data still
+/// reads. Eager means the value is in memory once the box is open, so reads are synchronous and writes
+/// are [Task]s. Reach for [LazySingleValueBox] when the value is big or rarely read.
 ///
-/// The functional contract, shared by every façade in this package:
+/// [clear] is the only way to unset it. There is no separate delete, since there is nothing else to
+/// delete.
 ///
-/// - absence is [Option], never `null` and never a sentinel;
-/// - effects are [Task]s: nothing runs until `.run()`, so they compose before they execute;
-/// - [clear] is the one unset (no separate delete; nothing else to delete).
+/// Don't store a collection as [T], that walks straight back into the reification trap [ListBox] exists
+/// to handle.
 ///
-/// Storing a collection as [T] re-opens the disk-reification trap this package exists to guard
-/// (post-restart reads reify as `List<dynamic>`); reach for [ListBox] instead.
+/// Whatever hive objects to (a closed box, a missing adapter) comes out of the [Task] when it runs.
+/// [close] and [deleteFromDisk] are terminal: the handle is spent, and getting back in means a fresh
+/// [open].
 ///
-/// Throw taxonomy: whatever the engine itself throws for (operating on a closed box, an
-/// unregistered adapter) surfaces unwrapped inside the returned [Task] when it runs. [close]
-/// and [deleteFromDisk] are terminal: the handle stays unusable afterwards, and reacquisition
-/// means a new [open].
-///
-/// `interface class`: implement it for test fakes; extending is reserved to this package.
+/// `interface class`: implement it for test fakes, extending is ours.
 interface class SingleValueBox<T extends Object>._({required final EagerCrudEngine<T> _engine}) {
-  /// The box name: the correlation handle observers receive with every event.
+  /// The box name. Observers hear it with every event.
   String get name => _engine.name;
 
-  /// `1` when a value is stored, `0` when not; a single-value box never holds more.
+  /// `1` when a value is stored, `0` when not. A single-value box never holds more.
   int get length => _engine.length;
 
   /// Whether no value is stored right now.
@@ -50,8 +43,7 @@ interface class SingleValueBox<T extends Object>._({required final EagerCrudEngi
   /// Whether a value is stored right now.
   bool get isNotEmpty => _engine.isNotEmpty;
 
-  /// Reads the value synchronously from memory: `Some` when set, `None` when never set (or
-  /// cleared).
+  /// Reads the value synchronously from memory: `Some` when set, `None` when never set (or cleared).
   Option<T> get() => _engine.get(singleValueRawSlotKey, singleValueSlotKey);
 
   /// Reads the value, falling back to [fallback] when absent. Sugar over [get].
@@ -60,17 +52,17 @@ interface class SingleValueBox<T extends Object>._({required final EagerCrudEngi
   /// Stores [value] when run, replacing whatever was there.
   Task<Unit> set(T value) => _engine.put(singleValueRawSlotKey, singleValueSlotKey, value);
 
-  /// Rewrites the value through [update] when run and returns the new value, mirroring
-  /// [Map.update] on the internal slot: an absent value is seeded by [ifAbsent], and with no
-  /// [ifAbsent] the task fails with an [ArgumentError] at run time.
+  /// Rewrites the value through [update] when run and returns the new value, mirroring [Map.update]
+  /// on the internal slot: an absent value is seeded by [ifAbsent], and with no [ifAbsent] the task
+  /// fails with an [ArgumentError] at run time.
   Task<T> update(T Function(T value) update, {T Function()? ifAbsent}) =>
       _engine.update(singleValueRawSlotKey, singleValueSlotKey, update, ifAbsent: ifAbsent);
 
-  /// Unsets the value when run; the next [get] reads `None`. Observers hear a clear.
+  /// Unsets the value when run, so the next [get] reads `None`. Observers hear a clear.
   Task<Unit> clear() => _engine.clear();
 
-  /// The value's change stream: `Some` on every [set], `None` on [clear]. Same shape on both
-  /// axes. No replay: pair with [get] for the current value.
+  /// The value's change stream: `Some` on every [set], `None` on [clear]. Same shape on both axes. No
+  /// replay: pair with [get] for the current value.
   Stream<Option<T>> watch() => _engine
       .watchRaw(key: singleValueRawSlotKey)
       .map(
@@ -79,29 +71,24 @@ interface class SingleValueBox<T extends Object>._({required final EagerCrudEngi
             : Some(_engine.decodeStored(event.value as Object, singleValueSlotKey)),
       );
 
-  /// Flushes pending writes to disk when run. Maintenance, not a data event: observers only
-  /// hear failures.
+  /// Flushes pending writes to disk when run. Maintenance, so observers only hear about failures.
   Task<Unit> flush() => _engine.flush();
 
-  /// Compacts the box file when run. Maintenance, not a data event: observers only hear
-  /// failures.
+  /// Compacts the box file when run. Maintenance, so observers only hear about failures.
   Task<Unit> compact() => _engine.compact();
 
-  /// Closes the box when run. **Terminal**: every later operation surfaces hive's own
-  /// already-closed error, and reacquisition means a new [open].
+  /// Closes the box when run. Terminal, see the class doc.
   Task<Unit> close() => _engine.close();
 
-  /// Deletes the box from disk when run. **Terminal**, like [close].
+  /// Deletes the box from disk when run. Terminal, like [close].
   Task<Unit> deleteFromDisk() => _engine.deleteFromDisk();
 
-  /// Opens the box named [name] and wires a [SingleValueBox] around it, as a lazy [Task]:
-  /// nothing touches disk until `.run()`.
+  /// Opens the box named [name] and wires a [SingleValueBox] around it, as a lazy [Task]: nothing touches
+  /// disk until `.run()`.
   ///
-  /// One-time engine setup stays hive_ce's, exactly as it documents: `Hive.init(path)` (or
-  /// `Hive.initFlutter()`) plus adapter registration. [cipher], [keyComparator],
-  /// [compactionStrategy], and [crashRecovery] pass through to hive_ce untouched. [observer]
-  /// hears every event of this box, starting with the open itself; a failed open dispatches an
-  /// operation error and rethrows inside the task.
+  /// Engine setup is still hive_ce's job, so `Hive.init(path)` and your adapters come first. [cipher],
+  /// [keyComparator], [compactionStrategy] and [crashRecovery] go straight through. [observer] hears
+  /// everything this box does, starting with the open.
   static Task<SingleValueBox<T>> open<T extends Object>(
     String name, {
     HiveCipher? cipher,
@@ -120,7 +107,7 @@ interface class SingleValueBox<T extends Object>._({required final EagerCrudEngi
       );
       observer?.onOpened(name);
 
-      // Type arguments stay explicit through this wiring (CODESTYLE #type-safety).
+      // Explicit type arguments on purpose, see CODESTYLE #type-safety.
       return SingleValueBox<T>._(
         engine: EagerCrudEngine<T>(
           box: box,
@@ -135,16 +122,15 @@ interface class SingleValueBox<T extends Object>._({required final EagerCrudEngi
   });
 }
 
-/// Testing seam: wires a [SingleValueBox] around an already-open (or fake) [box] instead of
-/// going through the real provider, so unit suites drive the façade against in-memory doubles.
+/// Testing seam: wires a [SingleValueBox] around an already-open (or fake) [box] instead of going through
+/// the real provider, so unit suites drive the façade against in-memory doubles.
 ///
-/// Same library as the façade on purpose, and deliberately not exported: the barrel's `show`
-/// keeps it out of the public API, so it exists only for suites importing this file directly.
+/// Not exported, so only suites importing this file directly can see it.
 @visibleForTesting
 SingleValueBox<T> singleValueBoxAround<T extends Object>(
   Box<Object?> box, {
   BoxObserver? observer,
 }) => SingleValueBox<T>._(
-  // Explicit type arguments on purpose; see CODESTYLE #type-safety.
+  // Explicit type arguments on purpose, see CODESTYLE #type-safety.
   engine: EagerCrudEngine<T>(box: box, valueCodec: IdentityValueCodec<T>(), observer: observer),
 );

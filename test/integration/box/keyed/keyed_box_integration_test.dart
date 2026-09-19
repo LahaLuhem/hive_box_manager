@@ -1,6 +1,4 @@
-// The eager façade end to end against real hive_ce on temp dirs, through the public barrel:
-// per-method round-trips, disk truth across close + reopen, cipher and custom-codec
-// pass-through, the call-site corruption gate, and the terminal lifecycle.
+// The eager keyed façade end to end, against real hive_ce on a temp dir and through the public barrel.
 @TestOn('vm')
 @Tags(['integration'])
 library;
@@ -20,8 +18,8 @@ import '../../../support/pins/probe_key_limits.dart';
 /// AES-256 wants exactly this many key bytes.
 const aesKeyBytes = 32;
 
-/// Collects the events [stream] emits while [act] runs, draining the event queue before
-/// returning so no in-flight notification is missed.
+/// Collects what [stream] emits while [act] runs, draining the queue first so nothing in flight gets
+/// missed.
 Future<List<TypedBoxEvent<String, int>>> record(
   Stream<TypedBoxEvent<String, int>> stream,
   Future<void> Function() act,

@@ -16,7 +16,7 @@ reserved for 7 days).
 
 ## Communication
 
-- **Concise.** No "here's what I just did" recap; the diff speaks.
+- **Concise.** No "here's what I just did" recap. The diff speaks.
 - **Explain the *why*** when recommending. The *what* is in the diff.
 - Reference code as `file.dart:42` (markdown links if you can).
 - Flag breaking-API or lint-violation implications loudly and early.
@@ -112,12 +112,10 @@ pipeline-owned (see *Forbidden* below). Don't plan or make a CHANGELOG edit or a
 - New / changed Managers honour the [Manager contract](./CODESTYLE.md#manager-contract): the
   functional surface (`Task` / `TaskOption` / `Option`), no null, `Option` for genuine absence, and
   documented eager-vs-lazy semantics.
-- DCM rules applied by hand (`dart analyze` doesn't run them): `no-empty-block`,
-  `newline-before-return`, `prefer-commenting-analyzer-ignores`, plus blank lines segmenting
-  logical chunks in methods.
-- Lint clean via the linterpol image for whatever changed: `shellcheck` (shell), `actionlint`
-  (workflows), `rumdl` (Markdown), `ryl` (YAML). The check set and per-tool config live in
-  `.github/lint-checks.json`, `.rumdl.toml`, and `.yamllint.yaml`.
+- DCM rules applied by hand, since `dart analyze` doesn't run them:
+  [`CODESTYLE.md#dcm-rules`](./CODESTYLE.md#dcm-rules).
+- Lint clean via the linterpol image for whatever changed. `.github/lint-checks.json` lists the
+  checks, and per-tool config lives in `.rumdl.toml` and `.yamllint.yaml`.
 - `dart pub publish --dry-run` clean if the change is publish-relevant. Do not bump the version or
   edit the CHANGELOG to make it pass; `scripts/release.sh` owns those.
 - Public API additions carry `///` dartdoc and are reflected in the README.

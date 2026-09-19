@@ -1,5 +1,5 @@
-// Pins hive_ce 2.19.3 serving `keys` and `values` in the same order. The eager read-all finds a
-// failed value's key by position, because a lookup per value costs more than the lane allows.
+// Pins hive_ce serving `keys` and `values` in the same order. The eager read-all finds a failed value's
+// key by position, because a lookup per value costs more than the read path can afford.
 @TestOn('vm')
 @Tags(['integration'])
 library;

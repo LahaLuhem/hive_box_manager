@@ -20,48 +20,39 @@ import 'list_edits.dart';
 
 /// A typed, fpdart-first façade over an **eager** hive box storing a `List` of [T] per [K] key.
 ///
-/// This variant exists because of a real engine limitation: hive reifies a collection of an
-/// **adapter-registered** type from disk as `List<dynamic>`, so a naive `Box<List<Person>>` opens
-/// fine and then throws on the first post-restart read. Here the element type is restored with a cast
-/// at the read boundary instead, and `dynamic` never reaches this surface.
+/// This variant exists because hive reads a collection of an adapter-registered type back as `List<dynamic>`,
+/// so a plain `Box<List<Person>>` opens fine and then throws on the first read after a restart. Here
+/// the element type gets restored with a cast at the read boundary, and `dynamic` never reaches you.
 ///
-/// Lists of primitives are the exception: hive specialises those, so a `List<String>` does read back
-/// as `List<String>` and a hand-rolled cast would survive. The benchmark's list-box lane measures both
-/// axes and the cast costs the same either way, so this surface does not branch on it: about 200 ns
-/// per [get] plus about 2.3 ns per element actually iterated. The view allocates nothing
-/// (measured RSS matches a hand-rolled cast exactly), so the per-element part is the type check, not a copy.
+/// Lists of primitives are the exception, since hive specialises those and a `List<String>` does come
+/// back as one. The cast costs the same either way, so this surface doesn't branch on it (`benchmark/list_box_bench.dart`).
+/// The view allocates nothing, so what you pay per element is the type check, not a copy.
 ///
-/// List semantics only: order-preserving, duplicates allowed. Sets, maps, and nested collections of
-/// custom types are deliberately out (the outer cast could not fix inner reification). Store flat lists,
-/// or model richer shapes as adapter-registered value types.
+/// Lists only, so order is kept and duplicates are fine. Sets, maps and nested collections of custom
+/// types are out, because the outer cast can't fix the inner reification. Store flat lists, or model
+/// richer shapes as their own adapter-registered types.
 ///
 /// The aliasing contract, both directions:
 ///
-/// - **inward**: [put], [putAll], and [update]'s returns are materialised into private copies, so
-///   mutating your original collection afterwards never reaches the box
-///   (and lazy iterables become the plain lists hive requires at write time).
-/// - **outward**: every list this box hands you ([get], [getOr], [values], [update]'s return, watch-event payloads)
-///   is an unmodifiable zero-copy view; absence is still [Option], and an empty stored list reads
-///   `Some(empty)`, never `None`.
+/// - **inward**: [put], [putAll] and [update]'s returns get copied, so mutating your own collection
+///   afterwards never reaches the box.
+/// - **outward**: every list you get back is an unmodifiable view over the stored one. An empty stored
+///   list reads `Some(empty)`, never `None`.
 ///
-/// Everything else matches [KeyedBox]: eager reads are synchronous and disk-free, effects are lazy
-/// [Task]s, keys go through a [KeyCodec] (`int` / `String` default to identity codecs), the write
-/// path gates raw keys with a synchronous [ArgumentError], engine failures surface unwrapped inside
-/// tasks, and [close] / [deleteFromDisk] are terminal.
+/// Everything else works like [KeyedBox].
 ///
-/// `interface class`: implement it for test fakes; extending is reserved to this package.
+/// `interface class`: implement it for test fakes, extending is ours.
 interface class ListBox<T extends Object, K extends Object>._({
   required final EagerCrudEngine<List<T>> _engine,
   required final KeyCodec<K> _codec,
 }) {
-  /// Encodes [key] for the engine, which admits only encoded keys.
   @pragma('vm:prefer-inline')
   RawKey _rawKeyFor(K key) => RawKey(_codec.encode(key));
 
-  /// The box name: the correlation handle observers receive with every event.
+  /// The box name. Observers hear it with every event.
   String get name => _engine.name;
 
-  /// Number of stored keys (not summed elements); keys always live in memory, so this is free.
+  /// How many keys are stored, not how many elements. Keys live in memory, so this is free.
   int get length => _engine.length;
 
   /// Whether the box holds no keys.
@@ -81,25 +72,23 @@ interface class ListBox<T extends Object, K extends Object>._({
   /// when present (`Some(empty)` for a stored empty list), `None` when the key is absent.
   Option<List<T>> get(K key) => _engine.get(_rawKeyFor(key), key);
 
-  /// Reads the list under [key], falling back to an empty list when absent: the natural default for
-  /// a collection, so there is no fallback parameter. Absent and stored-empty read the same here.
-  /// Use [get] to distinguish them.
+  /// Reads the list under [key], falling back to an empty one. That is the obvious default for a collection,
+  /// so there is no fallback parameter. Absent and stored-empty look the same here, use [get] to tell
+  /// them apart.
   List<T> getOr(K key) => _engine.get(_rawKeyFor(key), key).getOrElse(List.empty);
 
   /// Whether [key] is stored right now.
   bool contains(K key) => _engine.contains(_rawKeyFor(key));
 
-  /// Stores [values] under [key] when run, materialised into a private fixed-length copy:
-  /// hive rejects non-`List` iterables at write time, and the copy keeps your original collection yours.
-  /// Throws a synchronous [ArgumentError] at the call site when the encoded key leaves hive's raw domain,
-  /// exactly like [KeyedBox.put].
+  /// Stores [values] under [key] when run, copied first so your own collection stays yours. Rejects
+  /// an unstorable key on the spot, like [KeyedBox.put].
   Task<Unit> put(K key, Iterable<T> values) =>
       _engine.put(_rawKeyFor(key), key, materialisedCopyOf(values));
 
-  /// Stores every entry of [entries] in one batch when run, each list materialised as in [put].
-  /// All keys are encoded and gated at call time, so a bad key means nothing gets written.
+  /// Stores every entry of [entries] in one batch when run, each list materialised as in [put]. All
+  /// keys are encoded and gated at call time, so a bad key means nothing gets written.
   Task<Unit> putAll(Map<K, Iterable<T>> entries) => _engine.putAll(
-    // Lazy: the engine's own pass consumes this, so the batch is materialised once, not twice.
+    // Lazy on purpose: the engine's own pass consumes it, so the batch gets built once, not twice.
     entries.entries.map(
       (entry) => MapEntry(_rawKeyFor(entry.key), materialisedCopyOf(entry.value)),
     ),
@@ -108,9 +97,8 @@ interface class ListBox<T extends Object, K extends Object>._({
   /// Rewrites the list under [key] through [update] when run, mirroring [Map.update]: an absent key
   /// is seeded by [ifAbsent], and with no [ifAbsent] the task fails with an [ArgumentError] at run time.
   ///
-  /// [update] receives the unmodifiable view (build and return a new list. In-place mutation is impossible by construction),
-  /// returns are materialised into private copies like [put], and the task's result is the unmodifiable
-  /// view of the new list. A read-modify-write: O(n) in the stored list.
+  /// [update] gets the unmodifiable view, so build and return a new list rather than trying to mutate
+  /// it. A read-modify-write, O(n) in the stored list.
   Task<List<T>> update(
     K key,
     List<T> Function(List<T> values) update, {
@@ -124,15 +112,15 @@ interface class ListBox<T extends Object, K extends Object>._({
       )
       .map(UnmodifiableListView.new);
 
-  /// Appends [value] to the list under [key] when run; an absent key becomes `[value]` (multimap-natural).
-  /// Sugar over [update]: a read-modify-write, O(n) in the stored list.
+  /// Appends [value] to the list under [key] when run. A key that isn't there yet becomes `[value]`.
+  /// A read-modify-write, O(n) in the stored list.
   Task<Unit> add(K key, T value) => _engine
       // Fresh lists by construction, so the sugar paths skip the defensive copy.
       .update(_rawKeyFor(key), key, (values) => [...values, value], ifAbsent: () => [value])
       .map((_) => unit);
 
-  /// Appends every element of [values] to the list under [key] when run; an absent key becomes a copy
-  /// of [values]. Sugar over [update]: a read-modify-write, O(n) in the stored list.
+  /// Appends every element of [values] to the list under [key] when run. A key that isn't there yet
+  /// becomes a copy of [values]. A read-modify-write, O(n) in the stored list.
   Task<Unit> addAll(K key, Iterable<T> values) => _engine
       .update(
         _rawKeyFor(key),
@@ -142,9 +130,9 @@ interface class ListBox<T extends Object, K extends Object>._({
       )
       .map((_) => unit);
 
-  /// Removes the **first occurrence** of [value] from the list under [key] when run, mirroring `List.remove`:
-  /// an absent key or an absent element is a no-op, and removing the last element leaves an empty
-  /// list stored (`Some(empty)`), never a deleted key. A read-modify-write, O(n) in the stored list.
+  /// Removes the first [value] from the list under [key] when run, same as `List.remove`. A missing
+  /// key or element is a no-op, and taking the last element out leaves an empty list rather than deleting
+  /// the key. O(n) in the stored list.
   Task<Unit> remove(K key, T value) => Task(() async {
     // Encoded once, reused by both halves of the read-modify-write.
     final rawKey = _rawKeyFor(key);
@@ -159,12 +147,12 @@ interface class ListBox<T extends Object, K extends Object>._({
     return unit;
   });
 
-  /// Deletes [key] and its whole list when run; deleting an absent key is hive's documented no-op.
+  /// Deletes [key] and its whole list when run. Deleting something that isn't there is a no-op.
   Task<Unit> delete(K key) => _engine.delete(_rawKeyFor(key), key);
 
-  /// Deletes every key in [keys] in one batch when run; observers hear one event per key.
+  /// Deletes every key in [keys] in one batch when run. Observers hear one event per key.
   Task<Unit> deleteAll(Iterable<K> keys) {
-    // Materialised once: the batch needs raw keys, the hooks need semantic ones.
+    // Built once: the batch needs raw keys, the hooks need semantic ones.
     final keyList = keys.toList(growable: false);
 
     return _engine.deleteAll([for (final key in keyList) _rawKeyFor(key)], keyList);
@@ -173,8 +161,8 @@ interface class ListBox<T extends Object, K extends Object>._({
   /// Removes every entry when run.
   Task<Unit> clear() => _engine.clear();
 
-  /// Typed change stream; pass [key] to watch one key only. Event payloads carry the same unmodifiable
-  /// views reads do, non-null even on deletes (the eager promise).
+  /// Typed change stream. Pass [key] to watch one key only. Payloads carry the same unmodifiable views
+  /// reads hand you, and deletes still carry a value.
   Stream<TypedBoxEvent<List<T>, K>> watch({K? key}) =>
       _engine.watchRaw(key: key == null ? null : _rawKeyFor(key)).map((event) {
         final semanticKey = _codec.decode(event.key as Object);
@@ -189,15 +177,16 @@ interface class ListBox<T extends Object, K extends Object>._({
   /// Writes every value in [values] when run, grouped into one stored list per key [key] extracts.
   ///
   /// The list-shaped counterpart to the keyed families' `putAllBy`: a flat iterable in, one list per
-  /// distinct key out, elements in encounter order. **Replaces** the list at each key rather than
-  /// appending, matching [putAll]; use [addAll] to extend what is already stored.
+  /// distinct key out, elements in encounter order. **Replaces** the list at each key rather than appending,
+  /// same as [putAll]. Use [addAll] to extend what is already there.
   ///
   /// Grouping cannot stay lazy the way [putAll] does, because every value has to be seen before any
   /// one list is final. The grouped lists are built here and never escape, so they skip the defensive
   /// copy [put] makes.
   ///
   /// Reach for [putAll] when the key is not derivable from the element, or when a key needs an **empty**
-  /// list: grouping can never produce one, and stored-empty is a distinct state from absent on this surface.
+  /// list: grouping can never produce one, and stored-empty is a distinct state from absent on this
+  /// surface.
   Task<Unit> putAllGrouped(Iterable<T> values, {required K Function(T value) key}) {
     final grouped = <K, List<T>>{};
     for (final value in values) {
@@ -209,27 +198,25 @@ interface class ListBox<T extends Object, K extends Object>._({
     );
   }
 
-  /// Flushes pending writes to disk when run. Maintenance, not a data event: observers only hear failures.
+  /// Flushes pending writes to disk when run. Maintenance, so observers only hear about failures.
   Task<Unit> flush() => _engine.flush();
 
-  /// Compacts the box file when run. Maintenance, not a data event: observers only hear failures.
+  /// Compacts the box file when run. Maintenance, so observers only hear about failures.
   Task<Unit> compact() => _engine.compact();
 
-  /// Closes the box when run. **Terminal**: every later operation surfaces hive's own already-closed
-  /// error, and reacquisition means a new [open].
+  /// Closes the box when run. Terminal, see the class doc.
   Task<Unit> close() => _engine.close();
 
-  /// Deletes the box from disk when run. **Terminal**, like [close].
+  /// Deletes the box from disk when run. Terminal, like [close].
   Task<Unit> deleteFromDisk() => _engine.deleteFromDisk();
 
-  /// Opens the box named [name] and wires an [ListBox] around it, as a lazy [Task]: nothing
-  /// touches disk until `.run()`.
+  /// Opens the box named [name] and wires an [ListBox] around it, as a lazy [Task]: nothing touches
+  /// disk until `.run()`.
   ///
-  /// One-time engine setup stays hive_ce's, exactly as it documents: `Hive.init(path)` (or `Hive.initFlutter()`)
-  /// plus adapter registration for the **element** type [T]. [codec] defaults by key type
-  /// (`int` / `String` identity codecs; any other [K] without an explicit codec fails an assert synchronously at wiring time).
-  /// [cipher], [keyComparator], [compactionStrategy], and [crashRecovery] pass through to hive_ce
-  /// untouched. [observer] hears every event of this box, starting with the open itself.
+  /// Engine setup is still hive_ce's job, and the adapter you register is for the **element** type [T].
+  /// [codec] defaults by key type, and any other [K] without one trips an assert while wiring. [cipher],
+  /// [keyComparator], [compactionStrategy] and [crashRecovery] go straight through. [observer] hears
+  /// everything this box does, starting with the open.
   static Task<ListBox<T, K>> open<T extends Object, K extends Object>(
     String name, {
     KeyCodec<K>? codec,
@@ -252,7 +239,7 @@ interface class ListBox<T extends Object, K extends Object>._({
         );
         observer?.onOpened(name);
 
-        // Type arguments stay explicit through this wiring (CODESTYLE #type-safety).
+        // Explicit type arguments on purpose, see CODESTYLE #type-safety.
         return ListBox<T, K>._(
           engine: EagerCrudEngine<List<T>>(
             box: box,
@@ -272,15 +259,14 @@ interface class ListBox<T extends Object, K extends Object>._({
 /// Testing seam: wires an [ListBox] around an already-open (or fake) [box] instead of going through
 /// the real provider, so unit suites drive the façade against in-memory doubles.
 ///
-/// Same library as the façade on purpose, and deliberately not exported: the barrel's `show` keeps
-/// it out of the public API, so it exists only for suites importing this file directly.
+/// Not exported, so only suites importing this file directly can see it.
 @visibleForTesting
 ListBox<T, K> listBoxAround<T extends Object, K extends Object>(
   Box<Object?> box, {
   KeyCodec<K>? codec,
   BoxObserver? observer,
 }) => ListBox<T, K>._(
-  // Explicit type arguments on purpose; see CODESTYLE #type-safety.
+  // Explicit type arguments on purpose, see CODESTYLE #type-safety.
   engine: EagerCrudEngine<List<T>>(
     box: box,
     valueCodec: CollectionCastValueCodec<T>(),

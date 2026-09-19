@@ -1,7 +1,5 @@
-// The eager list façade end to end against real hive_ce on temp dirs, through the public
-// barrel: the collection disk truth of upstream issue 150 with a custom adapter type, reads
-// asserted only after close and reopen, the aliasing pins against hive's real cache,
-// absent-vs-empty on disk, the sugar semantics, and the terminal lifecycle.
+// The eager list façade end to end, against real hive_ce on a temp dir and through the public barrel.
+// Reads are asserted only after a close and reopen, since that is where the collection reification bites.
 @TestOn('vm')
 @Tags(['integration'])
 library;
@@ -40,7 +38,7 @@ void main() {
 
       facade = await ListBox.open<Person, int>('people').run();
 
-      // From disk hive reifies List<dynamic>; the read boundary restores List<Person>.
+      // From disk hive hands back List<dynamic>, and the read boundary restores List<Person>.
       check(facade.getOr(1)).deepEquals(people);
       check(facade.getOr(1)).isA<List<Person>>();
     });

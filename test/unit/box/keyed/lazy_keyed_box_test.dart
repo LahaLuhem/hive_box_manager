@@ -1,7 +1,4 @@
-// The lazy façade against the stateful in-memory fake, wired through the same-library testing
-// seam: single-flight auto-open, the sync-inspector carve-out, codec defaulting, delegation per
-// member, Option-valued watch events, absence + failure paths, and the pre-first-use close
-// no-op rider.
+// The lazy keyed façade against the in-memory fake, wired through the same-library testing seam.
 @Tags(['unit'])
 library;
 

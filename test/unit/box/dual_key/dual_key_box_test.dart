@@ -1,7 +1,4 @@
-// The eager dual-key façade against the stateful in-memory fake, wired through the
-// same-library testing seam: codec defaulting with the packed opt-in included, record
-// round-trips, the folded scan queries returning plain lists that track live state, part-domain
-// asserts, and terminal lifecycle.
+// The eager dual-key façade against the in-memory fake, wired through the same-library testing seam.
 @Tags(['unit'])
 library;
 

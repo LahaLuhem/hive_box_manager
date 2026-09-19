@@ -3,20 +3,17 @@ library;
 
 import 'dual_key_codec.dart';
 
-/// The opt-in performance dual-key codec: packs two 16-bit parts arithmetically into one u32
-/// `int` key.
+/// The opt-in performance dual-key codec: packs 2 parts of 16 bits arithmetically into one u32 `int` key.
 ///
-/// Byte-identical to the 0.0.x `.bitShift` scheme for in-range parts (`(p << 16) | s` equals
-/// `p * 2^16 + s` there), so 0.0.x bit-shift boxes read in place. The measured wins over the
-/// String default live on eager gets, box open time, keystore memory, file size, and key scans;
-/// lazy reads and single-key writes are codec-indifferent because disk dominates. The price is
-/// the domain ceiling: both parts must fit `0..65535`.
+/// Byte-identical to the 0.0.x `.bitShift` scheme for in-range parts, so those boxes still read. It
+/// wins on eager gets, open time, keystore memory, file size and key scans (`benchmark/key_codecs.dart`),
+/// while lazy reads and single writes don't care either way because disk dominates. The price is the
+/// ceiling: both parts have to fit 16 bits.
 ///
-/// Part domains are asserted in development and deliberately unchecked in release (the
-/// zero-cost path this codec exists for): an out-of-domain part is a fix-your-data error, and
-/// the write-path gate still rejects any packed result that escapes the u32 raw domain.
-/// Arithmetic rather than bitwise on principle: identical values, and exact under JS number
-/// semantics without leaning on web bitwise guarantees.
+/// Part domains are asserted in development and left unchecked in release, which is the whole point
+/// of this codec. An out-of-domain part is a fix-your-data problem, and the write-path gate still catches
+/// any packed result that escapes hive's raw domain. Arithmetic rather than bitwise, because the values
+/// are identical and arithmetic stays exact under JS number semantics.
 final class PackedIntDualCodec implements DualKeyCodec<int, int> {
   /// Const so façades can default to it without an allocation per box.
   const new();

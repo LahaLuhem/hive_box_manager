@@ -1,5 +1,5 @@
-// The lifecycle core's acquisition seam: pass-through of hive_ce's pluggables, verified against
-// a generated mock of the injected HiveInterface (the 1.x IsolatedHive hinge).
+// The lifecycle core's acquisition seam: hive_ce's pluggables passing through, checked against a generated
+// mock of the injected HiveInterface.
 @Tags(['unit'])
 library;
 

@@ -1,6 +1,5 @@
-/// Runs `release_mode_probe.dart` in a subprocess with asserts off (matching a
-/// release build) so the pin suites can assert release-mode engine truth that
-/// `dart test` (asserts on) cannot observe in-process.
+/// Runs `release_mode_probe.dart` in a subprocess with asserts off (matching a release build) so the
+/// pin suites can assert release-mode engine truth that `dart test` (asserts on) cannot observe in-process.
 library;
 
 import 'dart:convert';
@@ -10,8 +9,7 @@ import 'package:checks/checks.dart';
 
 /// Launches the probe via `dart run` and returns its flat verdict map.
 ///
-/// Relies on the test runner's working directory being the package root,
-/// which `dart test` guarantees.
+/// Relies on the test runner's working directory being the package root, which `dart test` guarantees.
 Future<Map<String, Object?>> runReleaseModeProbe(Directory workDir) async {
   final result = await Process.run(Platform.resolvedExecutable, [
     'run',

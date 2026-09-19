@@ -4,8 +4,8 @@ import 'package:platform_icons/platform_icons.dart';
 
 import '../observers/log_panel_observer.dart';
 
-/// The live box-event feed docked under every demo: one `ValueListenableBuilder` over the
-/// observer's `ListNotifier`, so each dispatched event repaints only this panel.
+/// The live box-event feed docked under every demo. One `ValueListenableBuilder` over the observer's
+/// notifier, so an event repaints only this panel.
 class LogPanel extends StatelessWidget {
   final LogPanelObserver observer;
 

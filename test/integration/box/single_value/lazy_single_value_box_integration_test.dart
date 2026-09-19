@@ -1,6 +1,5 @@
-// The lazy single-value façade end to end against real hive_ce on temp dirs, through the public
-// barrel: auto-open, the slot-0 disk truth via a new instance, the Option watch stream on the
-// lazy axis, and the pre-first-use close no-op (never creates the box).
+// The lazy single-value façade end to end, against real hive_ce on a temp dir and through the public
+// barrel. Includes the slot-0 compatibility pin.
 @TestOn('vm')
 @Tags(['integration'])
 library;

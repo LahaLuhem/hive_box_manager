@@ -1,6 +1,4 @@
-// The eager façade against the stateful in-memory fake, wired through the same-library testing
-// seam: codec defaulting at construction, delegation and event mapping per member, the sync
-// corruption gate, absence + failure paths, and the terminal-close contract.
+// The eager keyed façade against the in-memory fake, wired through the same-library testing seam.
 @Tags(['unit'])
 library;
 

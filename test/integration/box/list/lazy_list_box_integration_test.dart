@@ -1,7 +1,6 @@
-// The lazy list façade end to end against real hive_ce on temp dirs, through the public
-// barrel: auto-open, the collection disk truth of upstream issue 150 with a custom adapter
-// type via a new instance, Option-valued watch payloads, the sugar semantics, and the
-// pre-first-use close no-op rider.
+// The lazy list façade end to end, against real hive_ce on a temp dir and through the public barrel.
+// The collection disk truth is checked through a fresh instance, since that is where the reification
+// bites.
 @TestOn('vm')
 @Tags(['integration'])
 library;

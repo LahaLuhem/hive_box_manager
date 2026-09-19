@@ -7,13 +7,13 @@ this package. Claude-Code-specific guidance lives in [CLAUDE.md](./CLAUDE.md).
 
 A developer-experience wrapper over [`hive_ce`](https://pub.dev/packages/hive_ce) (the community
 Hive fork; docs at <https://docs.hive.isar.community>), giving Hive's `Box` / `LazyBox` a typed,
-functional surface. It adds no storage engine of its own. Four aims:
+functional surface. It adds no storage engine of its own. 4 aims:
 
 - **fpdart-first surface.** Reads and writes hand back lazy [`fpdart`](https://pub.dev/packages/fpdart)
   `Task` / `TaskOption` / `Option`, never a bare `Future` or `null`. Absence is an `Option`.
 - **CRUD for free.** The per-box get / put / update / delete / clear boilerplate consumers usually
   hand-write ships as ready-made box façades.
-- **Purpose-built box variants.** Four façade families, each in an eager and a lazy variant:
+- **Purpose-built box variants.** 4 façade families, each in an eager and a lazy variant:
   `KeyedBox`, `SingleValueBox`, `ListBox`, and `DualKeyBox` (with reverse queries folded in),
   each adding semantic ergonomics over raw Hive.
 - **Hive's performance, kept.** Raw speed is `hive_ce`'s headline; the wrapper must not trade it
@@ -26,19 +26,18 @@ engine; `fpdart` is the paradigm. Rationale:
 
 ## Stack
 
-- **Dart ≥ 3.12** (constraint in `pubspec.yaml`; SDK channel pinned in `.fvmrc`), one floor for
-  consumers and contributors alike (the test toolchain floors at 3.11, inside the package floor).
-  Rationale and history: [`APPENDIX.md#sdk-floor`](./APPENDIX.md#sdk-floor).
+- **Dart, floored by the `sdk:` constraint in `pubspec.yaml`** (SDK channel pinned in `.fvmrc`).
+  One floor for consumers and contributors alike. Rationale and history:
+  [`APPENDIX.md#sdk-floor`](./APPENDIX.md#sdk-floor).
 - **`dart test`** for tests; **`dart --no-version-check analyze .`** for pedantic static analysis
   (pedantic mode is intentional). No Flutter dependency in the package, no platform channels. The
   `example/` app is Flutter and carries its own pubspec; its CI is wired separately once it lands.
 - **`dependency_validator`** guards the dependency set; `dart_dependency_validator.yaml` scopes it
   to the published surface and skips the example.
-- **Container-based linters** (`shellcheck` for shell, `actionlint` for workflows, `rumdl` for
-  Markdown, `ryl` for YAML) run from the [`linterpol`](https://github.com/LahaLuhem/linterpol)
+- **Container-based linters** run from the [`linterpol`](https://github.com/LahaLuhem/linterpol)
   Docker image, not local installs, so only Docker (plus `jq`) is needed. The check set and image
-  tag live in one manifest, [`.github/lint-checks.json`](./.github/lint-checks.json); `repo.yml`
-  fans a CI matrix over it and `scripts/release.sh`'s preflight loops the same file, so the two
+  tag live in one manifest, [`.github/lint-checks.json`](./.github/lint-checks.json). `repo.yml`
+  fans a CI matrix over it and `scripts/release.sh`'s preflight loops the same file, so the 2
   can't drift. **Adding a linter is one entry in that manifest.** Per-tool config tuned to the repo
   lives in `.rumdl.toml` and `.yamllint.yaml`.
 - **CHANGELOG and the `version:` field are owned by [`scripts/release.sh`](./scripts/release.sh)**
@@ -54,7 +53,7 @@ hive_box_manager/
 ├── lib/
 │   ├── hive_box_manager.dart       Public entry; `show`-scoped `export 'src/…'` lines only
 │   └── src/
-│       ├── box/                    The eight public façades + their hidden testing seams
+│       ├── box/                    The 8 public façades + their hidden testing seams
 │       ├── codec/{key,dual}/       KeyCodec / DualKeyCodec seams + shipped codecs + resolution
 │       ├── core/                   box_provider, raw_key_gate, engine/, value_codec/,
 │       │                           constants/, utils/  (all internal)
@@ -172,13 +171,17 @@ keep in working memory:
 - **Mark recommendations with `★`.** Prefix your preferred option so the user can scan and reply by
   echoing or overriding (e.g. "★ for 1-4, change 5 to B").
 - **Document new user-facing features in the README** in the same change. Rationale and trade-offs
-  go in `APPENDIX.md`; the README is the user-facing entry point.
+  go in `APPENDIX.md`, the README being the user-facing entry point.
+- **Read <https://noslopgrenade.com/> before writing any prose.** Docs, dartdoc, comments, benchmark
+  headers, commit messages, PR bodies. Fetch the page, don't cite it from memory: it is the intent
+  behind [Prose & voice](./CODESTYLE.md#prose), and skipping it is how the wall of text gets
+  written.
 - **Read `analysis_options.yaml` before writing code.** The lint posture is far stricter than the
-  Dart default; code that fails lint won't pass review.
+  Dart default, and code that fails lint won't pass review.
 - **Surface semver implications loudly.** If a change touches anything re-exported from
   `lib/hive_box_manager.dart`, call out whether it's patch / minor / major before the diff lands.
 - **Verify a performance claim with an experiment that isolates one variable.** Issue #14's root
-  cause was wrong in three documents for a release because one lane changed two things at once: it
+  cause was wrong in 3 documents for a release because one lane changed 2 things at once: it
   dropped a record type argument *and* an adapter in the same step, then credited the wrong one.
   Before attributing a cost to a mechanism, build the lane that separates it from its neighbour, and
   commit that lane so the attribution stays reproducible instead of remembered. The corollary holds

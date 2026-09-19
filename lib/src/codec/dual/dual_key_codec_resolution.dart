@@ -1,13 +1,12 @@
 import 'dual_key_codec.dart';
 import 'string_composite_dual_codec.dart';
 
-/// Resolves the [DualKeyCodec] a dual façade wires for ([K1], [K2]): an [explicitCodec] always
-/// wins, and `(int, int)` parts default to the safe [StringCompositeDualCodec].
+/// Resolves the [DualKeyCodec] a dual façade wires for ([K1], [K2]): an [explicitCodec] always wins,
+/// and `(int, int)` parts default to the safe [StringCompositeDualCodec].
 ///
-/// Any other part pair without an explicit codec fails an assert at wiring time: construction
-/// always runs in development and the check is data-independent, so the assert is the contract
-/// (tier 1). The [ArgumentError] behind it is the honest release fallback, because a codec-less
-/// box cannot function at all.
+/// Any other part pair without a codec trips an assert while wiring. Construction always runs in development
+/// and the check doesn't depend on data, so the assert is the real contract. The [ArgumentError] behind
+/// it is the release fallback, since a codec-less box can't work at all.
 DualKeyCodec<K1, K2> resolveDualKeyCodec<K1 extends Object, K2 extends Object>(
   DualKeyCodec<K1, K2>? explicitCodec,
 ) {
@@ -19,9 +18,8 @@ DualKeyCodec<K1, K2> resolveDualKeyCodec<K1 extends Object, K2 extends Object>(
     'codec. Pass codec:.',
   );
 
-  // Exact type equality first, then `is`-promotion without an `as` launder; see
-  // resolveKeyCodec for why a bare `is` check would admit covariant supertype parts. The local
-  // is typed Object so the `is` check narrows (promotion cannot widen a concrete static type).
+  // Exact type equality first, then `is`-promotion, see resolveKeyCodec for why. The local is typed
+  // `Object` so the check narrows, since promotion can't widen a concrete static type.
   if (K1 == int && K2 == int) {
     const Object compositeDefault = StringCompositeDualCodec();
     if (compositeDefault is DualKeyCodec<K1, K2>) return compositeDefault;

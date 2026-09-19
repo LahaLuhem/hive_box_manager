@@ -1,6 +1,5 @@
-// The eager single-value façade end to end against real hive_ce on temp dirs, through the
-// public barrel: the slot-0 disk-truth compatibility pin, per-member round-trips, the Option
-// watch stream, cipher pass-through, and the terminal lifecycle.
+// The eager single-value façade end to end, against real hive_ce on a temp dir and through the public
+// barrel. Includes the slot-0 compatibility pin.
 @TestOn('vm')
 @Tags(['integration'])
 library;

@@ -1,8 +1,8 @@
-// Pins hive_ce 2.19.3's watch-event payloads (probe P6 + the 2026-07-21 lazy re-probe and clear() probe):
-// eager events always carry the value, even on deletes and clears; lazy delete/clear events carry
-// null because a LazyBox retains no values. The 1.0 typed-watch axis split (TypedBoxEvent with non-null
-// value vs LazyTypedBoxEvent with Option) is anchored here, so an engine upgrade that starts delivering
-// lazy delete values fails this suite loudly and the contract can be upgraded deliberately.
+// Pins what hive_ce puts in a watch event. Eager events always carry the value, deletes and clears included,
+// while lazy ones carry null because a LazyBox keeps nothing in memory.
+//
+// That split is what [TypedBoxEvent] and [LazyTypedBoxEvent] are built on, so an engine upgrade that
+// starts delivering lazy delete values fails here loudly rather than quietly widening the contract.
 @TestOn('vm')
 @Tags(['integration'])
 library;
@@ -15,8 +15,8 @@ import 'package:test/test.dart';
 
 import '../../support/bdd.dart';
 
-/// Collects the events [stream] emits while [act] runs, draining the event queue before returning so
-/// no in-flight notification is missed.
+/// Collects what [stream] emits while [act] runs, draining the queue first so nothing in flight gets
+/// missed.
 Future<List<BoxEvent>> record(Stream<BoxEvent> stream, Future<void> Function() act) async {
   final events = <BoxEvent>[];
   final subscription = stream.listen(events.add);

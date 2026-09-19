@@ -1,5 +1,5 @@
-// IntKeyCodec is a pure pass-through; this pin keeps it honest (a future "helpful" transform in
-// either direction would break stored-data compatibility).
+// IntKeyCodec is a pure pass-through, and this pin keeps it that way. A helpful transform in either
+// direction would break stored data.
 @Tags(['unit'])
 library;
 

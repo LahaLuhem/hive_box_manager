@@ -22,14 +22,14 @@ that's the gap this fills:
   there" is a case the compiler makes you handle, never a crash waiting to happen.
 - 🧰 **CRUD is already written.** get, put, update, delete, clear and watch ship on every box, so
   you stop rewriting the same boilerplate for every type you store.
-- 🧩 **Four boxes for four real shapes of data**, each in an eager and a lazy flavour, so the box
+- 🧩 **4 boxes for 4 real shapes of data**, each in an eager and a lazy flavour, so the box
   fits the problem instead of the other way round.
 - 🛡️ **Safer than raw Hive.** The write path rejects keys release-mode `hive_ce` accepts and then
   silently corrupts on, and `ListBox` closes the `List<dynamic>` trap that breaks a naive
   `Box<List<T>>` on its first post-restart read. Both pinned by tests against upstream, not assumed.
 - 🚀 **At near-native Hive speed.\*** Reads cost 1 to 22 ns per op against raw `hive_ce`, and
   effects that reach disk stay within 2 to 4%.
-  <br><sub>\* Two surfaces cost more than that, and [what that costs](#-what-that-costs) prices
+  <br><sub>\* 2 surfaces cost more than that, and [what that costs](#-what-that-costs) prices
   every surface rather than quoting one flattering average.</sub>
 
 Pure Dart, so it runs anywhere Hive does: Flutter apps, Dart servers, CLIs, and the web.
@@ -64,7 +64,7 @@ Start here. Match what you're storing to a family, then grab its eager or lazy v
 | Many values, one key each     | `KeyedBox<T, K>`        | users, todos, cache entries                 |
 | Exactly one value             | `SingleValueBox<T>`     | a session token, the theme, one config blob |
 | A list of values per key      | `ListBox<T, K>`         | tags per post, history per day              |
-| Values addressed by two parts | `DualKeyBox<T, K1, K2>` | (user, day) events, (row, column) grids     |
+| Values addressed by 2 parts | `DualKeyBox<T, K1, K2>` | (user, day) events, (row, column) grids     |
 
 Every family has an eager and a `Lazy...` twin; [Eager or lazy?](#-eager-or-lazy-measured) picks
 the axis with measured numbers. Reverse queries ("everything for this user") live on the
@@ -112,7 +112,7 @@ factory, holding one means it's already open. There's no init step to forget.
 
 ## 🧰 The box families
 
-Here's the good part: all four families wear the **same surface**, so you learn it once and it
+Here's the good part: all 4 families wear the **same surface**, so you learn it once and it
 carries everywhere. The shape, in short:
 
 - Absence is always `Option` / `TaskOption`, never `null` and never a magic default.
@@ -143,7 +143,7 @@ hand back.
 `Map.fromIterables(values.map((v) => v.id), values)` at the call site becomes
 `putAllBy(values, key: (v) => v.id)`. It builds no intermediate map, which measures about
 **74 ns per entry** cheaper (0.94x) than writing the map yourself. `DualKeyBox` takes the same shape
-with two extractors (`primary:` and `secondary:`), and `ListBox` has `putAllGrouped`, which collects
+with 2 extractors (`primary:` and `secondary:`), and `ListBox` has `putAllGrouped`, which collects
 a flat iterable into one stored list per key.
 
 Keep `putAll` for everything else, and that is most cases: the key often isn't derivable from the
@@ -243,7 +243,7 @@ Worth knowing:
 
 ### 🔗 DualKeyBox
 
-Two natural dimensions to your data (user + day, row + column). Address it by both parts, query by
+2 natural dimensions to your data (user + day, row + column). Address it by both parts, query by
 either.
 
 <details>
@@ -268,7 +268,7 @@ Both parts round-trip through one `DualKeyCodec`. `(int, int)` defaults to the s
 `StringCompositeDualCodec` (full-range parts, negatives included, no ceilings). If both parts fit
 in 16 bits and the numbers matter to you, opt into `PackedIntDualCodec`
 (`codec: const PackedIntDualCodec()`). It packs both parts into a single u32 key and is
-**bit-identical to the old `0.0.x` `.bitShift` scheme**, so those boxes read in place. The two
+**bit-identical to the old `0.0.x` `.bitShift` scheme**, so those boxes read in place. The 2
 codecs trade off measurably; [Codec choice](#-codec-choice) has the head-to-head. Rolling your own
 part types? Implement `DualKeyCodec<K1, K2>` and keep the encoding bijective, or reverse queries
 will lie to you.
@@ -327,7 +327,7 @@ final todos = await KeyedBox.open<Todo, int>(
 ```
 
 Extend `BoxObserver` and override only the events you care about; `PrintingBoxObserver` is the
-ready-made sink. Two notes on the engine side: `hive_ce`'s own warnings stay on its global logging
+ready-made sink. 2 notes on the engine side: `hive_ce`'s own warnings stay on its global logging
 channel (its [logging options](https://docs.hive.isar.community) filter them), and the
 [Hive Inspector DevTools extension](https://pub.dev/packages/hive_ce) is handy for eyeballing box
 contents while your observer reports what the code did to them.
@@ -347,7 +347,7 @@ Apple Silicon, AOT, hive_ce 2.19.3) disagrees:
 - **Reads are where they split.** An eager get is ~1.1 to 1.4 µs from memory; a lazy get pays for
   a disk read at ~26 µs.
 
-Open cost tracks file size on both axes (the two lines sit right on top of each other), while
+Open cost tracks file size on both axes (the 2 lines sit right on top of each other), while
 reads are where they part ways:
 
 ![Box open time by box size: eager and lazy overlap, both rising with size](https://raw.githubusercontent.com/LahaLuhem/hive_box_manager/master/benchmark/reports/open_eager_vs_lazy.png)
@@ -393,7 +393,7 @@ underlying op is that cheap, and percentages only where the denominator is a rea
 `benchmark/python/overhead.py` enforces the same split, and refuses to stand behind a run whose
 median and minimum disagree.
 
-Precision, honestly: repeated passes reproduce the *bands* above and the ordering, not two
+Precision, honestly: repeated passes reproduce the *bands* above and the ordering, not 2
 significant figures on any single lane. Treat each figure as an order of magnitude.
 
 </details>
@@ -410,10 +410,10 @@ while the wrapper's stays flat, so take the nanoseconds and ignore the multiple.
 <summary>Where a composite key can cost you, measured</summary>
 
 This surface takes `(K1, K2)` records, and there is one way to encode them that costs ~25x the
-others. Eight variants of the same two-part encode, each changing exactly one thing from the one
+others. 8 variants of the same two-part encode, each changing exactly one thing from the one
 above it:
 
-![Eight key-shape variants by ns per op: the three that route a generic-parameterised record through a checked parameter cost about 355 ns, every other shape sits near 15 ns](https://raw.githubusercontent.com/LahaLuhem/hive_box_manager/master/benchmark/reports/key_shape_attribution.png)
+![8 key-shape variants by ns per op: the 3 that route a generic-parameterised record through a checked parameter cost about 355 ns, every other shape sits near 15 ns](https://raw.githubusercontent.com/LahaLuhem/hive_box_manager/master/benchmark/reports/key_shape_attribution.png)
 
 Records are free. Generics are free. An extra adapter call frame is free. What costs ~350 ns is a
 **record type built from a class's own type parameters, sitting in a checked parameter position**:
@@ -429,7 +429,7 @@ relationship, so this stays measured rather than remembered.
 </details>
 
 **`ListBox` prices differently**, because raw hive has no list-valued box to compare against. Its
-baseline is the code you would hand-write, and there are two of those. Against the version with a
+baseline is the code you would hand-write, and there are 2 of those. Against the version with a
 `.cast<T>()` at the read boundary, `ListBox` costs the ~290 ns plus ~1.8 ns per element above (the
 per-element part is the cast view's type check, one per element you actually touch). Against the
 version without a cast, your hand-roll is *faster and broken*: a stored `List<Person>` reads back as
@@ -438,7 +438,7 @@ lane, reads included, so the read view really is copy-free; it just isn't check-
 
 ### ⚡ Codec choice
 
-Two dual-key codecs ship, and they trade off like this:
+2 dual-key codecs ship, and they trade off like this:
 
 | Operation                     | packed int                         | String composite |
 |-------------------------------|------------------------------------|------------------|

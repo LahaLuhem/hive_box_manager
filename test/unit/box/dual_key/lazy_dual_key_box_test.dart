@@ -1,7 +1,4 @@
-// The lazy dual-key façade against the stateful in-memory fake, wired through the same-library
-// testing seam: auto-open (queries included), the sync-inspector carve-out, codec defaulting,
-// record round-trips, Task-shaped queries (empty list, never None), Option-valued watch
-// payloads, and the pre-first-use close no-op rider.
+// The lazy dual-key façade against the in-memory fake, wired through the same-library testing seam.
 @Tags(['unit'])
 library;
 

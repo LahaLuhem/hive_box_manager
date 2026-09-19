@@ -1,8 +1,6 @@
 import 'package:hive_ce/hive.dart';
-// hive_ce's public openBox/openLazyBox signatures *default* to these two symbols but the barrel
-// never exports them, so passing them through needs the implementation paths (upstream
-// packaging oversight). The caret-open dependency plus compile visibility keeps any upstream
-// move loud.
+// hive_ce defaults to these 2 but never exports them, so the only way to pass them through is the
+// implementation path.
 // ignore: implementation_imports
 import 'package:hive_ce/src/box/default_compaction_strategy.dart';
 // ignore: implementation_imports -- same oversight as above.
@@ -10,14 +8,12 @@ import 'package:hive_ce/src/box/default_key_comparator.dart';
 
 /// Internal lifecycle core: the one place boxes are acquired.
 ///
-/// Wraps the global [Hive] by default and is injectable for tests; at 1.x this is also the seam
-/// where an IsolatedHive-backed provider plugs in (lazy-only, since isolated boxes are all-async).
-/// Boxes open `Object?`-parameterised: the engines' value codecs own typing at the read/write boundary,
-/// and collections could not open typed anyway (hive refuses or traps on typed collection boxes; pinned).
+/// Wraps the global [Hive] and takes an injected one for tests. Boxes open as `Object?`, since the engines'
+/// value codecs do the typing at the read and write boundary, and hive won't open a typed collection
+/// box anyway.
 ///
-/// hive_ce's own pluggables pass through untouched: cipher, key comparator, compaction strategy,
-/// crash recovery. No wrapper preconditions here: whatever `openBox` throws for (wrong-kind reopen, unknown types)
-/// surfaces as the engine's own error (tier 3).
+/// Cipher, key comparator, compaction strategy and crash recovery all go straight through, and so does
+/// whatever `openBox` throws.
 final class BoxProvider {
   final HiveInterface _hive;
 

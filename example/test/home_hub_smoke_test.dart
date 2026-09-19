@@ -1,6 +1,5 @@
-// Render smoke: the hub builds under the adaptive stack (Material on the test platform) and
-// shows one tile per box family. Plain testWidgets on purpose: bdd_framework wraps test(), not
-// testWidgets, so widget pumping stays outside the Gherkin suites.
+// Render smoke: the hub builds and shows one tile per box family. Plain testWidgets on purpose, since
+// bdd_framework wraps test() rather than testWidgets.
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hbm_example/features/core/views/home_hub_view.dart';

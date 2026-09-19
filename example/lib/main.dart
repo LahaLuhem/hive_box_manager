@@ -6,7 +6,7 @@ import '/features/core/data/constants/demo_theme.dart';
 import '/features/core/views/home_hub_view.dart';
 
 Future<void> main() async {
-  // Engine setup stays hive_ce's one-liner; every box open below goes through the façades.
+  // Engine setup stays hive_ce's one-liner. Every box open below goes through the façades.
   await Hive.initFlutter();
 
   runApp(const HbmExampleApp());

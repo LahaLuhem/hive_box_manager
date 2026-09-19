@@ -1,7 +1,7 @@
 // The #150 collection cast with its unmodifiable zero-copy view.
 //
-// The cast codec's whole subject is hive's `List<dynamic>` reification, so the DCM ban is
-// lifted for this file.
+// The cast codec's whole subject is hive's `List<dynamic>` reification, so the DCM ban is lifted for
+// this file.
 // ignore_for_file: avoid-dynamic
 @Tags(['unit'])
 library;

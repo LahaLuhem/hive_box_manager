@@ -1,31 +1,31 @@
 /// A thin, zero-dependency Gherkin vocabulary over `package:test`.
 ///
-/// The value is the shape, not a framework: [feature] and [scenario] make the system under test and
-/// its expected behaviour read as a specification, and [scenarioOutline] drives one system under test
-/// from a table of named examples, so the input values stay grouped as clear parameters instead of
-/// scattered through the test body.
+/// The value here is the shape, not a framework. [feature] and [scenario] make the thing under test
+/// and its expected behaviour read as a spec, and [scenarioOutline] drives one of them from a table
+/// of named examples so the inputs stay together instead of scattered through the body.
 ///
-/// Copied from the maintainer's `minted` package (`test/support/bdd.dart`). Adapt here as needed,
-/// and keep the shape in sync by hand.
+/// Copied from the maintainer's `minted` package (`test/support/bdd.dart`). Adapt here as needed, and
+/// keep the shape in sync by hand.
 library;
 
 import 'dart:async';
 
 import 'package:test/test.dart';
 
-/// Groups the scenarios describing one unit under test. Reads as `Feature: <description>` in the test output.
+/// Groups the scenarios describing one unit under test. Reads as `Feature: <description>` in the test
+/// output.
 void feature(String description, void Function() body) => group('Feature: $description', body);
 
-/// One behaviour of the unit under test, as a single test. Reads as `Scenario: <description>`; [body] is the Given/When/Then flow.
+/// One behaviour of the unit under test, as a single test. Reads as `Scenario: <description>`, with
+/// [body] carrying the Given/When/Then flow.
 void scenario(String description, FutureOr<void> Function() body) =>
     test('Scenario: $description', body);
 
 /// A scenario exercised once per row of an examples table.
 ///
-/// [examples] maps each row's name (what makes the case interesting) to its data: a record grouping
-/// the input parameters with the expected outcome, so the cases read as a table rather than scattered literals.
-/// [outline] receives each row and exercises the system under test, and becomes one test per row,
-/// so a failure names the row that broke.
+/// [examples] maps each row's name, which is whatever makes that case interesting, to a record of its
+/// inputs and expected outcome. [outline] runs once per row and becomes its own test, so a failure names
+/// the row that broke.
 void scenarioOutline<Row>(
   String description, {
   required Map<String, Row> examples,

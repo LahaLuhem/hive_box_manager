@@ -18,44 +18,40 @@ import '/src/event/typed_box_event.dart';
 import '/src/observer/box_observer.dart';
 import '/src/query/scan_query_index.dart';
 
-/// A typed, fpdart-first façade over an **eager** hive box addressed by a two-part composite key,
-/// with reverse queries by either part folded in.
+/// A typed, fpdart-first façade over an **eager** hive box addressed by a two-part composite key, with
+/// reverse queries by either part folded in.
 ///
-/// The two-dimensional scenario: user + day, row + column, entity + revision. Every operation takes
-/// the parts separately ([get], [put], [contains], ...) or as `(K1, K2)` records where a whole key
-/// travels ([keys], [putAll], watch events). Both parts round-trip through one [DualKeyCodec]:
-/// `(int, int)` parts default to the safe [StringCompositeDualCodec] (full-range parts, negatives included),
-/// and [PackedIntDualCodec] is the measured performance opt-in with its 16-bit-per-part ceiling.
-/// Any other part types take a consumer codec; keep it bijective or reverse queries will lie.
+/// For the two-dimensional cases: user and day, row and column, entity and revision. Most calls take
+/// the parts separately, and `(K1, K2)` records show up where a whole key has to travel ([keys], [putAll],
+/// watch events). Both parts round-trip through one [DualKeyCodec], and `(int, int)` gets [StringCompositeDualCodec]
+/// unless you say otherwise. Bring your own codec for other part types, and keep it bijective or the
+/// reverse queries will lie to you.
 ///
-/// [queryByPrimary] / [queryBySecondary] answer "everything at this part" with a plain, possibly-empty
-/// list, never an `Option` (no matches is a real, empty answer). 1.0's strategy is an honest **O(K)
-/// scan** over the live key set: exact lookups stay O(1), and the scan costs nothing until called.
-/// Queries read each match, so observers hear one read per matched key.
+/// [queryByPrimary] and [queryBySecondary] answer "everything at this part" with a plain list, empty
+/// when nothing matches, never an `Option`. It really is an O(K) scan, though exact lookups stay O(1)
+/// and the scan costs nothing until you call one. Observers hear one read per match.
 ///
-/// Everything else matches [KeyedBox]: eager reads are synchronous and disk-free, effects are lazy
-/// [Task]s, the write path gates raw keys with a synchronous [ArgumentError]
-/// (the shipped codecs cannot produce an unstorable key; the gate guards consumer codecs), engine
-/// failures surface unwrapped inside tasks, and [close] / [deleteFromDisk] are terminal.
+/// Everything else works like [KeyedBox]. The key check only ever fires for a codec you wrote, since
+/// the shipped ones can't produce an unstorable key.
 ///
-/// `interface class`: implement it for test fakes; extending is reserved to this package.
+/// `interface class`: implement it for test fakes, extending is ours.
 interface class DualKeyBox<T extends Object, K1 extends Object, K2 extends Object>._({
   required final EagerCrudEngine<T> _engine,
   required final DualKeyCodec<K1, K2> _dualCodec,
 }) {
   /// Encodes a two-part key for the engine, which admits only encoded keys.
   ///
-  /// Two scalar arguments, never a `(K1, K2)` record: a record parameter typed from a class's own
-  /// type parameters costs ~350 ns per call, and was this family's entire overhead. See [RawKey].
+  /// 2 scalar arguments, never a `(K1, K2)` record. A record parameter typed from the class's own
+  /// type parameters costs about 350 ns a call, which was this family's entire overhead. See [RawKey].
   @pragma('vm:prefer-inline')
   RawKey _rawKeyFor(K1 primary, K2 secondary) => RawKey(_dualCodec.encode(primary, secondary));
 
   late final _scanIndex = ScanQueryIndex<K1, K2>(rawKeys: () => _engine.rawKeys, codec: _dualCodec);
 
-  /// The box name: the correlation handle observers receive with every event.
+  /// The box name. Observers hear it with every event.
   String get name => _engine.name;
 
-  /// Number of stored composite keys; keys always live in memory, so this is free.
+  /// How many composite keys are stored. Keys live in memory, so this is free.
   int get length => _engine.length;
 
   /// Whether the box holds no entries.
@@ -68,8 +64,8 @@ interface class DualKeyBox<T extends Object, K1 extends Object, K2 extends Objec
   /// they are iterated.
   Iterable<(K1, K2)> get keys => _engine.rawKeys.map(_dualCodec.decode);
 
-  /// The stored values, served from the in-memory cache, decoded as they are iterated.
-  /// Dispatches one read-all event at call time.
+  /// The stored values, served from the in-memory cache, decoded as they are iterated. Dispatches one
+  /// read-all event at call time.
   Iterable<T> get values => _engine.values(_dualCodec.decode);
 
   /// Reads the value under ([primary], [secondary]) synchronously from memory: `Some` when present,
@@ -84,24 +80,24 @@ interface class DualKeyBox<T extends Object, K1 extends Object, K2 extends Objec
   /// Whether ([primary], [secondary]) is stored right now.
   bool contains(K1 primary, K2 secondary) => _engine.contains(_rawKeyFor(primary, secondary));
 
-  /// Every value whose key's primary part equals [primary], as a plain (possibly empty) list:
-  /// an O(K) scan over the live key set, one read event per match.
+  /// Every value whose primary part is [primary], as a plain list. An O(K) scan, one read event per
+  /// match.
   List<T> queryByPrimary(K1 primary) => _matchesFor(_scanIndex.rawKeysByPrimary(primary));
 
-  /// Every value whose key's secondary part equals [secondary], as a plain (possibly empty) list:
-  /// an O(K) scan over the live key set, one read event per match.
+  /// Every value whose secondary part is [secondary], as a plain list. An O(K) scan, one read event
+  /// per match.
   List<T> queryBySecondary(K2 secondary) => _matchesFor(_scanIndex.rawKeysBySecondary(secondary));
 
-  /// Writes [value] under ([primary], [secondary]) when run; the key gate applies as in [KeyedBox.put].
+  /// Writes [value] under ([primary], [secondary]) when run. Same key check as [KeyedBox.put].
   Task<Unit> put(K1 primary, K2 secondary, T value) => _engine
       .put(_rawKeyFor(primary, secondary), (primary, secondary), value)
       .map((_) => _afterWrite(primary, secondary));
 
-  /// Writes every entry of [entries] (keyed by `(primary, secondary)` records) in one batch when run.
-  /// All keys are encoded and gated at call time, so a bad key means nothing gets written.
+  /// Writes every entry of [entries], keyed by `(primary, secondary)` records, in one batch when run.
+  /// Keys are checked up front, so one bad key means nothing is written at all.
   Task<Unit> putAll(Map<(K1, K2), T> entries) => _engine
       .putAll(
-        // Lazy: the engine's own pass consumes this, so the batch is materialised once.
+        // Lazy on purpose: the engine's own pass consumes it, so the batch gets built once, not twice.
         entries.entries.map(
           (entry) => MapEntry(_rawKeyFor(entry.key.$1, entry.key.$2), entry.value),
         ),
@@ -114,25 +110,23 @@ interface class DualKeyBox<T extends Object, K1 extends Object, K2 extends Objec
         return unit;
       });
 
-  /// Writes every value in [values] when run, each under the two parts [primary] and [secondary] extract
+  /// Writes every value in [values] when run, each under the 2 parts [primary] and [secondary] extract
   /// from it.
   ///
-  /// Sugar over [putAll] for values that carry both their own parts. Worth more here than on the keyed
-  /// families: [putAll] needs the caller to build a `(K1, K2)`-keyed map, and hashing a record per
-  /// entry is the dearest part of that call. This path never builds a record at all.
+  /// Worth more here than on the keyed boxes: [putAll] makes you build a `(K1, K2)`-keyed map, and hashing
+  /// a record per entry is the expensive bit. This way no record is built at all.
   ///
-  /// Reach for [putAll] when the parts are not derivable from the value, which is common: parts coming
-  /// from a grid, a legacy key set, or anywhere but the value itself.
+  /// Use [putAll] when the parts don't come from the value, say a grid or a legacy key set.
   ///
-  /// Two values yielding the same pair trips an assert in development; in release the later one wins.
-  /// Same throw taxonomy as [putAll] otherwise, gate included.
+  /// 2 values landing on the same pair trips an assert in development, and in release the later one
+  /// wins.
   Task<Unit> putAllBy(
     Iterable<T> values, {
     required K1 Function(T value) primary,
     required K2 Function(T value) secondary,
   }) {
-    // Materialised: the engine consumes the entries, then the query hooks replay the same values.
-    // Extractors run twice per value as a result, which is why they should stay cheap.
+    // Built up front: the engine consumes the entries, then the query hooks replay them. That runs the
+    // extractors twice per value, so keep them cheap.
     final valueList = values.toList(growable: false);
 
     return _engine
@@ -168,7 +162,7 @@ interface class DualKeyBox<T extends Object, K1 extends Object, K2 extends Objec
   /// Deletes every `(primary, secondary)` record in [keys] in one batch when run. Observers hear one
   /// event per key.
   Task<Unit> deleteAll(Iterable<(K1, K2)> keys) {
-    // Materialised: iterated once for the batch, once for the hooks.
+    // Built once: iterated for the batch, then again for the hooks.
     final keyList = keys.toList(growable: false);
 
     return _engine
@@ -187,9 +181,8 @@ interface class DualKeyBox<T extends Object, K1 extends Object, K2 extends Objec
   /// Removes every entry when run.
   Task<Unit> clear() => _engine.clear();
 
-  /// Typed change stream; pass [key] as a `(primary, secondary)` record to watch one composite
-  /// key only (the surface's one blessed nullable). Events carry record keys and non-null values,
-  /// even on deletes (the eager promise).
+  /// Typed change stream. Pass [key] as a `(primary, secondary)` record to watch one composite key.
+  /// Events carry record keys, and a value even on deletes.
   Stream<TypedBoxEvent<T, (K1, K2)>> watch({(K1, K2)? key}) =>
       _engine.watchRaw(key: key == null ? null : _rawKeyFor(key.$1, key.$2)).map((event) {
         final semanticKey = _dualCodec.decode(event.key as Object);
@@ -201,23 +194,22 @@ interface class DualKeyBox<T extends Object, K1 extends Object, K2 extends Objec
         );
       });
 
-  /// Flushes pending writes to disk when run. Maintenance, not a data event: observers only hear failures.
+  /// Flushes pending writes to disk when run. Maintenance, so observers only hear about failures.
   Task<Unit> flush() => _engine.flush();
 
-  /// Compacts the box file when run. Maintenance, not a data event: observers only hear failures.
+  /// Compacts the box file when run. Maintenance, so observers only hear about failures.
   Task<Unit> compact() => _engine.compact();
 
-  /// Closes the box when run. **Terminal**: every later operation surfaces hive's own already-closed
-  /// error, and reacquisition means a new [open].
+  /// Closes the box when run. Terminal, see the class doc.
   Task<Unit> close() => _engine.close();
 
-  /// Deletes the box from disk when run. **Terminal**, like [close].
+  /// Deletes the box from disk when run. Terminal, like [close].
   Task<Unit> deleteFromDisk() => _engine.deleteFromDisk();
 
-  /// Reads every match in [rawKeys], skipping keys that vanish mid-scan
-  /// (races are the consumer's timeline, not an error).
+  /// Reads every match in [rawKeys], skipping keys that vanish mid-scan (races are the consumer's timeline,
+  /// not an error).
   List<T> _matchesFor(Iterable<Object> rawKeys) => rawKeys
-      // Already raw, so the scan hands it over directly; the decode is only for the read event.
+      // Already raw, so the scan hands it straight over. The decode is only for the read event.
       .map((rawKey) => _engine.get(RawKey(rawKey), _dualCodec.decode(rawKey)).toNullable())
       .nonNulls
       .toList(growable: false);
@@ -237,12 +229,10 @@ interface class DualKeyBox<T extends Object, K1 extends Object, K2 extends Objec
   /// Opens the box named [name] and wires a [DualKeyBox] around it, as a lazy [Task]: nothing touches
   /// disk until `.run()`.
   ///
-  /// One-time engine setup stays hive_ce's, exactly as it documents: `Hive.init(path)` (or `Hive.initFlutter()`)
-  /// plus adapter registration. [codec] defaults by part types:
-  /// `(int, int)` resolves to [StringCompositeDualCodec], and any other pair without an explicit codec
-  /// fails an assert synchronously at wiring time. [cipher], [keyComparator], [compactionStrategy],
-  /// and [crashRecovery] pass through to hive_ce untouched. [observer] hears every event of this box,
-  /// starting with the open itself.
+  /// Engine setup is still hive_ce's job, so `Hive.init(path)` and your adapters come first. [codec]
+  /// defaults to [StringCompositeDualCodec] for `(int, int)` parts, and any other pair without one trips
+  /// an assert while wiring. [cipher], [keyComparator], [compactionStrategy] and [crashRecovery] go
+  /// straight through. [observer] hears everything this box does, starting with the open.
   static Task<DualKeyBox<T, K1, K2>> open<T extends Object, K1 extends Object, K2 extends Object>(
     String name, {
     DualKeyCodec<K1, K2>? codec,
@@ -265,7 +255,7 @@ interface class DualKeyBox<T extends Object, K1 extends Object, K2 extends Objec
         );
         observer?.onOpened(name);
 
-        // Type arguments stay explicit through this wiring (CODESTYLE #type-safety).
+        // Explicit type arguments on purpose, see CODESTYLE #type-safety.
         return DualKeyBox<T, K1, K2>._(
           engine: EagerCrudEngine<T>(
             box: box,
@@ -282,11 +272,10 @@ interface class DualKeyBox<T extends Object, K1 extends Object, K2 extends Objec
   }
 }
 
-/// Testing seam: wires a [DualKeyBox] around an already-open (or fake) [box] instead of going through
-/// the real provider, so unit suites drive the façade against in-memory doubles.
+/// Testing seam: wraps a [DualKeyBox] around an already-open (or fake) [box], skipping the real provider
+/// so unit suites can use in-memory doubles.
 ///
-/// Same library as the façade on purpose, and deliberately not exported: the barrel's `show` keeps
-/// it out of the public API, so it exists only for suites importing this file directly.
+/// Not exported, so only suites importing this file directly can see it.
 @visibleForTesting
 DualKeyBox<T, K1, K2> dualKeyBoxAround<T extends Object, K1 extends Object, K2 extends Object>(
   Box<Object?> box, {
@@ -295,7 +284,7 @@ DualKeyBox<T, K1, K2> dualKeyBoxAround<T extends Object, K1 extends Object, K2 e
 }) {
   final dualCodec = resolveDualKeyCodec<K1, K2>(codec);
 
-  // Explicit type arguments on purpose; see CODESTYLE #type-safety.
+  // Explicit type arguments on purpose, see CODESTYLE #type-safety.
   return DualKeyBox<T, K1, K2>._(
     engine: EagerCrudEngine<T>(box: box, valueCodec: IdentityValueCodec<T>(), observer: observer),
     dualCodec: dualCodec,

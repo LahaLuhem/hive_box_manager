@@ -8,8 +8,8 @@ import 'package:pmvvm/pmvvm.dart';
 
 import '../core/observers/log_panel_observer.dart';
 
-/// Drives the eager list-box demo: tag lists per int key, mutated through the add / remove
-/// sugar (read-modify-writes under the hood) and read back as unmodifiable views.
+/// Drives the eager list-box demo: tag lists per int key, changed through add and remove, read back
+/// as unmodifiable views.
 final class ListBoxViewModel extends ViewModel {
   final observer = LogPanelObserver();
   final tagController = TextEditingController();
@@ -30,8 +30,8 @@ final class ListBoxViewModel extends ViewModel {
 
   ValueListenable<int> get selectedKey => _selectedKey;
 
-  /// Completes once the box is open and the first listing is loaded; awaitable by tests (and
-  /// by anything that wants a splash gate).
+  /// Completes once the box is open and the first listing has loaded. Await it in tests, or behind a
+  /// splash screen.
   Future<void> get ready => _opened;
 
   void onKeySelected(int? key) {

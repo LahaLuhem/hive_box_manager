@@ -1,7 +1,4 @@
-// The lazy single-value façade against the stateful in-memory fake, wired through the
-// same-library testing seam: single-flight auto-open, the sync-inspector carve-out, the slot-0
-// pin, TaskOption reads, the Option watch stream on the lazy axis, and the pre-first-use close
-// no-op rider.
+// The lazy single-value façade against the in-memory fake, wired through the same-library testing seam.
 @Tags(['unit'])
 library;
 

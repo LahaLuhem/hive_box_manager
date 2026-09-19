@@ -1,7 +1,4 @@
-// The lazy list façade against the stateful in-memory fake, wired through the same-library
-// testing seam: auto-open, the sync-inspector carve-out, the aliasing contract on the lazy
-// axis, absent-vs-empty, the sugar semantics, Option-valued watch payloads, and the
-// pre-first-use close no-op rider.
+// The lazy list façade against the in-memory fake, wired through the same-library testing seam.
 @Tags(['unit'])
 library;
 

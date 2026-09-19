@@ -1,8 +1,8 @@
 import 'package:hive_box_manager/src/codec/dual/dual_key_codec.dart';
 
-/// A consumer-shaped dual codec for part types with no default, driving the dual defaulting and
-/// custom-codec paths in the façade suites. `|` separates the parts because ISO-8601 itself
-/// contains `:`; bijective as the contract demands.
+/// A consumer-shaped dual codec for part types with no default, driving the dual defaulting and custom-codec
+/// paths in the façade suites. `|` separates the parts because ISO-8601 itself contains `:`, and bijective
+/// as the contract demands.
 final class DateIntDualCodec implements DualKeyCodec<DateTime, int> {
   const new();
 

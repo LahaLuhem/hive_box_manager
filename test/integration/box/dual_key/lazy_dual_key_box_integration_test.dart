@@ -1,7 +1,4 @@
-// Exercises the lazy dual-key façade end to end against real hive_ce on temp dirs, through the
-// public barrel. Covered here: auto-opening reverse queries answering from disk truth, both of
-// the shipped codecs persisting across a fresh instance, the Option-valued watch payloads, and
-// the no-op rider for closing a never-used handle.
+// The lazy dual-key façade end to end, against real hive_ce on a temp dir and through the public barrel.
 @TestOn('vm')
 @Tags(['integration'])
 library;

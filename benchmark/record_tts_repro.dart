@@ -1,24 +1,21 @@
-// Standalone repro for dart-lang/sdk#61970, cut down from the key-shape lane.
-//
-// An `AssertAssignable` whose destination type is a record built from the enclosing class's own
-// type parameters gets no specialised type testing stub and is never cached, so every check enters
-// the C++ runtime. Same IL instruction against a plain type parameter is ~100x cheaper.
+// Standalone repro for the record type-check cliff, cut down from the key-shape lane. A type check against
+// a record built from the enclosing class's own type parameters gets no specialised stub and is never
+// cached, so every one of them drops into the C++ runtime. The same check against a plain type parameter
+// is orders of magnitude cheaper.
 //
 // No package dependencies, so it runs anywhere:
 //
-//   dart compile exe benchmark/record_tts_repro.dart -o /tmp/repro && /tmp/repro
+// dart compile exe benchmark/record_tts_repro.dart -o /tmp/repro && /tmp/repro
 //
-// Each lane does exactly one interface call per iteration. They differ only in the *kind* of the
-// callee's parameter type, which is the whole argument.
-//
-// AOT only. JIT answers a different question, as the key-shape lane's header explains.
+// Each lane does one interface call per iteration, and they differ only in the kind of the callee's
+// parameter type. AOT only, since JIT answers a different question.
 import 'dart:io';
 
-// Named constructors, not 3.13's `const new()`: this file has to compile on 3.12.2 as well,
-// since comparing the two SDKs is the point of it.
+// Named constructors, not 3.13's `const new()`, because this file has to compile on 3.12.2 too.
+// Comparing the 2 SDKs is the whole point of it.
 // ignore_for_file: unnecessary_type_name_in_constructor
 
-/// One-argument codec interface. Three copies, so each lane has one implementation behind its call.
+/// One-argument codec interface. 3 copies, so each lane has one implementation behind its call.
 // The lanes are the point here, not any one class
 // ignore: prefer-match-file-name
 abstract interface class Codec1<K extends Object> {
@@ -47,8 +44,8 @@ final class ConcretePair implements Codec1<(int, int)> {
   Object encode((int, int) key) => key.$1;
 }
 
-/// Control: the parameter type is the class's own type parameter and not a record. Emits
-/// `AssertAssignable` against a `TypeParameter`, which the subtype test cache handles.
+/// Control: the parameter type is the class's own type parameter and not a record. Emits `AssertAssignable`
+/// against a `TypeParameter`, which the subtype test cache handles.
 final class GenericScalar<A extends Object> implements Codec1<A> {
   /// Const, as above.
   const GenericScalar();
@@ -57,8 +54,8 @@ final class GenericScalar<A extends Object> implements Codec1<A> {
   Object encode(A key) => key;
 }
 
-/// Subject: the parameter type is a record built from the class's type parameters. Emits
-/// `AssertAssignable` against an uninstantiated `_RecordType`.
+/// Subject: the parameter type is a record built from the class's type parameters. Emits `AssertAssignable`
+/// against an uninstantiated `_RecordType`.
 final class GenericPair<A extends Object, B extends Object> implements Codec1<(A, B)> {
   /// Const, as above.
   const GenericPair();
@@ -67,7 +64,7 @@ final class GenericPair<A extends Object, B extends Object> implements Codec1<(A
   Object encode((A, B) key) => key.$1;
 }
 
-/// As [GenericPair] with three fields, to show the cost scales per field.
+/// As [GenericPair] with 3 fields, to show the cost scales per field.
 final class GenericTriple<A extends Object, B extends Object, C extends Object>
     implements Codec2<(A, B, C)> {
   /// Const, as above.
@@ -77,7 +74,7 @@ final class GenericTriple<A extends Object, B extends Object, C extends Object>
   Object encode((A, B, C) key) => key.$1;
 }
 
-/// As [GenericPair] with four fields.
+/// As [GenericPair] with 4 fields.
 final class GenericQuad<A extends Object, B extends Object, C extends Object, D extends Object>
     implements Codec3<(A, B, C, D)> {
   /// Const, as above.
@@ -127,7 +124,7 @@ void main() {
   if (checksum == 0) stdout.writeln('checksum collapsed, a lane is dead');
 }
 
-/// Runs [op] for [n] iterations twice, timing the second pass, and prints one line.
+/// Runs [op] for [n] iterations twice, timing the 2nd pass, and prints one line.
 int time(String lane, int n, int Function(int index) op) {
   var checksum = 0;
   // Warm-up: AOT has no JIT to warm, but the first pass faults in the sample's pages.

@@ -1,20 +1,16 @@
-// Key-codec matrix worker. One measurement per process invocation; emits one JSON line.
+// Key-codec matrix worker. One measurement per process, one JSON line out.
 //
-// Runs every lane twice, once per `impl`: `facade` drives the shipped `DualKeyBox` /
-// `LazyDualKeyBox` with the shipped `DualKeyCodec`s, `raw` drives hive_ce directly with the
-// hand-inlined pack/unpack in key_codecs.dart. The façade lane is what the README's performance
-// table describes; the raw lane is both the historical baseline (the committed pre-1.0 results
-// measured it) and the denominator for this lane's wrapper-overhead percentages.
+// Every lane runs twice, once per impl. `facade` drives the shipped dual boxes and codecs, `raw` drives
+// hive_ce directly with the hand-inlined pack/unpack in key_codecs.dart. The façade lane is what the
+// README's performance table describes, and the raw lane is both the historical baseline and the denominator
+// for the wrapper-overhead percentages.
 //
-// JIT: dart run benchmark/bench.dart <args>  (or benchmark/bench_jit.sh)
-// AOT (the deciding lane): dart compile exe benchmark/bench.dart, then drive
-// the executable via benchmark/driver.sh.
+// JIT: dart run benchmark/bench.dart <args> (or benchmark/bench_jit.sh) AOT (the deciding lane): dart
+// compile exe benchmark/bench.dart, then drive the executable via benchmark/driver.sh.
 //
-// Usage: bench <mode> <impl> <keyKind> <n> [boxKind] [workDir]
-//   modes: put | putall | prep | open | get | scan | scanread | micro
-//   impl: facade | raw
-//   keyKind: arith | string | bitshift   (bitshift is raw-only: no shipped codec packs that way)
-//   boxKind: eager | lazy
+// Usage: bench <mode> <impl> <keyKind> <n> [boxKind] [workDir] modes: put | putall | prep | open | get
+// | scan | scanread | micro impl: facade | raw keyKind: arith | string | bitshift (bitshift is raw-only:
+// no shipped codec packs that way) boxKind: eager | lazy
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -40,7 +36,7 @@ const maxLazyGetOps = 10000;
 /// putAll batching for the prep lane, bounding peak memory while building the batch map.
 const prepChunkSize = 100000;
 
-/// Which generated pair's primary the scan lanes hunt (arbitrary; fixed for determinism).
+/// Which generated pair's primary the scan lanes hunt. Arbitrary, but fixed so runs match.
 const scanTargetPairIndex = 123;
 
 /// Stride decorrelating the micro lane's secondary part from its primary.
@@ -78,9 +74,9 @@ Future<void> main(List<String> args) async {
   }
 }
 
-/// The shipped codec matching [keyKind]. `bitshift` has none: [PackedIntDualCodec] is
-/// byte-identical to it for in-range parts, so 0.0.x boxes read in place without a second codec,
-/// and that lane stays raw-only as the byte-compatibility reference it always was.
+/// The shipped codec matching [keyKind]. `bitshift` has none: [PackedIntDualCodec] is byte-identical
+/// to it for in-range parts, so 0.0.x boxes read in place without a second codec, and that lane stays
+/// raw-only as the byte-compatibility reference it always was.
 DualKeyCodec<int, int> shippedCodecFor(String keyKind) => switch (keyKind) {
   'arith' => const PackedIntDualCodec(),
   'string' => const StringCompositeDualCodec(),
@@ -126,8 +122,8 @@ Future<void> runPut(String impl, String keyKind, int n, {required bool isSingle}
     final batch = {for (final pair in pairs) pair: 'v'};
     watch.start();
     if (isSingle) {
-      // Sequential by contract: this lane measures per-put round-trip latency; mapping to
-      // futures + .wait would fire every put concurrently and measure throughput instead.
+      // Sequential by contract, since this lane measures per-put round-trip latency. Mapping to futures
+      // + .wait would fire every put concurrently and measure throughput instead.
       for (final (primary, secondary) in pairs) {
         await box.put(primary, secondary, 'v').run();
       }
@@ -136,8 +132,8 @@ Future<void> runPut(String impl, String keyKind, int n, {required bool isSingle}
     }
     watch.stop();
   } else {
-    // Materialised: a lazy mapped Iterable re-runs keyFor on every traversal, which would both
-    // double the encode work (batch build + timed loop) and move it inside the timed window.
+    // Materialised: a lazy mapped Iterable re-runs keyFor on every traversal, which would both double
+    // the encode work (batch build + timed loop) and move it inside the timed window.
     final keys = pairs.map((pair) => keyFor(keyKind, pair)).toList(growable: false);
     final box = await Hive.openBox<String>(boxName);
     final batch = {for (final key in keys) key: 'v'};
@@ -166,14 +162,13 @@ Future<void> runPut(String impl, String keyKind, int n, {required bool isSingle}
   });
 }
 
-/// Builds the shared box the open / get / scan lanes read. Deliberately impl-agnostic: the
-/// shipped codecs encode byte-identically to key_codecs.dart's pack functions (asserted by the
-/// codec suites), so one prepped file serves both impls and the read lanes compare like for like.
+/// Builds the shared box the open / get / scan lanes read. Deliberately impl-agnostic: the shipped codecs
+/// encode byte-identically to key_codecs.dart's pack functions (asserted by the codec suites), so one
+/// prepped file serves both impls and the read lanes compare like for like.
 Future<void> runPrep(String keyKind, int n, String workDir) async {
   Hive.init(workDir);
   final box = await Hive.openBox<String>(boxName);
-  // slices() keeps the chunking lazy; each chunk's batch map is an immediately-consumed
-  // materialisation.
+  // slices() keeps the chunking lazy, so each chunk's batch map is an immediately-consumed materialisation.
   for (final chunk in generatePairs(n).slices(prepChunkSize)) {
     await box.putAll({for (final pair in chunk) keyFor(keyKind, pair): 'v'});
   }
@@ -198,8 +193,8 @@ Future<void> runOpen(String impl, String keyKind, int n, String boxKind, String 
     watch.stop();
     length = box.length;
   } else if (impl == 'facade') {
-    // Lazy façades construct without touching disk, so the open this lane times is the
-    // single-flight one ensureInitialised forces.
+    // Lazy façades construct without touching disk, so the open this lane times is the single-flight
+    // one ensureInitialised forces.
     final box = LazyDualKeyBox<String, int, int>(boxName, codec: shippedCodecFor(keyKind));
     await box.ensureInitialised().run();
     watch.stop();
@@ -258,10 +253,10 @@ Future<void> runGet(String impl, String keyKind, int n, String boxKind, String w
     }
     watch.stop();
   } else {
-    // Encoded *inside* the window, deliberately. A consumer holding a (user, day) pair builds the
-    // composite key at the call site, exactly as the façade does, so pre-encoding the whole sample
-    // outside the timed loop would hand the raw lane a discount no real workload gets. It did: the
-    // earlier shape flattered raw and booked the difference as façade overhead.
+    // Encoded *inside* the window, deliberately. A consumer holding a (user, day) pair builds the composite
+    // key at the call site, exactly as the façade does, so pre-encoding the whole sample outside the
+    // timed loop would hand the raw lane a discount no real workload gets. It did: the earlier shape
+    // flattered raw and booked the difference as façade overhead.
     if (boxKind == 'eager') {
       final box = await Hive.openBox<String>(boxName);
       watch.start();
@@ -292,10 +287,9 @@ Future<void> runGet(String impl, String keyKind, int n, String boxKind, String w
   });
 }
 
-/// The historical count-only scan: decode every live key, count primary matches, read nothing.
-/// Raw-only and kept verbatim so the committed pre-1.0 `results_aot.jsonl` scan rows stay
-/// comparable. It is *not* the counterpart of `queryByPrimary`, which also reads each match;
-/// that comparison is [runScanRead].
+/// The historical count-only scan: decode every live key, count primary matches, read nothing. Raw-only
+/// and kept verbatim so the committed pre-1.0 `results_aot.jsonl` scan rows stay comparable. It is *not*
+/// the counterpart of `queryByPrimary`, which also reads each match. That comparison is [runScanRead].
 Future<void> runScan(String keyKind, int n, String workDir) async {
   Hive.init(workDir);
   final box = await Hive.openLazyBox<String>(boxName);
@@ -326,10 +320,9 @@ Future<void> runScan(String keyKind, int n, String workDir) async {
   });
 }
 
-/// A reverse query the way the API actually answers one: scan the live key set, then read every
-/// match. The façade lane calls `queryByPrimary`; the raw lane hand-rolls the same two steps, so
-/// the pair is a like-for-like wrapper-overhead measurement (unlike [runScan], which reads
-/// nothing).
+/// A reverse query the way the API actually answers one: scan the live key set, then read every match.
+/// The façade lane calls `queryByPrimary` and the raw lane hand-rolls the same 2 steps, so the pair
+/// is a like-for-like wrapper-overhead measurement (unlike [runScan], which reads nothing).
 Future<void> runScanRead(String impl, String keyKind, int n, String boxKind, String workDir) async {
   Hive.init(workDir);
   final target = generatePairs(n)[scanTargetPairIndex].$1;
@@ -395,7 +388,7 @@ Future<void> runScanRead(String impl, String keyKind, int n, String boxKind, Str
   });
 }
 
-// This file is the worker entrypoint (`bench`, per driver.sh); the class is an internal harness
+// This file is the worker entrypoint (`bench`, per driver.sh), and the class is an internal harness
 // detail, not the file's subject.
 // ignore: prefer-match-file-name
 class _PackUnpackBenchmark extends BenchmarkBase {

@@ -1,7 +1,4 @@
-// The eager single-value façade against the stateful in-memory fake, wired through the
-// same-library testing seam: the slot-0 compatibility pin, absence + presence reads, the
-// Map.update mirror, clear as the one unset, the Option-mapped watch stream, and terminal
-// lifecycle.
+// The eager single-value façade against the in-memory fake, wired through the same-library testing seam.
 @Tags(['unit'])
 library;
 

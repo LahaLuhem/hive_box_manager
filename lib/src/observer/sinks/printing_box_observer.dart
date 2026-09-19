@@ -1,5 +1,5 @@
-// coverage:ignore-file -- smoke-only sink, excluded from the coverage ratio per sibling
-// precedent: every method is a one-line forward to dart:developer.
+// coverage:ignore-file -- smoke-only sink, excluded from the coverage ratio per sibling precedent: every
+// method is a one-line forward to dart:developer.
 import 'dart:developer' as developer;
 
 import '../box_observer.dart';
@@ -7,9 +7,8 @@ import '../box_observer.dart';
 /// Ready-made sink forwarding every box event to `dart:developer`'s log under a configurable logger
 /// [name], so DevTools can filter the package's diagnostics as one channel.
 ///
-/// Pure-Dart-safe (`debugPrint` is Flutter-only), `avoid_print`-compliant, and dependency-free.
-/// Errors log at level 900 (SEVERE on `package:logging`'s scale, without the dependency).
-/// Everything else logs at the default level.
+/// Pure Dart, no dependencies, and no `print`. Errors log at level 900, which is what `package:logging`
+/// calls SEVERE, and everything else goes out at the default level.
 // ignore: public_member_api_docs -- a primary constructor has nowhere to hang a doc comment.
 final class const PrintingBoxObserver({
   /// The DevTools-filterable logger name.

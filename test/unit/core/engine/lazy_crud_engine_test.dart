@@ -1,9 +1,7 @@
-// The lazy engine against the stateful in-memory fake: single-flight auto-open (the named
-// Phase 1 race test), CRUD + absence paths, the sync gate firing before the box even opens,
-// the raw watch passthrough, and the terminal-close contract.
+// The lazy engine against the in-memory fake.
 //
-// Calls spell out both key halves: the `RawKey` hive stores under, and the semantic key the
-// observer hears. Option-valued watch events moved out to the façades with the key codec.
+// Calls spell out both key halves: the `RawKey` hive stores under, and the semantic key observers hear.
+// Typed watch events live with the façades now, along with the key codec.
 @Tags(['unit'])
 library;
 

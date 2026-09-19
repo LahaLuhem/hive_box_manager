@@ -1,8 +1,8 @@
-/// Central mockito codegen (house rule: generated mocks structure the suite; stateful doubles
-/// stay hand-written in `fake_boxes.dart`). Import this file, not `mocks.mocks.dart`.
+/// Central mockito codegen. Generated mocks give the suite its structure, and stateful doubles stay
+/// hand-written in `fake_boxes.dart`. Import this file, not `mocks.mocks.dart`.
 ///
-/// The no-op private function below only anchors the codegen annotation: mockito's builder
-/// reads element annotations, not library metadata.
+/// The no-op below is only there to hang the codegen annotation on, since mockito's builder reads element
+/// annotations rather than library metadata.
 library;
 
 import 'package:hive_box_manager/src/core/utils/no_op.dart';
@@ -11,7 +11,7 @@ import 'package:mockito/annotations.dart';
 
 export 'mocks.mocks.dart';
 
-/// Codegen anchor only: never called; mockito's builder reads element annotations.
+/// Codegen anchor, never called. Mockito's builder reads element annotations.
 @GenerateNiceMocks([
   MockSpec<HiveInterface>(),
   MockSpec<Box<Object?>>(),
