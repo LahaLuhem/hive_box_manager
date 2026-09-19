@@ -1,7 +1,6 @@
-// The eager dual-key façade end to end against real hive_ce on temp dirs, through the public
-// barrel: both shipped codecs on disk, the 0.0.x bit-shift data-compatibility pin (raw
-// bit-shifted keys read natively through the packed codec), reverse queries incl. the
-// 10K-entry scan sanity, and the terminal lifecycle.
+// The eager dual-key façade end to end, against real hive_ce on a temp dir and through the public barrel.
+// Includes the 0.0.x bit-shift compatibility pin, where raw bit-shifted keys read straight through the
+// packed codec.
 @TestOn('vm')
 @Tags(['integration'])
 library;

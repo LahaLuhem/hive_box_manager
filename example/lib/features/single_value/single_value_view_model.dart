@@ -9,8 +9,8 @@ import 'package:pmvvm/pmvvm.dart';
 
 import '../core/observers/log_panel_observer.dart';
 
-/// Drives the encrypted single-value demo: a lazy box holding one AES-encrypted token, with the
-/// current value fed entirely by the box's own watch stream.
+/// Drives the encrypted single-value demo: a lazy box holding one AES-encrypted token, with the watch
+/// stream feeding the current value.
 final class SingleValueViewModel extends ViewModel {
   final observer = LogPanelObserver();
   final tokenController = TextEditingController();
@@ -19,8 +19,8 @@ final class SingleValueViewModel extends ViewModel {
   late final LazySingleValueBox<String> _box;
   StreamSubscription<Option<String>>? _subscription;
 
-  // Demo-only fixed key so the box reopens across runs; real apps generate one with
-  // Hive.generateSecureKey() and keep it in platform secure storage.
+  // Fixed so the demo box reopens across runs. A real app generates one with Hive.generateSecureKey()
+  // and keeps it in secure storage.
   static final _demoKey = List<int>.filled(32, 42);
 
   @override

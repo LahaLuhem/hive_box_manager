@@ -1,5 +1,5 @@
-// One undecodable record must not poison a whole-box or scan read. The eager axis is pinned here
-// too: its open fails inside hive_ce, so only delete-then-compact recovers it.
+// One undecodable record must not poison a whole-box or scan read. The eager axis is pinned here too,
+// where the open itself fails inside hive_ce and only delete-then-compact gets you back.
 @TestOn('vm')
 @Tags(['integration'])
 library;
@@ -127,8 +127,8 @@ void main() {
   });
 
   feature('an eager read-all names the key that failed to decode', () {
-    /// Written as `String` and reopened as `int`, so hive opens fine and the identity codec's cast
-    /// is what refuses. Anything the *adapter* rejects takes the whole open down first instead.
+    /// Written as `String` and reopened as `int`, so hive opens fine and the identity codec's cast is
+    /// what refuses. Anything the adapter itself rejects takes the whole open down first.
     Future<void> seedMistyped() async {
       final wrote = await KeyedBox.open<String, int>('mixed').run();
       await wrote.put(1, 'one').run();
@@ -162,8 +162,8 @@ void main() {
   });
 
   feature('a watch event names the key whose value failed to decode', () {
-    /// Two handles disagreeing about the value type: the writer stores a `String`, the watcher
-    /// wants an `int`, so the codec refuses on the way through the stream.
+    /// 2 handles disagreeing about the value type. The writer stores a `String`, the watcher wants
+    /// an `int`, so the codec refuses on the way through the stream.
     scenario('the stream error names the key rather than a bare cast error', () async {
       final writer = await KeyedBox.open<String, int>('watched').run();
       final watcher = await KeyedBox.open<int, int>('watched').run();
@@ -209,7 +209,7 @@ void main() {
 
       final lazy = LazyKeyedBox<Thing, String>('probeBox');
       await lazy.delete('b').run();
-      // delete only appends a tombstone; the bad frame stays until the file is rewritten.
+      // delete only appends a tombstone, so the bad frame stays until the file is rewritten.
       await lazy.compact().run();
       await lazy.close().run();
 

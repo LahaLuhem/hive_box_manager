@@ -4,14 +4,11 @@ library;
 
 /// Internal read/write-boundary transform between consumer values [T] and what hive stores.
 ///
-/// This seam exists so `dynamic` never reaches the public surface: boxes open
-/// `Object?`-parameterised (hive reifies collections from disk as `List<dynamic>` regardless of the write-side type),
-/// and this codec restores [T] at the boundary. Internal on purpose: a public value codec is the one
-/// place consumers could launder `dynamic` back in, so it goes public only if a second genuine
-/// implementation earns it (the 1.x seam review). Shipped implementations: [IdentityValueCodec] and
-/// [CollectionCastValueCodec].
+/// This seam is how `dynamic` is kept off the public surface. Boxes open as `Object?` and hive reads
+/// collections back as `List<dynamic>`, so the codec puts [T] back at the boundary. It stays internal
+/// because a public value codec is exactly where someone could launder `dynamic` in again.
 abstract interface class ValueCodec<T extends Object> {
-  /// Adapts [value] for storage; the engine writes the result verbatim.
+  /// Adapts [value] for storage. The engine writes the result as is.
   Object toStorable(T value);
 
   /// Restores the consumer-facing [T] from what hive handed back.

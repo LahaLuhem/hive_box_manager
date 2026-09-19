@@ -1,9 +1,7 @@
-// The eager engine against the stateful in-memory fake: CRUD, absence paths, observer dispatch, the
-// sync corruption gate, Task laziness, and the raw watch passthrough.
+// The eager engine against the in-memory fake.
 //
-// Calls spell out both key halves: the `RawKey` hive stores under, and the semantic key the observer
-// hears. Typed watch events moved out to the façades with the key codec, and stay covered by the four
-// façade suites.
+// Calls spell out both key halves: the `RawKey` hive stores under, and the semantic key observers hear.
+// Typed watch events live with the façades now, along with the key codec.
 @Tags(['unit'])
 library;
 

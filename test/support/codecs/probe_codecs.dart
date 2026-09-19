@@ -1,6 +1,6 @@
 /// The composite-key packing candidates from the planning benchmarks (P1 / P2), as plain functions:
-/// the Phase 0 pins assert *platform* arithmetic (JS and wasm number semantics), not library code.
-/// Superseded by the real `KeyCodec` implementations once Phase 1 lands them.
+/// the Phase 0 pins assert *platform* arithmetic (JS and wasm number semantics), not library code. Superseded
+/// by the real `KeyCodec` implementations once Phase 1 lands them.
 library;
 
 /// Each packed part gets half a hive int key: hive int keys are unsigned 32-bit.

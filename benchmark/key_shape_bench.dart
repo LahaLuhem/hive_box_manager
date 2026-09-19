@@ -1,34 +1,23 @@
-// Key-shape lane: which Dart type shape costs the dual family its overhead.
-// One measurement per process invocation; emits one JSON line. Drive via key_shape_driver.sh.
+// Key-shape lane: which Dart type shape costs the dual family its overhead. One measurement per process,
+// one JSON line out. Drive it with key_shape_driver.sh, and see README.md for the lanes and what they
+// showed.
 //
-// Exists because issue #14's first answer was wrong: one lane dropped the record type argument and
-// `DualKeyCodecAdapter` in the same step, so it could not tell which paid. Each lane below moves
-// exactly one thing against its neighbour.
+// Each lane moves exactly one thing against its neighbour, which is the whole point: an earlier attempt
+// dropped the record type argument and the adapter in one step and could not say which paid. Every lane
+// is documented where it is built, down in `laneRunner`.
 //
-// The store is a plain Map, not hive: a hive get is ~13 ns and identical in every lane, so it would
-// add a constant and a disk dependency while answering nothing. bench.dart owns façade-vs-hive.
+// The store is a plain Map rather than hive, since a hive get costs the same in every lane and would
+// only add a constant and a disk dependency. bench.dart owns façade-vs-hive.
 //
-//   generic-int             Engine generic over the semantic key. Baseline, and what KeyedBox ships.
-//   generic-string          Same, over String. Control: a non-record generic is free.
-//   generic-record          Engine generic over (int, int) + generic adapter. Pre-fix DualKeyBox.
-//   raw-generic-adapter     Engine not generic in the key, same adapter. Isolates the type param.
-//   raw-concrete-adapter    Same, adapter with no class type params. Isolates the record param.
-//   raw-widened-adapter     Param widened to Object + explicit cast. The check moves, not vanishes.
-//   raw-object-record       Generic class, concrete (Object, Object) param. Free, and a trap.
-//   raw-direct              Two scalar arguments. The shipped shape.
-//
-// raw-generic-adapter vs raw-concrete-adapter carries the argument: they differ only in whether the
-// record parameter type is built from the enclosing class's own type parameters.
-//
-// Not a devirtualisation artifact, which is why one-lane-per-process is safe here: a build
-// containing only the generic-record shape, const codec, single call site, still pays ~360 ns.
+// One lane per process is safe here: a build containing nothing but the slow shape still pays it, so
+// this is not devirtualisation flattering whichever lane ran first.
 //
 // Usage: key_shape_bench <lane> [n]
 import 'dart:convert';
 import 'dart:io';
 
-/// Default op count per timed pass, sized so the *fast* lanes clear the noise floor: at ~15 ns/op
-/// they land near 30 ms here, versus ~1.5 ms (pure scheduling noise) at the 100K other lanes use.
+/// Default op count per timed pass, sized so the *fast* lanes clear the noise floor: at ~15 ns/op they
+/// land near 30 ms here, versus ~1.5 ms (pure scheduling noise) at the 100K other lanes use.
 const defaultOps = 2000000;
 
 /// Sample size: small and power-of-two, so it stays cache-resident and the index wrap is a mask.
@@ -66,12 +55,12 @@ abstract interface class KeyCodec<K extends Object> {
   K decode(Object rawKey);
 }
 
-/// Mirrors the package's real `DualKeyCodec`: two parts in, one raw key out.
+/// Mirrors the package's real `DualKeyCodec`: 2 parts in, one raw key out.
 abstract interface class DualKeyCodec<K1 extends Object, K2 extends Object> {
   /// Encodes ([primary], [secondary]) into the raw domain.
   Object encode(K1 primary, K2 secondary);
 
-  /// Decodes [rawKey] back into its two parts.
+  /// Decodes [rawKey] back into its 2 parts.
   (K1, K2) decode(Object rawKey);
 }
 
@@ -99,7 +88,7 @@ final class StringKeyCodec implements KeyCodec<String> {
   String decode(Object rawKey) => rawKey as String;
 }
 
-/// Replicates the shipped `PackedIntDualCodec`: two 16-bit parts packed into one int.
+/// Replicates the shipped `PackedIntDualCodec`: 2 parts of 16 bits packed into one int.
 final class PackedIntDualCodec implements DualKeyCodec<int, int> {
   /// Const, as above.
   const new();
@@ -115,8 +104,8 @@ final class PackedIntDualCodec implements DualKeyCodec<int, int> {
   }
 }
 
-/// Replicates the since-deleted `DualKeyCodecAdapter`: its record parameter is built from this
-/// class's own type parameters, which is the defect being priced.
+/// Replicates the since-deleted `DualKeyCodecAdapter`: its record parameter is built from this class's
+/// own type parameters, which is the defect being priced.
 final class GenericDualAdapter<K1 extends Object, K2 extends Object> implements KeyCodec<(K1, K2)> {
   final DualKeyCodec<K1, K2> _dualCodec;
 
@@ -130,8 +119,8 @@ final class GenericDualAdapter<K1 extends Object, K2 extends Object> implements 
   (K1, K2) decode(Object rawKey) => _dualCodec.decode(rawKey);
 }
 
-/// The same adapter with no class type parameters, so its record parameter is concrete. The one
-/// variable separating it from [GenericDualAdapter].
+/// The same adapter with no class type parameters, so its record parameter is concrete. The one variable
+/// separating it from [GenericDualAdapter].
 final class ConcreteDualAdapter implements KeyCodec<(int, int)> {
   final DualKeyCodec<int, int> _dualCodec;
 
@@ -145,8 +134,8 @@ final class ConcreteDualAdapter implements KeyCodec<(int, int)> {
   (int, int) decode(Object rawKey) => _dualCodec.decode(rawKey);
 }
 
-/// Parameter widened to `Object`, moving the record check into an explicit cast. Legal Dart, and
-/// no help: it is the same check.
+/// Parameter widened to `Object`, moving the record check into an explicit cast. Legal Dart, and no
+/// help: it is the same check.
 final class WidenedDualAdapter<K1 extends Object, K2 extends Object> implements KeyCodec<(K1, K2)> {
   final DualKeyCodec<K1, K2> _dualCodec;
 
@@ -164,8 +153,8 @@ final class WidenedDualAdapter<K1 extends Object, K2 extends Object> implements 
   (K1, K2) decode(Object rawKey) => _dualCodec.decode(rawKey);
 }
 
-/// Generic class, concrete record parameter. Fast, and a trap: it hides the cost while keeping a
-/// record on the boundary, so the defect returns the moment someone re-parameterises it.
+/// Generic class, concrete record parameter. Fast, and a trap: it hides the cost while keeping a record
+/// on the boundary, so the defect returns the moment someone re-parameterises it.
 final class ObjectRecordDualAdapter<K1 extends Object, K2 extends Object>
     implements KeyCodec<(Object, Object)> {
   final DualKeyCodec<K1, K2> _dualCodec;
@@ -280,8 +269,8 @@ void runLane(String lane, int n) {
     return;
   }
 
-  // Warm-up: AOT has no JIT to warm, but the first pass faults in the store's pages, which would
-  // otherwise flatter whichever lane ran first.
+  // Warm-up: AOT has no JIT to warm, but the first pass faults in the store's pages, which would otherwise
+  // flatter whichever lane ran first.
   var checksum = 0;
   for (var i = 0; i < n; i++) {
     checksum += op(i);
@@ -314,8 +303,8 @@ List<(int, int)> buildPairs() {
   return [for (var i = 0; i < keySampleSize; i++) (next() % 0xFFFF, next() % 0xFFFF)];
 }
 
-/// Resolves [lane] to the closure the timed loop calls, or `null` when unknown. Each returns the
-/// found payload's id for the checksum; all wiring happens here, outside the timed window.
+/// Resolves [lane] to the closure the timed loop calls, or `null` when unknown. Each returns the found
+/// payload's id for the checksum, and all the wiring happens here, outside the timed window.
 int Function(int index)? laneOp(
   String lane, {
   required Map<Object, Object?> store,

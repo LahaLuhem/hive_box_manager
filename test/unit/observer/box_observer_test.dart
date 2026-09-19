@@ -1,5 +1,5 @@
-// The observer base class: no-op defaults, partial override, const-constructibility, and the
-// recording double the engine suites lean on.
+// The observer base class: no-op defaults, partial override, const-constructibility, and the recording
+// double the engine suites lean on.
 @Tags(['unit'])
 library;
 

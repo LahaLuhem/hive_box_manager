@@ -1,6 +1,5 @@
-// The encrypted single-value demo's behaviour through its view-model: the current value is fed
-// by the box's watch stream, so every assertion drains the event queue first. Input values live
-// in the example rows, read back through the context.
+// The encrypted single-value demo through its view-model. The watch stream feeds the current value,
+// so every assertion drains the event queue first.
 import 'dart:io';
 
 import 'package:bdd_framework/bdd_framework.dart';

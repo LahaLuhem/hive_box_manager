@@ -1,6 +1,5 @@
-// The list-box demo's behaviour through its view-model: the add / remove sugar with List
-// semantics per selected key, against real hive on a temp dir. Input values live in the example
-// rows, read back through the context.
+// The list-box demo through its view-model: add and remove per selected key, against real hive on a
+// temp dir.
 import 'dart:io';
 
 import 'package:bdd_framework/bdd_framework.dart';

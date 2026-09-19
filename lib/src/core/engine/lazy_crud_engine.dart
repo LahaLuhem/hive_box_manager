@@ -9,23 +9,19 @@ import '../value_codec/value_codec.dart';
 
 /// The lazy CRUD engine: every lazy façade delegates here, so CRUD is written exactly once.
 ///
-/// Owns hive and the corruption gate; façades own their codecs. Keys arrive encoded as [RawKey],
-/// with the semantic key alongside purely so observers hear what a consumer would recognise
-/// (same split as the eager engine, and the same reason: see [RawKey]).
+/// It owns hive and the corruption gate, the façades own their codecs. Keys turn up already encoded
+/// as [RawKey], with the semantic key alongside for observers. Same split as the eager engine, and for
+/// the same reason, see [RawKey].
 ///
-/// Constructs synchronously and auto-opens **single-flight** on first use: the first operation
-/// triggers the open, every concurrent caller awaits the same future, and a failed open resets the
-/// memo so a later operation can retry. `ensureInitialised()` exposes the warm-up compositionally.
-/// The sync inspectors ([length], [isEmpty], [isNotEmpty], [rawKeys], [contains]) are the one
-/// carve-out: they need the keystore, so before the first open they throw a [StateError].
+/// Building one is synchronous and opens nothing. The first operation triggers the open, concurrent
+/// callers all await that same future, and a failed open clears the memo so a later one can retry. The
+/// sync inspectors ([length], [isEmpty], [isNotEmpty], [rawKeys], [contains]) are the carve-out: they
+/// need the keystore, so before the first open they throw a [StateError].
 ///
-/// `close()` / `deleteFromDisk()` are terminal: after a real close the memo stays resolved on
-/// purpose, so later operations surface the engine's own already-closed error (tier 3). `close()`
-/// before first use is a no-op (ratified rider): nothing opens just to be closed, `onClosed` still
-/// dispatches, and the wrapper synthesises the same already-closed error afterwards because the
-/// engine was never engaged. `deleteFromDisk()` before first use still opens then deletes: it must
-/// reach storage. A codec emitting a non-storable raw key throws at the call site, before any
-/// [Task] is built.
+/// `close()` and `deleteFromDisk()` are terminal. After a real close the memo stays resolved on purpose,
+/// so later operations get hive's own already-closed error. Closing before first use opens nothing,
+/// still fires `onClosed`, and the wrapper makes up the same already-closed error afterwards. Deleting
+/// from disk before first use does open first, since it has to reach storage.
 // ignore: public_member_api_docs -- a primary constructor has nowhere to hang a doc comment.
 final class LazyCrudEngine<T extends Object>({
   required final String _boxName,
@@ -37,8 +33,8 @@ final class LazyCrudEngine<T extends Object>({
   LazyBox<Object?>? _box;
   var _wasClosedBeforeFirstUse = false;
 
-  /// hive_ce's own post-close message (`BoxBaseImpl.checkOpen`), reused verbatim so a
-  /// pre-first-use close surfaces indistinguishably from a real one.
+  /// hive_ce's own post-close message (`BoxBaseImpl.checkOpen`), reused verbatim so a pre-first-use
+  /// close surfaces indistinguishably from a real one.
   static const _alreadyClosedMessage = 'Box has already been closed.';
 
   /// The box name: the observer correlation handle (available before the box opens).
@@ -53,12 +49,12 @@ final class LazyCrudEngine<T extends Object>({
   /// Whether the box holds at least one entry.
   bool get isNotEmpty => _requireOpened.isNotEmpty;
 
-  /// The stored keys exactly as hive holds them. Façades decode; the query strategies scan.
-  /// Same sync carve-out as [length]; the dual façades warm the box up before scanning.
+  /// The stored keys exactly as hive holds them. Façades decode them, the query strategies scan them.
+  /// Same carve-out as [length]. The dual façades warm the box up before they scan.
   Iterable<Object> get rawKeys => _requireOpened.keys.map((rawKey) => rawKey as Object);
 
-  /// Restores a stored value through the value codec, for façades assembling their watch events.
-  /// [semanticKey] names the record if the codec refuses it.
+  /// Restores a stored value through the value codec, for façades assembling their watch events. [semanticKey]
+  /// names the record if the codec refuses it.
   T decodeStored(Object storedValue, Object semanticKey) {
     try {
       return _valueCodec.fromStored(storedValue);
@@ -70,7 +66,7 @@ final class LazyCrudEngine<T extends Object>({
     }
   }
 
-  /// Warms the box up compositionally; any effect does the same implicitly.
+  /// Opens the box. Any effect would do it anyway, this just gets it out of the way.
   Task<Unit> ensureInitialised() => Task(() async {
     await _obtainBox();
 
@@ -102,8 +98,8 @@ final class LazyCrudEngine<T extends Object>({
     }),
   );
 
-  /// Reads every value; materialised, so completion means every disk read already happened.
-  /// [semanticKeyOf] decodes a raw key for failure reports only.
+  /// Reads every value into a list, so by the time it completes the disk reads are done. [semanticKeyOf]
+  /// decodes a raw key for failure reports only.
   Task<List<T>> values(Object Function(Object rawKey) semanticKeyOf) => Task(
     () => _guarded('values', () async {
       final box = await _obtainBox();
@@ -178,12 +174,12 @@ final class LazyCrudEngine<T extends Object>({
 
   /// Writes every entry of [rawEntries] in one batch. No semantic keys: the event carries a count.
   ///
-  /// Lazy iterable, consumed eagerly here: the façade's encode fuses into this pass (one materialisation, not two)
-  /// while a bad key still fails before the [Task] exists.
+  /// Lazy iterable, consumed eagerly here: the façade's encode fuses into this pass (one materialisation,
+  /// not 2) while a bad key still fails before the [Task] exists.
   ///
-  /// Two entries encoding to one raw key is an assert, not an error: in release the later entry wins
+  /// 2 entries encoding to one raw key is an assert, not an error: in release the later entry wins
   /// (plain `Map` semantics), so a batch that quietly drops rows gets caught in development instead
-  /// of shipping. It means either two values yielded the same key, or the codec is not injective.
+  /// of shipping. It means either 2 values yielded the same key, or the codec is not injective.
   Task<Unit> putAll(Iterable<MapEntry<RawKey, T>> rawEntries) {
     final storableEntries = <Object, Object?>{};
     for (final entry in rawEntries) {
@@ -208,8 +204,8 @@ final class LazyCrudEngine<T extends Object>({
     );
   }
 
-  /// Rewrites [rawKey] through [update], mirroring `Map.update`: absent + no [ifAbsent] is an
-  /// [ArgumentError] inside the task, evaluated when it runs.
+  /// Rewrites [rawKey] through [update], mirroring `Map.update`: absent + no [ifAbsent] is an [ArgumentError]
+  /// inside the task, evaluated when it runs.
   Task<T> update(
     RawKey rawKey,
     Object semanticKey,
@@ -238,8 +234,8 @@ final class LazyCrudEngine<T extends Object>({
     );
   }
 
-  /// Deletes [rawKey]. No gate: deletes cannot corrupt (hive no-ops absent keys before writing any
-  /// frame, and a bad key was never admitted by the write gate).
+  /// Deletes [rawKey]. No gate: deletes cannot corrupt (hive no-ops absent keys before writing any frame,
+  /// and a bad key was never admitted by the write gate).
   Task<Unit> delete(RawKey rawKey, Object semanticKey) => Task(
     () => _guarded('delete', () async {
       final box = await _obtainBox();
@@ -250,8 +246,8 @@ final class LazyCrudEngine<T extends Object>({
     }),
   );
 
-  /// Deletes [rawKeysToDelete] in one batch, dispatching one event per [semanticKeys] entry.
-  /// Parallel lists, both built by the façade in one traversal.
+  /// Deletes [rawKeysToDelete] in one batch, dispatching one event per [semanticKeys] entry. Parallel
+  /// lists, both built by the façade in one traversal.
   Task<Unit> deleteAll(List<RawKey> rawKeysToDelete, List<Object> semanticKeys) {
     final unwrappedKeys = [for (final rawKey in rawKeysToDelete) rawKey.value];
 
@@ -279,9 +275,8 @@ final class LazyCrudEngine<T extends Object>({
     }),
   );
 
-  /// hive's own change stream, narrowed to [key] when given; subscribing auto-opens like any
-  /// effect. Raw because the façade owns the key codec, and typing it here would only be rebuilt
-  /// there.
+  /// hive's own change stream, narrowed to [key] when given. Subscribing opens the box like any effect.
+  /// Raw because the façade owns the key codec, and typing it here would only be rebuilt there.
   Stream<BoxEvent> watchRaw({RawKey? key}) async* {
     final box = await _obtainBox();
 
@@ -306,9 +301,8 @@ final class LazyCrudEngine<T extends Object>({
     }),
   );
 
-  /// Closes the box; terminal for this handle. Before first use nothing ever opened, so nothing
-  /// closes and no open is paid (the ratified no-op): `onClosed` still dispatches, and the
-  /// handle still turns terminal.
+  /// Closes the box, terminal for this handle. Before first use there is nothing to close, so no open
+  /// is paid, though `onClosed` still fires and the handle is still spent.
   Task<Unit> close() => Task(
     () => _guarded('close', () async {
       if (_boxFuture == null) {
@@ -325,7 +319,7 @@ final class LazyCrudEngine<T extends Object>({
     }),
   );
 
-  /// Deletes the box from disk; terminal for this handle.
+  /// Deletes the box from disk. Terminal for this handle.
   Task<Unit> deleteFromDisk() => Task(
     () => _guarded('deleteFromDisk', () async {
       await (await _obtainBox()).deleteFromDisk();
@@ -335,9 +329,9 @@ final class LazyCrudEngine<T extends Object>({
     }),
   );
 
-  /// Single-flight auto-open: assigns the memo synchronously so every concurrent first caller
-  /// shares one open; a failed open clears it so retry is possible. After a pre-first-use close
-  /// it surfaces the engine-shaped already-closed error instead of opening.
+  /// Assigns the memo synchronously, so concurrent first callers share one open, and clears it on failure
+  /// so a retry is possible. After a close that came before first use it raises the already-closed error
+  /// instead of opening.
   Future<LazyBox<Object?>> _obtainBox() {
     if (_wasClosedBeforeFirstUse) throw HiveError(_alreadyClosedMessage);
 

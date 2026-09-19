@@ -17,6 +17,7 @@ renames don't break callers.
 - [Class structure](#class-structure)
 - [The box-façade contract](#manager-contract)
 - [Idioms](#idioms)
+- [Prose & voice](#prose)
 - [Comments & dartdoc](#dartdoc)
 - [DCM rules (applied by hand)](#dcm-rules)
 - [Test style](#test-style)
@@ -116,7 +117,7 @@ under [*Hard rules* in `.ai/AGENTS.md`](./.ai/AGENTS.md#hard-rules).
   `needs`) or a plain verb, so it reads as a question at the use site (`if (isEmpty)`,
   `emitsValueOnDelete ? old : null`), never a noun or bare adjective (`empty`, `single`). A method
   that's already a verb (`contains`, `deleteAll`) is a predicate by construction and needs no prefix.
-  Two carve-outs: a name fixed by a dependency keeps its spelling (`crashRecovery`, `deleted` mirror
+  2 carve-outs: a name fixed by a dependency keeps its spelling (`crashRecovery`, `deleted` mirror
   `hive_ce`), and a setter / handler parameter stays the conventional `value` (per the
   callback-parameter exemption above).
 
@@ -125,19 +126,34 @@ under [*Hard rules* in `.ai/AGENTS.md`](./.ai/AGENTS.md#hard-rules).
 <a id="formatting"></a>
 ## Formatting
 
-- **Wrap text-file content at 100 columns.** [`.editorconfig`](./.editorconfig) is authoritative;
-  Markdown, Dart, and YAML share the cap. The formatter's `page_width: 100` in
-  `analysis_options.yaml` matches it; keep them aligned if either moves.
-- **Comments and docstrings wrap *roughly* around 100, never at 80.** The Dart formatter doesn't
-  reflow `//` / `///` prose, so break lines near the 100 mark wherever the sentence reads best; a
-  few characters over beats an awkward mid-phrase break. The "roughly" does **not** apply to
-  filetypes a linter hard-caps (linterpol's `ryl` for YAML, `rumdl` for Markdown): there 100 is a
-  real limit and lines must stay under it.
+- **Wrap text-file content at 100 columns.** [`.editorconfig`](./.editorconfig) is authoritative,
+  and Markdown, Dart, and YAML share the cap. The formatter's `page_width: 100` in
+  `analysis_options.yaml` matches it, so keep them aligned if either moves.
+- **Comment lines overshoot 100 by their last word, they don't wrap before it.** The Dart formatter
+  doesn't reflow `//` / `///` prose, so fill each line and let the word that crosses column 100 stay
+  put, then break. Wrapping a word down to the next line while the current one still has room is the
+  thing to avoid, because it leaves a ragged half-empty line above a short one.
+
+  ```dart
+  // Prefer
+  /// Eager means the whole box sits in memory once it is open, so reads are synchronous and never touch
+  /// disk.
+
+  // Over
+  /// Eager means the whole box sits in memory once it is open, so reads are synchronous and
+  /// never touch disk.
+  ```
+
+  *Why:* one consistent fill rule beats per-line judgement, and it keeps a diff from churning every
+  time a sentence is edited upstream of the break.
+
+  This does **not** apply to filetypes a linter hard-caps (linterpol's `ryl` for YAML, `rumdl` for
+  Markdown). There 100 is a real limit and lines must stay under it.
 - **Blank lines separate logical chunks within a method.** Group the guard checks, the box
   operation, and the return with one blank line between groups, so a reader can scan past chunks
   they don't need.
 - **Prefer expression bodies** (`prefer_expression_function_bodies`) and **single quotes**
-  (`prefer_single_quotes`). A Manager method wrapping one box call is frequently one expression;
+  (`prefer_single_quotes`). A Manager method wrapping one box call is frequently one expression, so
   write it as one.
 
 ---
@@ -198,7 +214,7 @@ under [*Hard rules* in `.ai/AGENTS.md`](./.ai/AGENTS.md#hard-rules).
   }
   ```
 
-  Three constraints come with it:
+  3 constraints come with it:
   - **Every other generative constructor must redirect** to the primary one. A constructor that
     transforms its argument in an initialiser list cannot, so `BoxProvider`
     (`: _hive = hive ?? Hive`) stays on the classic shape. Factories are unaffected.
@@ -252,8 +268,8 @@ learns one shape and applies it across every variant. Rationale:
 - **Acquisition encodes openness.** Eager façades have no public constructor: the static
   `open(...)` factory returns a `Task`, so holding one implies its box is open. Lazy façades
   construct synchronously and auto-open single-flight on the first effect, with
-  `ensureInitialised()` as the warm-up; their sync inspectors (`length` / `isEmpty` /
-  `isNotEmpty` / `keys` / `contains`) throw a `StateError` before the first open — the one
+  `ensureInitialised()` as the warm-up. Their sync inspectors (`length` / `isEmpty` /
+  `isNotEmpty` / `keys` / `contains`) throw a `StateError` before the first open, the one
   deliberate carve-out.
 - **The throw taxonomy is fixed.** Key-gate violations and missing codecs fail synchronously at
   the call site (an `ArgumentError` / a wiring assert); everything the engine itself throws for
@@ -283,7 +299,7 @@ learns one shape and applies it across every variant. Rationale:
 - **`<T extends Object>` on every value / key generic.** A stored value is a real object; `null`
   is never a valid stored value. See [type safety](#type-safety).
 
-The per-family member sets live in the dartdoc of the eight façades (`KeyedBox`,
+The per-family member sets live in the dartdoc of the 8 façades (`KeyedBox`,
 `SingleValueBox`, `ListBox`, `DualKeyBox`, and their `Lazy` twins); the design reasoning per
 axis lives in `APPENDIX.md`'s 1.0 sections.
 
@@ -336,8 +352,8 @@ fixed batch). Beyond that, keep the pipeline: build a cross-product with
 `outer.expand((a) => inner.map((b) => (a, b)))` rather than a nested `for`, and when a map's
 **values are a function of its keys** prefer `Map.fromIterables(keys, keys.map(transform))` over
 `{for (…) key: transform(key)}`, so enumerating the keys and transforming them into values read as
-two visible steps instead of one opaque comprehension body. Derive the values from the **same**
-keys iterable, never an independent parallel list, or the two desync. (Replaces the earlier
+2 visible steps instead of one opaque comprehension body. Derive the values from the **same**
+keys iterable, never an independent parallel list, or the 2 desync. (Replaces the earlier
 comprehension-first guidance; maintainer call, 2026-07-21. Carve-out narrowed to flat
 comprehensions 2026-07-22.)
 
@@ -407,6 +423,28 @@ dir nests); there is no root-relative form for them, and the fixtures can't move
 
 ---
 
+<a id="prose"></a>
+## Prose & voice
+
+**Read <https://noslopgrenade.com/> before writing any prose here.** Open it, don't cite it from
+memory. It is short and it carries the examples and the intent behind every line below.
+
+Covers every surface a person reads: dartdoc, comments, READMEs, APPENDIX entries, benchmark
+headers, commit messages, PR and issue bodies.
+
+- Keep it trimmed and compacted to reduce noise. Brief, concise, succinct. No over-explaining.
+- Comment at the call site, rather than a preamble wall-of-text.
+- No need to document what can easily be gleaned from the sites. Also reduces drift risk.
+- Use the Markdown features that improve readability: subsection layout, tables, (un)ordered lists,
+  show-hide sections.
+- Prefer not using technical buzz-words, use ELI18 level instead.
+- No AI-tell-tale signs like em-dashes, `;` and others.
+- Numbers as numerals, not words: `1`, `2`, `1st`, `2nd`. "one" stays where it means single or
+  sole, and "first" where it means earliest rather than a position.
+- Keep the tone informal and light. Give it a natural flow.
+
+---
+
 <a id="dartdoc"></a>
 ## Comments & dartdoc
 
@@ -416,17 +454,16 @@ the type already says that. `public_member_api_docs` is on (see
 semantics a consumer can't read off the signature: eager vs lazy (does a read hit disk?), how keys
 are handled, and what a `defaultValue` means for that method.
 
-**Be brief. Raise signal by cutting noise.** One or two sentences for most symbols; a short
-paragraph for the genuinely load-bearing ones. Longer rationale belongs in `APPENDIX.md` (design
-reasoning) or a benchmark's own header (measurements), with a one-line pointer from the dartdoc.
+[Prose & voice](#prose) governs the words. This section is what's specific to Dart.
 
-*Why:* a docstring competes with the code under it. A wall of prose above a three-line method
-buries the one sentence that mattered, and readers start skipping dartdoc wholesale, including the
-sentences that would have saved them.
+**Aim for 1 or 2 lines.** A guideline, not a cap: an explanation that earns its length keeps it, and
+a decision a reader would otherwise question is worth the sentence. What doesn't earn it is
+restating the signature, or rationale that belongs in [`APPENDIX.md`](./APPENDIX.md) or a
+benchmark's own header behind a one-line pointer. Surplus lines are noise the next reader pays for
+and they bury the comment that mattered, so trim the neighbours whenever you edit a file.
 
-*How to apply:* lead with the guarantee, then stop. Cut background the reader can get from the
-linked symbol. Cite a measurement once, where it lives, instead of restating it at every site that
-depends on it. Don't re-explain a rule this file already states.
+Lead with the guarantee, then stop. Cut background the reader can get from the linked symbol, and
+cite a measurement once where it lives instead of restating it at every site that depends on it.
 
 ```dart
 // Prefer
@@ -497,9 +534,24 @@ library;
 <a id="documentation-conventions"></a>
 ## Documentation conventions (Markdown)
 
+Structure and spelling here, voice in [Prose & voice](#prose).
+
 - **APPENDIX.md is the source of truth for rationale.** Hard rules, pitfalls, and workflow stay in
-  `.ai/AGENTS.md` and `.ai/CLAUDE.md`; the "why we do it this way" essays live in
+  `.ai/AGENTS.md` and `.ai/CLAUDE.md`, and the "why we do it this way" essays live in
   [`APPENDIX.md`](./APPENDIX.md).
+- **Never restate a value a source file owns.** Point at the file instead: "the `sdk:` constraint
+  in `pubspec.yaml`", not the literal, and "the channel `.fvmrc` names", not "stable". A copied
+  value drifts silently the moment the source moves, which is how `.ai/AGENTS.md` came to claim
+  Dart 3.12 after the floor had gone up. Prose owns the *reason*, the file owns the value.
+  Facts about a release ("primary constructors need 3.13") are not pins and stay, since Dart's
+  history doesn't move.
+- **The same goes for anything a command prints.** Test counts, benchmark figures, file listings,
+  lint-rule sets. Name the command or the artefact that produces it and stop, so there is one copy
+  and it cannot disagree with itself.
+- **One layer states the rule, the other argues it, never both.** AGENTS and this file say what to
+  do and link out. APPENDIX carries the argument and the rejected alternatives. A paragraph that
+  makes a case *and then* links to the section making it is the smell, and the copy that is not the
+  source of truth is the one that goes stale.
 - **Explicit `<a id="…">` anchors** sit above every APPENDIX and CODESTYLE heading. Link via the
   anchor, not the heading text. Anchor stability is load-bearing: when renaming a heading, keep the
   existing anchor, or `rg` the repo and update every caller in the same change.

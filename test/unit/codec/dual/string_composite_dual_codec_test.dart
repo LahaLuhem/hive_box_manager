@@ -8,8 +8,8 @@ import 'package:test/test.dart';
 
 import '../../../support/bdd.dart';
 
-// The i64 extremes, as expressions: literals this large would trip avoid_js_rounded_ints. These
-// rows only ever run on the VM (the unit suite's browser lane selects browser-tagged files).
+// The i64 extremes as expressions, since literals this large trip avoid_js_rounded_ints. These rows
+// only run on the VM.
 const i64Min = 1 << 63;
 const i64Max = -(i64Min + 1);
 
@@ -42,7 +42,7 @@ void main() {
       const codec = StringCompositeDualCodec();
       final rawKey = codec.encode(i64Min, i64Min) as String;
 
-      // Two 20-char parts (sign included) + 1 separator = 41 ASCII bytes.
+      // 2 parts of 20 chars (sign included) + 1 separator = 41 ASCII bytes.
       check(rawKey.length).equals(41);
     });
   });

@@ -1,7 +1,7 @@
 import 'package:hive_box_manager/src/observer/box_observer.dart';
 
-/// Records every dispatch as one readable line, so suites assert order and payloads in a single
-/// `deepEquals` (the siblings' recording-observer pattern; the second sanctioned hand-written double).
+/// Records every dispatch as one readable line, so suites assert order and payloads in a single `deepEquals`.
+/// The siblings' recording-observer pattern, and the second hand-written double we allow.
 final class RecordingBoxObserver extends BoxObserver {
   /// One line per dispatch, in dispatch order.
   final calls = <String>[];

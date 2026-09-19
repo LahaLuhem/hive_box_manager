@@ -1,10 +1,10 @@
 // Collections file
 // ignore_for_file: avoid-dynamic, prefer-match-file-name
 
-// Stateful in-memory doubles for hive's Box / LazyBox: the sanctioned hand-written fakes
-// (engine CRUD is stateful, which mocks cannot express; house rule). They mimic the PINNED
-// watch payloads: eager delete/clear events carry the old value, lazy ones carry null; and the
-// pinned lifecycle: operations on a closed box throw HiveError, absent-key deletes are no-ops.
+// Stateful in-memory doubles for hive's Box / LazyBox: the sanctioned hand-written fakes (engine CRUD
+// is stateful, which mocks cannot express). They mimic the PINNED watch payloads, so eager delete and
+// clear events carry the old value and lazy ones carry null. The pinned lifecycle: operations on a closed
+// box throw HiveError, absent-key deletes are no-ops.
 //
 // Signatures mirror hive's own dynamic-typed interface, so the DCM ban is lifted here.
 import 'dart:async';

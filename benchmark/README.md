@@ -1,6 +1,6 @@
 # Benchmarks
 
-Maintainer tooling, excluded from the published tarball. Three lanes live here:
+Maintainer tooling, excluded from the published tarball. 3 lanes live here:
 
 - **Key-codec matrix** (`bench.dart` + `driver.sh`, plus `driver_1m.sh` for the open-only 1M
   pass): measures put / putAll / open / get / scan / query / RSS / file size per key-encoding
@@ -11,8 +11,8 @@ Maintainer tooling, excluded from the published tarball. Three lanes live here:
   is two-currency (tens of ns per op on memory paths, single-digit percent on disk paths) because a
   flat percentage is meaningless on the cheap lanes; see below. The eager read path carries
   `vm:prefer-inline` pragmas exactly because this lane holds it to raw speed.
-- **List-box lane** (`list_box_bench.dart` + `list_box_driver.sh`): `ListBox` against two
-  hand-rolled baselines, across two element types and the elements-per-key axis.
+- **List-box lane** (`list_box_bench.dart` + `list_box_driver.sh`): `ListBox` against 2
+  hand-rolled baselines, across 2 element types and the elements-per-key axis.
 
 Only operations with an **exact** raw counterpart live in the overhead lane, so its percentages
 mean "what the wrapper costs" and nothing else. `ListBox` and `DualKeyBox` are deliberately
@@ -20,10 +20,10 @@ out: raw hive_ce has no list-valued or two-part-keyed box, so their baseline has
 code rather than one call. That is a different question, asked in the matrix lane (dual) and in the
 list-box lane.
 
-## The list-box lane's two baselines
+## The list-box lane's 2 baselines
 
 "Versus raw hive_ce" isn't one question here, because raw hive_ce has no list-valued box. The
-baseline is code a consumer writes, and there are two versions of it:
+baseline is code a consumer writes, and there are 2 versions of it:
 
 | impl | what it does |
 |---|---|
@@ -47,7 +47,7 @@ Probed against hive_ce 2.19.3, and this is narrower than `ListBox`'s own docs us
 
 So the lane runs both element types, and the read lanes record the throw as the result instead of
 dying on it: "this baseline cannot read its own data back" is the measurement. It lands on exactly
-one of the two axes.
+one of the 2 axes.
 
 ### Watch the seeding
 
@@ -58,7 +58,7 @@ difference as a wrapper cost, which is exactly the false 2x this lane produced o
 before the seeding was equalised and the RSS window moved after the seed.
 
 > **The overhead lane needs a quiet host.** It resolves tens of nanoseconds per op, so background
-> load doesn't add noise, it drowns the signal. Passes taken on a laptop with two JetBrains IDEs
+> load doesn't add noise, it drowns the signal. Passes taken on a laptop with 2 JetBrains IDEs
 > running (load average 4 to 17) put eager get anywhere from -6% to +27% and spread individual
 > samples 27x apart; the same lane on the same machine at load 3 reads +1.5%, reproducibly.
 > `python/overhead.py` cross-checks median against min and refuses to stand behind a run where they
@@ -83,20 +83,20 @@ percentage is a fact about the denominator.
 
 The list-box lane has the same hazard from the other direction: its `get` ratio runs 3.0x at one
 element per key and 1.1x at a thousand, which reads like the wrapper getting cheaper at scale. It
-isn't. Fitting the four lengths gives **~292 ns fixed per get + ~1.8 ns per element** (within 8% at
+isn't. Fitting the 4 lengths gives **~292 ns fixed per get + ~1.8 ns per element** (within 8% at
 every length), so both terms are real and the ratio only moves because the fixed term stops
 dominating. Quote the two-term model, never the ratio at one list length.
 
-That fixed term is an SDK regression, not a wrapper change, and it is one of only two cross-version
+That fixed term is an SDK regression, not a wrapper change, and it is one of only 2 cross-version
 claims here that survive a controlled check. Compiling this lane's source with both 3.12.2 and
-3.13.1 and alternating the binaries on one host, seven interleaved rounds at one element per key,
+3.13.1 and alternating the binaries on one host, 7 interleaved rounds at one element per key,
 puts the façade at 310 ns per get against 390 by min (345 against 430 by median) while `correct`
 goes 140 to 125 and `naive` stays inside its own spread. Measured as the wrapper's own cost over
 `correct`, that is **+170 ns growing to +265 ns, up 56%**. 3.12.2 fitted the lane at ~197 ns + ~1.6
-ns per element; the per-element term is not pinned down at `reps 5`, two passes putting it at 1.8
+ns per element; the per-element term is not pinned down at `reps 5`, 2 passes putting it at 1.8
 and 2.5.
 
-The mechanism is not identified, and it is in none of the obvious places. Isolated on the same two
+The mechanism is not identified, and it is in none of the obvious places. Isolated on the same 2
 SDKs, the cast view's construction, walking it through the extra `UnmodifiableListView` layer, the
 engine's type argument (`Engine<T>` against `Engine<List<T>>`), and fpdart's `Option` in the real
 box path all come out flat or *faster* on 3.13.1, and `KeyedBox` reads do not move at all.
@@ -112,7 +112,7 @@ That non-product SDK build is done, and it named the mechanism for the key-shape
 itself out for this one. See
 [The record cliff, and what 3.13.1 added to it](#the-record-cliff-and-what-3131-added-to-it).
 
-Three traps for whoever picks that up again. `--print-flow-graph` and `--trace-inlining` are
+3 traps for whoever picks that up again. `--print-flow-graph` and `--trace-inlining` are
 registered in the shipped `gen_snapshot`, which does reject genuinely unknown flags, but they are
 compiled out: they accept silently and emit nothing. 3.13.1's
 `--print-instructions-sizes-to` reports ~96 stubs that 3.12.2's omits, `FfiCallbackTrampoline` and
@@ -124,12 +124,12 @@ product` leaves the flags compiled out, so the build has to be `--mode release`;
 loading any snapshot until you re-sign it with the entitlements the shipped one carries.
 
 Do not read the same story into the other lanes. The matrix lane's eager get looks 40% worse than
-its 2026-07-26 file, but the same alternating check puts the two SDKs within 2% of each other
+its 2026-07-26 file, but the same alternating check puts the 2 SDKs within 2% of each other
 today, well inside one SDK's own 27% sample spread. That lane is slower because this host is, not
 because the compiler is. Comparing a lane against an older results file measures the host as much
 as the SDK, so only a two-binary pass on one host settles a version question.
 
-The overhead lane's two readings sort its own lanes cleanly:
+The overhead lane's 2 readings sort its own lanes cleanly:
 
 - **memory-path ops** (eager get, contains, values, batch writes): 1 to 22 ns of wrapper per op;
 - **effectful ops** (anything returning a `Task` that hits disk): 300 to 660 ns per op, which is
@@ -140,7 +140,7 @@ Quote nanoseconds for the first group and percentages for the second.
 
 ### How precise is this lane, really
 
-Two full passes at comparable load (3.3 to 4.8) reproduce the ordering and the bands, not the
+2 full passes at comparable load (3.3 to 4.8) reproduce the ordering and the bands, not the
 individual figures. Per-op wrapper cost, run A then run B:
 
 | Lane | A | B |
@@ -155,15 +155,15 @@ individual figures. Per-op wrapper cost, run A then run B:
 | single get (lazy) | +657 ns | +684 ns |
 | get (lazy) | -62 ns | +452 ns |
 
-So: the two groups above are solid, and most lanes land within a factor of two. `put` and
+So: the 2 groups above are solid, and most lanes land within a factor of 2. `put` and
 `get (lazy)` are not: they moved 2x and flipped sign respectively, and `put` tripped the 5% target
 in B while clearing it in A. Treat any single figure from this lane as an order of magnitude, and
-don't quote a lane to two significant figures without a third pass agreeing.
+don't quote a lane to 2 significant figures without a third pass agreeing.
 
 ## The record cliff, and what 3.13.1 added to it
 
 Both tags built from source at `--mode release` (`is_product = false`, so the flags and the VM's own
-symbols survive) and driven through `gen_snapshot` directly rather than `dart compile exe`. Two
+symbols survive) and driven through `gen_snapshot` directly rather than `dart compile exe`. 2
 separate things came out, and only the second is a 3.13.1 story.
 
 ### An `as` against a record type built from class type parameters costs ~340 ns
@@ -176,7 +176,7 @@ AssertAssignable(v31 T{_Record}, v25 T{_RecordType}, 'key', instantiator_type_ar
 ```
 
 with `v25 = #(X0, X1)`, an uninstantiated record type. The same instruction against a plain type
-parameter costs 3.2 ns. Against `(X0, X1)` it costs 339. Two VM facts stack up:
+parameter costs 3.2 ns. Against `(X0, X1)` it costs 339. 2 VM facts stack up:
 
 - `HierarchyInfo::CanUseRecordSubtypeRangeCheckFor` requires every field type to pass
   `CanUseSubtypeRangeCheckFor`, which rejects type parameters outright, so no specialised type
@@ -213,7 +213,7 @@ via TLS", which is not in 3.12.2 and first ships in 3.13.0, moved `Roots` from a
 
 `Object::null()` is `Roots::null_obj()`, and every VM handle is initialised to null. macOS has no
 fast TLS model, so each access becomes an indirect call through the TLV descriptor.
-`Type::Handle(Zone*)` goes from a four-instruction leaf to a thirteen-instruction non-leaf with a
+`Type::Handle(Zone*)` goes from a 4-instruction leaf to a 13-instruction non-leaf with a
 `blr` in the middle of it.
 
 The record path allocates handles by the dozen per check, so it pays that a lot and nothing else in
@@ -223,7 +223,7 @@ symbol in the profile moves by under 1.7 points, in both directions. It lands on
 rather than the fixed one: 158 + 90.3 ns/field on 3.12.2 against 162 + 97.2 on 3.13.1, so fixed +2%
 and per field +7.6%.
 
-Two things follow. It only bites where a hot loop makes a C++ runtime call per op, which in this
+2 things follow. It only bites where a hot loop makes a C++ runtime call per op, which in this
 suite is the record lanes and nothing else. And it is not macOS-only, which is what this section
 guessed first and guessed wrong. Cost of one read, measured against a plain global load on the same
 machine:
@@ -239,7 +239,7 @@ Android measured on a Sony XQ-BQ52 (API 33) over adb, warmed up first because th
 otherwise absorbs the frequency ramp. Darwin resolves every `thread_local` through a descriptor
 call and has no cheaper model to pick. ELF does, but only a standalone executable gets it by
 default: a shared library, which is the shape an engine embeds the runtime as, pays a call and is
-the worst of the four at +0.71. `-ftls-model=initial-exec` takes that back to exactly zero and does
+the worst of the 4 at +0.71. `-ftls-model=initial-exec` takes that back to exactly zero and does
 nothing on Darwin.
 
 Filed upstream as [dart-lang/sdk#64103](https://github.com/dart-lang/sdk/issues/64103), with the
@@ -257,7 +257,7 @@ taxes runtime calls cannot be worth +26% there. That lane's mechanism is still o
 dart compile exe benchmark/record_tts_repro.dart -o /tmp/record_tts && /tmp/record_tts
 ```
 
-It compiles on 3.12.2 as well as 3.13.1, which is the point of it, so alternate the two binaries
+It compiles on 3.12.2 as well as 3.13.1, which is the point of it, so alternate the 2 binaries
 within each round the way every other cross-version claim here was checked.
 
 ## The `impl` axis
@@ -273,13 +273,13 @@ Every matrix lane runs twice, once per `impl`:
 
 The driver preps one box file per (keyKind, scale) and points both impls at it. That works only
 because the shipped codecs encode byte-identically to `key_codecs.dart`; keep them that way or
-the two impls quietly stop comparing like with like.
+the 2 impls quietly stop comparing like with like.
 
 `bitshift` is raw-only. No shipped codec packs that way, because `PackedIntDualCodec` is
 byte-identical to it for in-range parts (which is what lets 0.0.x boxes read in place), so a
 façade lane there would just re-measure `arith`.
 
-Two scan modes, deliberately:
+2 scan modes, deliberately:
 
 - `scan` reads nothing, only decodes every live key and counts primary matches. Raw-only, kept
   verbatim so the pre-1.0 result rows stay comparable.
@@ -326,13 +326,13 @@ AOT only; a JIT pass answers a different question, since the effect is an AOT su
 This lane touches no disk and prepares no box: the store is an in-process Map, because the question
 is a type shape rather than a storage cost.
 
-It exists because #14's root cause was wrong in three documents for a release, having been read off
-a table where one lane moved two variables at once. So the reader states each relationship as a
+It exists because #14's root cause was wrong in 3 documents for a release, having been read off
+a table where one lane moved 2 variables at once. So the reader states each relationship as a
 claim and checks it, and the `PREMISE` line fails loudly if a future SDK starts caching the subtype
 check this whole argument rests on. Numbers alone would let the same mistake happen twice.
 
 3.13.1 moved this lane, and it is the cleanest reading of that SDK's cost change anywhere in the
-suite: the three record-paying lanes went up 6 to 10% (`generic-record` 355 to 388 ns) while every
+suite: the 3 record-paying lanes went up 6 to 10% (`generic-record` 355 to 388 ns) while every
 free lane got 1 to 4% *faster*. The free lanes are the control, so this is the SDK, not the host,
 and a two-binary alternating pass on one host reproduces it. The shipped shape (`raw-direct`)
 is in the group that got faster.
@@ -368,16 +368,16 @@ Raw JSONL backing the top-level README's performance tables and codec-crossover 
 | `results_1m.jsonl` | matrix, 1M open-only |
 | `results_jit.jsonl` | matrix, JIT: ordering sanity, never for decisions |
 | `results_overhead.jsonl` | wrapper overhead, AOT: the source of the README's percentages |
-| `results_list_box.jsonl` | list-box lane, AOT: three impls x two element types x list length |
+| `results_list_box.jsonl` | list-box lane, AOT: 3 impls x 2 element types x list length |
 | `results_key_shape.jsonl` | key-shape lane, AOT: which type shape costs what, with its controls |
 
 Environment for all of them: macOS 15.7.8 on Apple Silicon (arm64), Dart 3.13.1, hive_ce 2.19.3,
-2026-08-21, all six re-run in one session. Values were a constant 1 byte by design, isolating key
+2026-08-21, all 6 re-run in one session. Values were a constant 1 byte by design, isolating key
 cost; web performance is unmeasured (ordering assumed to follow the VM).
 
 `results_overhead.jsonl` carries a load stamp, but see the precision note above before quoting a
 single figure from it: a repeat pass moved `put` 2x and flipped `get (lazy)`'s sign. The 3.13.1
-pass reproduced that and worse. Two passes ten minutes apart, same binary, flipped the sign on four
+pass reproduced that and worse. 2 passes 10 minutes apart, same binary, flipped the sign on 4
 lanes (`contains (eager)`, `get (lazy)`, `single get (lazy)`, `deleteAll`), moved `single set
 (eager)` 2x, and each printed CONTAMINATED on a different lazy lane. The file below is one of those
 passes, kept because its load stamp matches the 3.12.2 pass most closely; treat it as unresolved,
@@ -390,7 +390,7 @@ uv run --project benchmark/python python overhead.py   # must not print CONTAMIN
 ```
 
 This lane also carries `putallby`, which does **not** go through the wrapper-overhead machinery: its
-impl axis is `map` vs `facade` (the two ways to write one call) rather than `raw` vs `facade`, since
+impl axis is `map` vs `facade` (the 2 ways to write one call) rather than `raw` vs `facade`, since
 there is no raw hive_ce counterpart. It is also the one lane that times the caller's batch
 construction, because removing that map is the entire point of `putAllBy`; every other write lane
 treats the batch as given input. It gets its own `by_n` (6th driver argument, default 100000): one
@@ -404,7 +404,7 @@ harness in the tree and its output nowhere.
 
 ## `reports/`
 
-Charts rendered from `results/` and committed as PNGs. Four come from
+Charts rendered from `results/` and committed as PNGs. 4 come from
 [`python/plot.py`](python/plot.py) and are referenced by the top-level README by absolute raw
 GitHub URL, so they render on pub.dev without shipping in the tarball (`benchmark/` is
 `.pubignore`d): codec get + keystore-RSS scaling (packed vs String), and open time + per-read
@@ -425,5 +425,5 @@ uv run --project benchmark/python python plot.py      # rewrite reports/*.png
 uv run --project benchmark/python python overhead.py  # print the overhead table
 ```
 
-[`overhead.py`](python/overhead.py) prints rather than plots (three lanes make a table, not a
+[`overhead.py`](python/overhead.py) prints rather than plots (3 lanes make a table, not a
 chart), so it leans on the stdlib instead of the charting stack.

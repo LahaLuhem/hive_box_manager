@@ -1,20 +1,18 @@
 /// @docImport 'scan_query_index.dart';
 library;
 
-/// Internal seam behind the dual façades' reverse query, shaped so the 1.x inverted-index multi-box
-/// strategy plugs in without touching the public surface (the ratified paper-fit proof): every write
-/// and delete flows through the hooks with both the raw key and the decoded parts, which is all an
-/// index needs to maintain side state.
+/// Internal seam behind the dual façades' reverse query, shaped so a real inverted index can replace
+/// the scan later without touching the public surface. Writes and deletes flow through the hooks with
+/// the raw key and the decoded parts, which is everything an index needs.
 ///
-/// 1.0 ships only [ScanQueryIndex]; the interface stays internal until a second implementation earns
-/// making it public. `clear()` deliberately has no hook yet: the scan needs none, and being
-/// internal, the seam gains one for free when the 1.x index arrives. Hooks fire per requested
-/// key (an absent-key delete still dispatches; hive no-ops it and so does the scan).
+/// [ScanQueryIndex] is the only implementation so far, so this stays internal until a second one earns
+/// making it public. `clear()` has no hook because the scan doesn't need one. Hooks fire per key asked
+/// for, even a delete of a key that isn't there.
 abstract interface class QueryIndexStrategy<K1 extends Object, K2 extends Object> {
-  /// Observes one written raw key with its decoded parts (index maintenance hook).
+  /// One written raw key with its decoded parts, for an index to record.
   void afterWrite(Object rawKey, K1 primary, K2 secondary);
 
-  /// Observes one deleted raw key with its decoded parts (index maintenance hook).
+  /// One deleted raw key with its decoded parts, for an index to record.
   void afterDelete(Object rawKey, K1 primary, K2 secondary);
 
   /// Raw keys whose primary part equals [primary].

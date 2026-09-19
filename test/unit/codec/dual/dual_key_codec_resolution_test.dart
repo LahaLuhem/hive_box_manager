@@ -1,6 +1,5 @@
-// The construction-time dual-codec defaulting: (int, int) parts default to the String
-// composite, an explicit codec always wins, and any other part pair (including covariant
-// supertype pairs) fails the wiring assert (tier 1).
+// Construction-time dual-codec defaulting: `(int, int)` gets the String composite, an explicit codec
+// always wins, and anything else, supertype pairs included, trips the wiring assert.
 @Tags(['unit'])
 library;
 

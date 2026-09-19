@@ -1,7 +1,4 @@
-// The lazy façade end to end against real hive_ce on temp dirs, through the public barrel:
-// auto-open, TaskOption-shaped reads, disk truth across close + a new instance, the
-// pre-first-use close() no-op (never creates the box), cipher pass-through, and the sync
-// inspector carve-out against the real keystore.
+// The lazy keyed façade end to end, against real hive_ce on a temp dir and through the public barrel.
 @TestOn('vm')
 @Tags(['integration'])
 library;
@@ -20,8 +17,8 @@ import '../../../support/doubles/recording_box_observer.dart';
 /// AES-256 wants exactly this many key bytes.
 const aesKeyBytes = 32;
 
-/// Collects the events [stream] emits while [act] runs, draining the event queue before
-/// returning so no in-flight notification is missed.
+/// Collects what [stream] emits while [act] runs, draining the queue first so nothing in flight gets
+/// missed.
 Future<List<LazyTypedBoxEvent<String, int>>> record(
   Stream<LazyTypedBoxEvent<String, int>> stream,
   Future<void> Function() act,

@@ -1,8 +1,8 @@
 import 'package:hive_box_manager/hive_box_manager.dart';
 import 'package:listenable_collections/listenable_collections.dart';
 
-/// Streams every semantic box event into a live list the log panel renders: the package's
-/// observer seam, pointed at the UI instead of a logger. Newest entry first.
+/// Streams every box event into a list the log panel renders, newest first. The observer seam pointed
+/// at the UI instead of a logger.
 final class LogPanelObserver extends BoxObserver {
   final entries = ListNotifier<String>();
 

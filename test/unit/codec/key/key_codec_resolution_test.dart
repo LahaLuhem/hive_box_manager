@@ -1,5 +1,5 @@
-// The construction-time codec defaulting: identity codecs for int / String keys, an explicit
-// codec always winning, and any other K without a codec failing the wiring assert (tier 1).
+// Construction-time codec defaulting: identity codecs for `int` and `String`, an explicit codec always
+// winning, and anything else without one tripping the wiring assert.
 @Tags(['unit'])
 library;
 

@@ -1,5 +1,5 @@
-// The write-path corruption gate: the one release-mode check in the package, guarding exactly
-// what release-mode hive_ce silently corrupts on (pinned in the integration suite).
+// The write-path corruption gate, the one release-mode check in the package, guarding what release-mode
+// hive_ce silently corrupts on.
 @Tags(['unit'])
 library;
 
@@ -13,8 +13,8 @@ import '../../support/pins/probe_key_limits.dart';
 /// A 3-UTF-8-byte character (hiragana "a"): stresses the byte-vs-character distinction.
 const threeByteChar = 'あ';
 
-/// A 2-UTF-8-byte character: builds keys whose *length* passes the cheap bound but whose
-/// *bytes* exceed the limit.
+/// A 2-UTF-8-byte character: builds keys whose *length* passes the cheap bound but whose *bytes* exceed
+/// the limit.
 const twoByteChar = 'é';
 
 void main() {
@@ -39,8 +39,8 @@ void main() {
         'int -1': -1,
         'int one past u32': HiveKeyLimits.maxIntKey + 1,
         'one byte over, ASCII': 'b' * (HiveKeyLimits.maxStringKeyBytes + 1),
-        // 128 chars pass a naive length check but encode to 256 bytes: the byte-count path
-        // must engage even though the string is "short".
+        // 128 chars pass a naive length check but encode to 256 bytes: the byte-count path must engage
+        // even though the string is "short".
         'one byte over, multibyte': twoByteChar * 128,
         'far over': 'c' * ProbeKeyLimits.farOversizedKeyLength,
       },

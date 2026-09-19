@@ -1,7 +1,7 @@
-// Pins hive_ce 2.19.3's lifecycle semantics (probe P5): idempotent double open, wrong-kind reopen
-// throwing while open, and isBoxOpen tracking. The 1.0 lifecycle core leans on these, and the tier-3
-// rule (never duplicate a precondition the engine already throws for) requires the engine to keep
-// erroring where it errors today.
+// Pins hive_ce 2.19.3's lifecycle semantics (probe P5): idempotent double open, wrong-kind reopen throwing
+// while open, and isBoxOpen tracking. The 1.0 lifecycle core leans on these, and the tier-3 rule (never
+// duplicate a precondition the engine already throws for) requires the engine to keep erroring where
+// it errors today.
 @TestOn('vm')
 @Tags(['integration'])
 library;

@@ -1,5 +1,5 @@
-// The keyed demo's behaviour through its view-model, BDD-shaped via bdd_framework against real
-// hive on a temp dir. Input values live in the example rows, read back through the context.
+// The keyed demo through its view-model, against real hive on a temp dir. Inputs live in the example
+// rows and come back through the context.
 import 'dart:io';
 
 import 'package:bdd_framework/bdd_framework.dart';

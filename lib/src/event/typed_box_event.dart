@@ -3,12 +3,12 @@ library;
 
 import 'package:meta/meta.dart';
 
-/// One change on an eager box's watch stream: the decoded [key], the affected [value], and whether
-/// the change [deleted] the entry.
+/// One change on an eager box's watch stream: the decoded [key], the affected [value], and whether the
+/// change [deleted] the entry.
 ///
-/// The value is **non-null even on deletes**: eager hive_ce delivers the just-deleted value from its
-/// cache (pinned against 2.19.3), so consumers never null-check and the 0.0.x delete-event crash is
-/// unrepresentable. The lazy axis cannot make the same promise; its stream carries [LazyTypedBoxEvent] instead.
+/// The value is there even on deletes, because eager hive_ce hands back what it just dropped from its
+/// cache (pinned behaviour), so there is nothing to null-check. A lazy box can't promise that, so it
+/// carries [LazyTypedBoxEvent] instead.
 @immutable
 // ignore: public_member_api_docs -- a primary constructor has nowhere to hang a doc comment.
 final class const TypedBoxEvent<T extends Object, K extends Object>({

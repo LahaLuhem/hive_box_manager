@@ -1,27 +1,18 @@
-// Wrapper-overhead lane: façade vs raw hive_ce on the hot paths aim #4 protects. The target is
-// two-currency, since a flat percentage says nothing on an op that costs 13 ns raw: tens of
-// nanoseconds per op on the memory paths, single-digit percent on anything reaching disk.
-// One measurement per process invocation; emits one JSON line.
-// Drive via overhead_driver.sh (JIT for sanity; `dart compile exe` + the driver for the
-// deciding AOT numbers).
+// Wrapper-overhead lane: façade against raw hive_ce on the hot paths. One measurement per process, one
+// JSON line out. Drive it with overhead_driver.sh, JIT for a sanity check and `dart compile exe` for
+// anything you intend to believe. README.md §"Running the overhead lane" has the targets, and why a
+// flat percentage is the wrong currency on an op that cheap.
 //
-// Every lane here compares operations with an *exact* raw counterpart, so the percentage means
-// "what the wrapper costs" and nothing else. `ListBox` and `DualKeyBox` are deliberately absent:
-// raw hive_ce has no equivalent of a list-valued or two-part-keyed box, so their baseline has to be
-// hand-rolled code rather than one call, which is a different question measured elsewhere (the
-// matrix lane covers dual; the list box has its own lane).
+// Every lane here has an *exact* raw counterpart, so the percentage means the wrapper and nothing else.
+// `ListBox` and `DualKeyBox` are absent on purpose: raw hive_ce has no list-valued or two-part-keyed
+// box, so their baseline is hand-rolled code rather than one call. The matrix lane covers dual, and
+// the list box has its own.
 //
-// Usage:
-//   overhead_bench prep <n> <workDir>
-//   overhead_bench get <impl> <n> <boxKind> <workDir> [passes]
-//   overhead_bench values <impl> <n> <boxKind> <workDir>
-//   overhead_bench contains <impl> <n> <boxKind> <workDir>
-//   overhead_bench put <impl> <n>
-//   overhead_bench putall <impl> <n>
-//   overhead_bench delete <impl> <n>
-//   overhead_bench deleteall <impl> <n>
-//   overhead_bench single <impl> <op> <n> <boxKind>
-// with impl: facade | raw, boxKind: eager | lazy, op: get | set
+// Usage: overhead_bench prep <n> <workDir> overhead_bench get <impl> <n> <boxKind> <workDir> [passes]
+// overhead_bench values <impl> <n> <boxKind> <workDir> overhead_bench contains <impl> <n> <boxKind>
+// <workDir> overhead_bench put <impl> <n> overhead_bench putall <impl> <n> overhead_bench delete <impl>
+// <n> overhead_bench deleteall <impl> <n> overhead_bench single <impl> <op> <n> <boxKind> with impl:
+// facade | raw, boxKind: eager | lazy, op: get | set
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -37,18 +28,16 @@ const getSampleSeed = 7;
 /// Lazy gets pay a disk read per op, so that lane samples at most this many.
 const maxLazyGetOps = 10000;
 
-/// How many times the get lane replays its whole sample inside one timed window. One by default:
-/// the historical shape, and the one the README's per-get percentages describe.
+/// How many times the get lane replays its whole sample inside one timed window. One by default: the
+/// historical shape, and the one the README's per-get percentages describe.
 ///
-/// Raising it is **not** a free noise reduction, so it stays opt-in. A single 100K eager pass runs
-/// ~50 ms, which is close enough to process-startup and scheduling noise that a busy host swings
-/// the reading from -6% to +27% run to run, and a wider window does clear that floor. But it also
-/// changes the question: the façade allocates a `Some` per get where raw allocates nothing, so ten
-/// replays turn 100K allocations into 1M and the lane starts charging the façade for young-gen GC
-/// it never reached in one pass. Measured that way the eager lane reads +23% instead of ~+2%.
+/// Raising it is not a free noise reduction, so it stays opt-in. A wider window does clear the scheduling
+/// floor, but it changes the question: the façade allocates a `Some` per get where raw allocates nothing,
+/// so 10 replays turn 100K allocations into 1M and start charging the façade for GC that a single pass
+/// never reaches. Measured that way the eager lane reads +23%, not ~+2%.
 ///
-/// Both are real numbers for different questions ("one cold pass" vs "sustained reads"). Pass an
-/// explicit count when you want the sustained one, and label it as such wherever it lands.
+/// Both are real numbers for different questions ("one cold pass" vs "sustained reads"). Pass an explicit
+/// count when you want the sustained one, and label it as such wherever it lands.
 const defaultGetPasses = 1;
 
 Future<void> main(List<String> args) async {
@@ -80,8 +69,8 @@ Future<void> main(List<String> args) async {
   }
 }
 
-/// A fresh temp dir with hive pointed at it, for the lanes that must own their box (every write
-/// lane mutates, so they cannot share the read lanes' prepped file).
+/// A fresh temp dir with hive pointed at it, for the lanes that must own their box (every write lane
+/// mutates, so they cannot share the read lanes' prepped file).
 Directory scratchBox(String suffix) {
   final dir = Directory.systemTemp.createTempSync('hbm_overhead_$suffix');
   Hive.init(dir.path);
@@ -237,8 +226,8 @@ Future<void> runContains(String impl, int n, String boxKind, String workDir) asy
     }
     stopwatch.stop();
   } else if (impl == 'facade') {
-    // `contains` is a sync inspector on the lazy façade, so the box has to be open before it is
-    // legal to call: that open stays outside the timed window, exactly like the get lane's.
+    // `contains` is a sync inspector on the lazy façade, so the box has to be open before it is legal
+    // to call: that open stays outside the timed window, exactly like the get lane's.
     final box = LazyKeyedBox<String, int>(boxName);
     await box.ensureInitialised().run();
     stopwatch.start();
@@ -266,8 +255,8 @@ Future<void> runContains(String impl, int n, String boxKind, String workDir) asy
   });
 }
 
-/// One batched write of [n] entries. The façade encodes and gates every key up front, before the
-/// task exists, so this lane charges it for a full extra pass over the batch that raw never makes.
+/// One batched write of [n] entries. The façade encodes and gates every key up front, before the task
+/// exists, so this lane charges it for a full extra pass over the batch that raw never makes.
 Future<void> runPutAll(String impl, int n) async {
   final dir = scratchBox('putall_');
   // Built outside the timed window: the batch map is the input, not part of the operation.
@@ -294,17 +283,16 @@ Future<void> runPutAll(String impl, int n) async {
 
 /// The `putAllBy` lane: from a flat list of values to written, caller prep **included**.
 ///
-/// Deliberately unlike [runPutAll], which treats the batch map as given input because it measures
-/// the write. Here building that map *is* what is under test, since removing it is the whole point
-/// of `putAllBy`. Both impls start from the same flat list and pay for whatever they need on the
-/// way to hive.
+/// Deliberately unlike [runPutAll], which treats the batch map as given input because it measures the
+/// write. Here building that map *is* what is under test, since removing it is the whole point of `putAllBy`.
+/// Both impls start from the same flat list and pay for whatever they need on the way to hive.
 ///
-///   map     `Map.fromIterables(values, values)` then `putAll`: what a consumer writes without it.
-///   facade  `putAllBy(values, key: ...)`.
+/// map `Map.fromIterables(values, values)` then `putAll`: what a consumer writes without it. facade
+/// `putAllBy(values, key: ...)`.
 ///
-/// Keys are the values themselves (`KeyedBox<String, String>`), so the extractor is identity and
-/// costs the same on both sides. Anything expensive there would add a constant to both impls and
-/// bury the difference being measured.
+/// Keys are the values themselves (`KeyedBox<String, String>`), so the extractor is identity and costs
+/// the same on both sides. Anything expensive there would add a constant to both impls and bury the
+/// difference being measured.
 Future<void> runPutAllBy(String impl, int n) async {
   final dir = scratchBox('putallby_');
   // Built outside the window: the *values* are this lane's input. Turning them into a batch is not.
@@ -333,8 +321,8 @@ Future<void> runPutAllBy(String impl, int n) async {
   dir.deleteSync(recursive: true);
 }
 
-/// Deletes, either [n] sequential single calls or one batch. The box is seeded outside the timed
-/// window, and deletes need their own box because they consume it.
+/// Deletes, either [n] sequential single calls or one batch. The box is seeded outside the timed window,
+/// and deletes need their own box because they consume it.
 Future<void> runDelete(String impl, int n, {required bool batched}) async {
   final dir = scratchBox(batched ? 'deleteall_' : 'delete_');
   final keys = List.generate(n, (index) => index, growable: false);
@@ -378,9 +366,9 @@ Future<void> runDelete(String impl, int n, {required bool batched}) async {
   dir.deleteSync(recursive: true);
 }
 
-/// The single-value façades against their raw shape: one fixed slot key, no key argument on the
-/// surface. Slot `0` is the compatibility invariant the façade stores under, so the raw baseline
-/// addresses the same slot.
+/// The single-value façades against their raw shape: one fixed slot key, no key argument on the surface.
+/// Slot `0` is the compatibility invariant the façade stores under, so the raw baseline addresses the
+/// same slot.
 Future<void> runSingleValue(String impl, String op, int n, String boxKind) async {
   const slotKey = 0;
   final dir = scratchBox('single_');

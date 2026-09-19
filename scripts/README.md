@@ -82,7 +82,7 @@ The script refuses to proceed unless every check passes:
 - `dart format`, `dart analyze`, and `dart test` all clean.
 - The target tag does not already exist locally or on the remote.
 
-`dart pub publish --dry-run` is *not* in preflight. It cross-checks three things
+`dart pub publish --dry-run` is *not* in preflight. It cross-checks 3 things
 that must be satisfied simultaneously:
 
 1. `pubspec.yaml`'s `version:` matches a CHANGELOG header.
@@ -92,7 +92,7 @@ that must be satisfied simultaneously:
 (1) only holds *after* `cider bump` + `cider release`. (2) only holds *after*
 `git commit` — running the dry-run against the working tree mid-execute would
 trip on the bump/release modifications. So the dry-run runs as step 5, after
-the prep commit lands. The `ERR` trap handles failure in two phases:
+the prep commit lands. The `ERR` trap handles failure in 2 phases:
 
 - **Pre-commit failure** (bump or release errored, no commit yet):
   restore `pubspec.yaml` + `CHANGELOG.md` from `HEAD`.

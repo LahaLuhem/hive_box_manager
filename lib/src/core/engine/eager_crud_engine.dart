@@ -9,15 +9,14 @@ import '../value_codec/value_codec.dart';
 
 /// The eager CRUD engine: every eager façade delegates here, so CRUD is written exactly once.
 ///
-/// Owns hive and the corruption gate; façades own their codecs. Keys arrive encoded as [RawKey],
-/// with the semantic key alongside purely so observers hear what a consumer would recognise.
-/// Keeping codecs out is what removes the `KeyCodec<(K1, K2)>` adapter the dual façades would otherwise
-/// need, and its ~350 ns per op (`benchmark/key_shape_bench.dart`).
+/// It owns hive and the corruption gate, the façades own their codecs. Keys turn up already encoded
+/// as [RawKey], with the semantic key alongside so observers hear something a consumer would recognise.
+/// Keeping the codecs out here is what spares the dual façades a `KeyCodec<(K1, K2)>` adapter and what
+/// that cost (`benchmark/key_shape_bench.dart`).
 ///
-/// Sync reads are legal by construction: an eager engine only exists around an already-open box.
-/// `close()` / `deleteFromDisk()` are terminal, after which operations surface the engine's own
-/// already-closed error (tier 3: no wrapper pre-check). A codec emitting a non-storable raw key
-/// throws at the call site, before any [Task] is built.
+/// Sync reads are safe by construction, since an eager engine only exists around an open box. `close()`
+/// and `deleteFromDisk()` are terminal, and anything after one gets hive's own already-closed error.
+/// A codec producing an unstorable raw key throws at the call site, before any [Task] exists.
 // ignore: public_member_api_docs -- a primary constructor has nowhere to hang a doc comment.
 final class EagerCrudEngine<T extends Object>({
   required final Box<Object?> _box,
@@ -36,19 +35,19 @@ final class EagerCrudEngine<T extends Object>({
   /// Whether the box holds at least one entry.
   bool get isNotEmpty => _box.isNotEmpty;
 
-  /// The stored keys exactly as hive holds them. Façades decode; the query strategies scan.
+  /// The stored keys exactly as hive holds them. Façades decode them, the query strategies scan them.
   Iterable<Object> get rawKeys => _box.keys.map((rawKey) => rawKey as Object);
 
-  /// The stored values, decoded lazily; dispatches one read-all event at call time.
-  /// [semanticKeyOf] decodes a raw key for failure reports only.
+  /// The stored values, decoded as they are iterated. One read-all event at call time. [semanticKeyOf]
+  /// decodes a raw key for failure reports only.
   Iterable<T> values(Object Function(Object rawKey) semanticKeyOf) {
     _observer?.onReadAll(name, _box.length);
 
     return _AttributedValues(_box, _valueCodec, name, semanticKeyOf);
   }
 
-  /// Restores a stored value through the value codec, for façades assembling their watch events.
-  /// [semanticKey] names the record if the codec refuses it.
+  /// Restores a stored value through the value codec, for façades assembling their watch events. [semanticKey]
+  /// names the record if the codec refuses it.
   T decodeStored(Object storedValue, Object semanticKey) {
     try {
       return _valueCodec.fromStored(storedValue);
@@ -92,12 +91,12 @@ final class EagerCrudEngine<T extends Object>({
 
   /// Writes every entry of [rawEntries] in one batch. No semantic keys: the event carries a count.
   ///
-  /// Lazy iterable, consumed eagerly here: the façade's encode fuses into this pass (one materialisation, not two)
-  /// while a bad key still fails before the [Task] exists.
+  /// Lazy iterable, consumed eagerly here: the façade's encode fuses into this pass (one materialisation,
+  /// not 2) while a bad key still fails before the [Task] exists.
   ///
-  /// Two entries encoding to one raw key is an assert, not an error: in release the later entry wins
+  /// 2 entries encoding to one raw key is an assert, not an error: in release the later entry wins
   /// (plain `Map` semantics), so a batch that quietly drops rows gets caught in development instead
-  /// of shipping. It means either two values yielded the same key, or the codec is not injective.
+  /// of shipping. It means either 2 values yielded the same key, or the codec is not injective.
   Task<Unit> putAll(Iterable<MapEntry<RawKey, T>> rawEntries) {
     final storableEntries = <Object, Object?>{};
     for (final entry in rawEntries) {
@@ -146,8 +145,8 @@ final class EagerCrudEngine<T extends Object>({
     });
   }
 
-  /// Deletes [rawKey]. No gate: deletes cannot corrupt (hive no-ops absent keys before writing any
-  /// frame, and a bad key was never admitted by the write gate).
+  /// Deletes [rawKey]. No gate: deletes cannot corrupt (hive no-ops absent keys before writing any frame,
+  /// and a bad key was never admitted by the write gate).
   Task<Unit> delete(RawKey rawKey, Object semanticKey) => _guard('delete', () async {
     await _box.delete(rawKey.value);
     _observer?.onDeleted(name, semanticKey);
@@ -155,8 +154,8 @@ final class EagerCrudEngine<T extends Object>({
     return unit;
   });
 
-  /// Deletes [rawKeysToDelete] in one batch, dispatching one event per [semanticKeys] entry.
-  /// Parallel lists, both built by the façade in one traversal.
+  /// Deletes [rawKeysToDelete] in one batch, dispatching one event per [semanticKeys] entry. Parallel
+  /// lists, both built by the façade in one traversal.
   Task<Unit> deleteAll(List<RawKey> rawKeysToDelete, List<Object> semanticKeys) {
     final unwrappedKeys = [for (final rawKey in rawKeysToDelete) rawKey.value];
 
@@ -196,7 +195,7 @@ final class EagerCrudEngine<T extends Object>({
     return unit;
   });
 
-  /// Closes the box; terminal for this handle.
+  /// Closes the box. Terminal for this handle.
   Task<Unit> close() => _guard('close', () async {
     await _box.close();
     _observer?.onClosed(name);
@@ -204,7 +203,7 @@ final class EagerCrudEngine<T extends Object>({
     return unit;
   });
 
-  /// Deletes the box from disk; terminal for this handle.
+  /// Deletes the box from disk. Terminal for this handle.
   Task<Unit> deleteFromDisk() => _guard('deleteFromDisk', () async {
     await _box.deleteFromDisk();
     _observer?.onDeletedFromDisk(name);
@@ -225,8 +224,8 @@ final class EagerCrudEngine<T extends Object>({
 
 /// The eager read-all view: decodes each stored value and names the key when one refuses.
 ///
-/// Hand-rolled rather than `values.indexed.map`, whose per-element record cost 4 ns on the
-/// wrapper-overhead lane.
+/// Hand-rolled rather than `values.indexed.map`, whose per-element record cost 4 ns on the wrapper-overhead
+/// lane.
 final class _AttributedValues<T extends Object> extends Iterable<T> {
   const new(this._box, this._valueCodec, this._boxName, this._semanticKeyOf);
 

@@ -1,6 +1,5 @@
-// The dual-key demo's behaviour through its view-model: grid seeding and the reverse queries by
-// either part, against real hive on a temp dir. The two query axes and the no-match case are
-// rows of one scenario, read back through the context.
+// The dual-key demo through its view-model: grid seeding and the reverse queries. Both axes and the
+// no-match case are rows of one scenario.
 import 'dart:io';
 
 import 'package:bdd_framework/bdd_framework.dart';

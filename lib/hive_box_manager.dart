@@ -1,10 +1,5 @@
-/// Typed, fpdart-first façades over `hive_ce` boxes: no `null`s, lazy effects,
-/// ready-made CRUD, purpose-built box variants.
-///
-/// All four box families are live: `KeyedBox`, `SingleValueBox`,
-/// `ListBox`, and `DualKeyBox` (with reverse queries folded in), each in
-/// an eager and a lazy variant, alongside the key-codec seam with its four
-/// shipped codecs, the box observer pair, and the typed watch events.
+/// Typed, fpdart-first façades over `hive_ce` boxes: no `null`s, lazy effects, ready-made CRUD, purpose-built
+/// box variants.
 library;
 
 export 'src/box/dual_key/dual_key_box.dart' show DualKeyBox;

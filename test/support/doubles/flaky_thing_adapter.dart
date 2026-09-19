@@ -23,7 +23,7 @@ final class FlakyThingAdapter extends TypeAdapter<Thing> {
   void write(BinaryWriter writer, Thing obj) => writer.writeString(obj.id);
 }
 
-/// A minimal adapter-backed value; [id] is all that reaches disk.
+/// A minimal adapter-backed value. Only [id] reaches disk.
 final class Thing {
   /// [undecodableId] here makes the adapter refuse this record.
   final String id;

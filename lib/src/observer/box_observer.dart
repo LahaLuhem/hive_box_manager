@@ -2,13 +2,12 @@ import '/src/core/utils/no_op.dart';
 
 /// Semantic observer over one or many boxes: extend it and override only the events you care about.
 ///
-/// Every method is a no-op by default, so subclasses stay minimal, and `base` (extend, never implement)
-/// lets new events land in minor releases without breaking anyone. Attach one per box at construction
-/// (`observer:`); with none attached, dispatch is a single null check, so the silent default costs
-/// nothing on hot paths. Dispatch is synchronous: keep overrides cheap, and push expensive sink work
-/// (IO, network) onto your own asynchronous machinery.
+/// Everything is a no-op by default, and `base` means new events can land in a minor release without
+/// breaking you. Attach one per box with `observer:`. With none attached a dispatch is one null check,
+/// so it costs nothing. Dispatch is synchronous, so keep overrides cheap and hand IO or network work
+/// to your own async code.
 ///
-/// `boxName` leads every signature so a single observer instance can serve every box in an app.
+/// `boxName` comes first everywhere, so one observer can serve every box in an app.
 abstract base class BoxObserver {
   /// Const so subclasses can be const-constructed and shared freely.
   const new();
@@ -16,7 +15,7 @@ abstract base class BoxObserver {
   /// The box finished opening (an eager open, or a lazy box's first-use auto-open).
   void onOpened(String boxName) => noop();
 
-  /// The box was closed; the handle is terminal from here on.
+  /// The box was closed. The handle is spent from here on.
   void onClosed(String boxName) => noop();
 
   /// The box's backing file (or IndexedDB store) was deleted from disk.
@@ -25,10 +24,10 @@ abstract base class BoxObserver {
   /// Every entry was removed in one clear.
   void onCleared(String boxName) => noop();
 
-  /// A single-key read completed; [value] is null when the key was absent.
+  /// A single-key read finished. [value] is null when the key wasn't there.
   void onRead(String boxName, Object key, Object? value) => noop();
 
-  /// A whole-box read was served, spanning [valueCount] entries at that moment.
+  /// A whole-box read was served, [valueCount] entries at the time.
   void onReadAll(String boxName, int valueCount) => noop();
 
   /// A single-key write completed.
@@ -40,7 +39,7 @@ abstract base class BoxObserver {
   /// A single-key delete completed (batch deletes report once per key).
   void onDeleted(String boxName, Object key) => noop();
 
-  /// An operation's effect failed; the error also propagates to the caller unchanged.
+  /// An effect failed. The error reaches the caller unchanged too.
   void onOperationError(String boxName, String operation, Object error, StackTrace stackTrace) =>
       noop();
 }

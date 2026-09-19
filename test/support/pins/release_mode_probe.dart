@@ -1,11 +1,11 @@
-// Not a test: the pin suites run this in a subprocess so it executes WITHOUT asserts, the way a
-// release build does. hive_ce's write-path key guard (Frame.assertKey) and the typed-collection-box
-// open guard (typedMapOrIterableCheck) are assert-gated: active under `dart test` and in debug builds,
-// stripped in release, where the silent behaviours live. This probe reports what release-mode hive_ce
-// actually does, one flat JSON map on stdout; the pin suites assert its verdicts via `runReleaseModeProbe`.
+// Not a test: the pin suites run this in a subprocess so it executes WITHOUT asserts, the way a release
+// build does. hive_ce's write-path key guard (Frame.assertKey) and the typed-collection-box open guard
+// (typedMapOrIterableCheck) are assert-gated: active under `dart test` and in debug builds, stripped
+// in release, where the silent behaviours live. This probe reports what release-mode hive_ce actually
+// does, one flat JSON map on stdout. The pin suites read its verdicts through `runReleaseModeProbe`.
 //
-// Deliberately NOT named *_test.dart: there are no test() calls, the runner must never load it,
-// and it lives beside the pins it serves.
+// Deliberately NOT named *_test.dart: there are no test() calls, the runner must never load it, and
+// it lives beside the pins it serves.
 // ignore_for_file: prefer-correct-test-file-name
 import 'dart:convert';
 import 'dart:io';
@@ -90,8 +90,8 @@ Future<Map<String, Object?>> probeOversizedString(
   }
 }
 
-/// Round-trips a `Box<List<Person>>` (the upstream-#150 shape): without asserts the open succeeds
-/// and only the first post-reopen get blows up.
+/// Round-trips a `Box<List<Person>>` (the upstream-#150 shape): without asserts the open succeeds and
+/// only the first post-reopen get blows up.
 Future<Map<String, Object?>> probeTypedBox(String workDir) async {
   final dir = Directory('$workDir/typed')..createSync(recursive: true);
   Hive

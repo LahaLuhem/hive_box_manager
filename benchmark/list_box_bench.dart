@@ -1,40 +1,23 @@
-// List-box lane: `ListBox` against the two things a consumer would hand-write instead.
-// One measurement per process invocation; emits one JSON line. Drive via list_box_driver.sh.
+// List-box lane: `ListBox` against the 2 things a consumer would hand-write instead. One measurement
+// per process, one JSON line out. Drive it with list_box_driver.sh.
 //
-// Three impls, because "vs raw hive_ce" is not one question here. Raw hive_ce has no list-valued
-// box, so the baseline is code a consumer writes, and there are two versions of that code:
+// 3 impls, because "vs raw hive_ce" is not one question here. Raw hive_ce has no list-valued box,
+// so the baseline is code a consumer writes, and there are 2 versions of it: `naive` is what you write
+// first, `correct` is what you write after it bites you, and `facade` is `ListBox`. So naive-vs-facade
+// prices safety and correct-vs-facade prices the wrapper. README.md §"The list-box lane's 2 baselines"
+// has the rest.
 //
-//   naive    `box.get(k) as List<T>` and `box.put(k, list)`. What you write first.
-//   correct  the same with `.cast<T>()` at the read boundary and a defensive `List.from` at the
-//            write boundary. What a consumer writes after being bitten. This is the honest
-//            wrapper-tax denominator.
-//   facade   `ListBox`.
+// 2nd axis is the element type, because whether `naive` is broken at all depends on it: a `List<String>`
+// reads back fine and a `List<Person>` does not. The read lanes record that throw as the result rather
+// than dying on it, since "this baseline cannot read its own data back" is the measurement. `collection_disk_truth_test.dart`
+// pins the behaviour.
 //
-// So: naive-vs-facade prices safety, correct-vs-facade prices the wrapper. Reporting only one of
-// them would answer the wrong question.
+// 3rd axis is elements per key, not entries per box, because that is what the costs here scale with:
+// writes copy, `add` and `remove` are read-modify-writes, and iterating the cast view is O(n). Box size
+// is held constant.
 //
-// Second axis: the **element type**, because whether the naive baseline is broken at all depends on
-// it. Probed against hive_ce 2.19.3:
-//
-//   str  a `List<String>` reads back from disk as `List<String>`. The engine specialises lists of
-//        primitives, so the naive cast survives a restart and hand-rolling is genuinely fine.
-//   obj  a `List<Person>` (adapter-registered custom type) reads back as `List<dynamic>`, so the
-//        naive cast throws TypeError on the first post-restart read. This is upstream #150, pinned
-//        in test/integration/hive_ce_pins/collection_disk_truth_test.dart, and it is the reason
-//        `ListBox` exists.
-//
-// The read lanes record that throw as the result rather than dying on it: "this baseline cannot read
-// its own data back" is the measurement, and it only lands on one of the two element types.
-//
-// Third axis: **elements per key**, not entries per box, because that is what every cost here
-// scales with: the write path materialises a private copy (O(n) per put), `add` / `remove` are
-// read-modify-writes (O(n) in the stored list), and the read path's cast view is O(1) to obtain and
-// O(n) across iteration. Box size is held constant.
-//
-// Usage: list_box_bench <mode> <impl> <elem> <keys> <listLen> [workDir]
-//   modes: prep | put | putall | get | add | remove | open
-//   impl: naive | correct | facade
-//   elem: str | obj
+// Usage: list_box_bench <mode> <impl> <elem> <keys> <listLen> [workDir] modes: prep | put | putall |
+// get | add | remove | open impl: naive | correct | facade elem: str | obj
 import 'dart:convert';
 import 'dart:io';
 
@@ -44,11 +27,11 @@ import 'package:meta/meta.dart';
 
 const boxName = 'ibench';
 
-/// A custom element type, so one axis of this lane exercises the reification trap that only fires
-/// for adapter-registered types. Mirrors the pin suite's fixture (hand-written, no codegen).
+/// A custom element type, so one axis of this lane exercises the reification trap that only fires for
+/// adapter-registered types. Mirrors the pin suite's fixture (hand-written, no codegen).
 @immutable
-// A harness fixture, not this file's subject: the file is a worker entrypoint (`list_box_bench`,
-// per list_box_driver.sh).
+// A harness fixture, not this file's subject: the file is a worker entrypoint (`list_box_bench`, per
+// list_box_driver.sh).
 // ignore: prefer-match-file-name
 class Person {
   final String name;
@@ -84,11 +67,11 @@ int weighString(String element) => element.length;
 
 int weighPerson(Person element) => element.name.length;
 
-/// Everything a lane needs about its element type, so `ListBox<T, K>` and the raw casts can stay
-/// statically typed while the element type varies per invocation.
+/// Everything a lane needs about its element type, so `ListBox<T, K>` and the raw casts can stay statically
+/// typed while the element type varies per invocation.
 ///
-/// [weigh] exists to force iteration: without touching each element the read lanes would measure
-/// obtaining the cast view (O(1)) instead of walking it (O(n)), which is the cost under test.
+/// [weigh] exists to force iteration: without touching each element the read lanes would measure obtaining
+/// the cast view (O(1)) instead of walking it (O(n)), which is the cost under test.
 @immutable
 class ElementSpec<T extends Object> {
   final T Function(int index) at;
@@ -134,14 +117,14 @@ Future<void> main(List<String> args) async {
   final listLen = int.parse(args[4]);
   final workDir = args.length > 5 ? args[5] : '';
 
-  // Prep is impl-agnostic by design (one file serves all three), so it alone takes any impl token.
+  // Prep is impl-agnostic by design (one file serves all 3), so it alone takes any impl token.
   if (mode != 'prep' && impl != 'naive' && impl != 'correct' && impl != 'facade') {
     throw ArgumentError('unknown impl: $impl');
   }
   if (elem != 'str' && elem != 'obj') throw ArgumentError('unknown elem: $elem');
 
-  // Dispatched once, here: every lane body below is generic in the element type, so the two axes
-  // differ only in which spec they are handed.
+  // Dispatched once, here: every lane body below is generic in the element type, so the 2 axes differ
+  // only in which spec they are handed.
   final result = switch ((mode, elem)) {
     ('prep', 'obj') => await runPrep(personSpec, keys, listLen, workDir, elem),
     ('prep', _) => await runPrep(stringSpec, keys, listLen, workDir, elem),
@@ -189,8 +172,7 @@ Future<void> main(List<String> args) async {
 }
 
 /// Seeds the shared box the read lanes open. Written raw and untyped, which is byte-identical to what
-/// the façade writes (its value codec is the identity on the way in), so one file serves all three
-/// impls.
+/// the façade writes (its value codec is the identity on the way in), so one file serves all 3 impls.
 Future<LaneResult> runPrep<T extends Object>(
   ElementSpec<T> spec,
   int keys,
@@ -209,9 +191,9 @@ Future<LaneResult> runPrep<T extends Object>(
   return (micros: 0, checksum: 0, rssDelta: 0, fileBytes: fileBytes, failure: null);
 }
 
-/// Writes, either [keys] sequential puts or one batch. RSS spans the timed window: the façade
-/// materialises a private fixed-length copy per list, and `putAll` builds a whole second map of them
-/// before anything reaches hive, so this is where that shows up if it shows up.
+/// Writes, either [keys] sequential puts or one batch. RSS spans the timed window: the façade materialises
+/// a private fixed-length copy per list, and `putAll` builds a whole second map of them before anything
+/// reaches hive, so this is where that shows up if it shows up.
 Future<LaneResult> runPut<T extends Object>(
   ElementSpec<T> spec,
   String impl,
@@ -243,7 +225,7 @@ Future<LaneResult> runPut<T extends Object>(
     final box = await Hive.openBox<Object?>(boxName);
     stopwatch.start();
     if (batched) {
-      // The defensive copy is the whole difference between the two baselines on the write path.
+      // The defensive copy is the whole difference between the 2 baselines on the write path.
       await box.putAll(
         impl != 'correct'
             ? batch
@@ -271,12 +253,12 @@ Future<LaneResult> runPut<T extends Object>(
 }
 
 /// Reads every key and **fully iterates** each list. Iteration is the point: the façade hands back an
-/// unmodifiable cast view, which costs nothing to obtain and one type check per element to walk, so a
-/// lane that only called `get` would measure the cheap half and miss the cost entirely.
+/// unmodifiable cast view, which costs nothing to obtain and one type check per element to walk, so
+/// a lane that only called `get` would measure the cheap half and miss the cost entirely.
 ///
 /// On the `obj` axis the naive impl throws here rather than returning a number. That is the finding:
-/// this box was written by a previous process, which is exactly the condition `as List<T>` cannot
-/// survive for an adapter-registered type.
+/// this box was written by a previous process, which is exactly the condition `as List<T>` cannot survive
+/// for an adapter-registered type.
 Future<LaneResult> runGet<T extends Object>(
   ElementSpec<T> spec,
   String impl,
@@ -335,7 +317,7 @@ Future<LaneResult> runGet<T extends Object>(
 
 /// Appends one element to every key: a read-modify-write, O(listLen) per op on every impl. The box is
 /// seeded in-process, so the naive impl's read still works even on the `obj` axis (hive's write cache
-/// hands back the instance it just stored, pinned) and the lane measures all three.
+/// hands back the instance it just stored, pinned) and the lane measures all 3.
 Future<LaneResult> runAdd<T extends Object>(
   ElementSpec<T> spec,
   String impl,
@@ -345,10 +327,9 @@ Future<LaneResult> runAdd<T extends Object>(
 ) async {
   final dir = scratchBox('add_', elem);
   final appended = spec.at(listLen);
-  // A distinct list per key, in every impl. Sharing one instance across keys (which raw hive_ce
-  // happily does) would leave the raw baselines holding a single list where the façade's putAll has
-  // materialised one per key, and the RSS column below would report that seeding difference as a
-  // wrapper cost.
+  // A distinct list per key, in every impl. Sharing one instance across keys (which raw hive_ce happily
+  // does) would leave the raw baselines holding a single list where the façade's putAll has materialised
+  // one per key, and the RSS column below would report that seeding difference as a wrapper cost.
   final seed = {for (var key = 0; key < keys; key++) key: spec.list(listLen)};
 
   final stopwatch = Stopwatch();
@@ -392,8 +373,8 @@ Future<LaneResult> runAdd<T extends Object>(
 }
 
 /// Removes one mid-list element from every key. Distinct from [runAdd] because the façade implements
-/// it directly (`indexOf`, then a copy skipping that index) rather than through the update path, so it
-/// walks the list twice where `add` walks it once.
+/// it directly (`indexOf`, then a copy skipping that index) rather than through the update path, so
+/// it walks the list twice where `add` walks it once.
 Future<LaneResult> runRemove<T extends Object>(
   ElementSpec<T> spec,
   String impl,
@@ -444,11 +425,11 @@ Future<LaneResult> runRemove<T extends Object>(
   );
 }
 
-/// Open cost and the RSS the eager value cache costs, per impl. The façade wraps the same hive box, so
-/// this lane exists to confirm it adds nothing rather than to find something.
+/// Open cost and the RSS the eager value cache costs, per impl. The façade wraps the same hive box,
+/// so this lane exists to confirm it adds nothing rather than to find something.
 Future<LaneResult> runOpen<T extends Object>(
-  // Unread: the spec is here only to infer `T` for `ListBox.open<T, int>` below. The box this lane
-  // opens is seeded out of process by the prep lane, so the key count is not this lane's business.
+  // Unread: the spec is here only to infer `T` for `ListBox.open<T, int>` below. The box this lane opens
+  // is seeded out of process by the prep lane, so the key count is not this lane's business.
   ElementSpec<T> _,
   String impl,
   String elem,

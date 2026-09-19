@@ -7,8 +7,8 @@ import 'package:pmvvm/pmvvm.dart';
 
 import '../core/observers/log_panel_observer.dart';
 
-/// Drives the eager keyed demo: an int-keyed `KeyedBox` of strings, read synchronously and
-/// mutated through lazy tasks run at the handler edge.
+/// Drives the eager keyed demo: an int-keyed `KeyedBox` of strings, read synchronously and written through
+/// tasks run at the handler edge.
 final class KeyedViewModel extends ViewModel {
   final observer = LogPanelObserver();
   final valueController = TextEditingController();
@@ -24,8 +24,8 @@ final class KeyedViewModel extends ViewModel {
     unawaited(_opened);
   }
 
-  /// Completes once the box is open and the first listing is loaded; awaitable by tests (and
-  /// by anything that wants a splash gate).
+  /// Completes once the box is open and the first listing has loaded. Await it in tests, or behind a
+  /// splash screen.
   Future<void> get ready => _opened;
 
   Future<void> onAddPressed() async {

@@ -1,10 +1,9 @@
-// Pins the web platform for the 1.0 key/codec design (probe P2): packing arithmetic is exact under
-// dart2js AND dart2wasm number semantics, and hive_ce's IndexedDB backend serves the same post-reopen
-// collection shapes as the VM binary format. Per the 2026-07-21 ratification rider these reads
-// happen after close + reopen, so they assert IndexedDB truth, not write-cache truth. A full process
-// restart is not reachable from `dart test`, which stays the documented residual.
-// The pinned subject includes `dynamic` itself (the post-reopen List<dynamic> shape on web), so
-// the DCM ban is lifted for this file.
+// Pins the web platform for the key and codec design: the packing arithmetic stays exact under both
+// dart2js and dart2wasm, and IndexedDB serves the same post-reopen collection shapes the VM does. Reads
+// happen after a close and reopen, so this is IndexedDB truth rather than write-cache truth. A real
+// process restart isn't reachable from `dart test`, which stays the known gap.
+//
+// The shape being pinned is `dynamic` itself, so the DCM ban is lifted for this file.
 // ignore_for_file: avoid-dynamic
 @TestOn('browser')
 @Tags(['browser'])
@@ -54,12 +53,14 @@ void main() {
 
   feature('hive_ce IndexedDB disk truth', () {
     scenario('keys, custom types, and collection casts survive close + reopen', () async {
-      // hive_ce's web backend ignores the path (storage is IndexedDB); the argument only satisfies the shared VM/web signature.
+      // hive_ce's web backend ignores the path, since storage is IndexedDB. The argument is only there
+      // to satisfy the shared VM and web signature.
       Hive
         ..init('hive_web_pins')
         ..registerAdapter(PersonAdapter(), override: true);
 
-      // Unique per run: IndexedDB persists across tests within one browser session, and these pins must start from an empty box.
+      // Unique per run: IndexedDB persists across tests within one browser session, and these pins must
+      // start from an empty box.
       final boxName = 'pins_${DateTime.now().millisecondsSinceEpoch}';
       var box = await Hive.openBox<Object>(boxName);
       await box.put(7, 'int-key');

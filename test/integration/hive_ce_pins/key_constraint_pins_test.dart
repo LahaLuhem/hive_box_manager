@@ -1,10 +1,10 @@
 // Pins hive_ce 2.19.3's key handling (probe P4 + the 2026-07-21 assert-mode discovery). The engine's
 // only key guard (Frame.assertKey) is assert-gated: with asserts on (dart test, debug builds) bad keys
-// throw HiveError at put. With asserts stripped (release, probed via subprocess) out-of-range ints
-// wrap silently into u32 and oversized String keys corrupt the whole box file. The 1.0 write-path
-// corruption gate exists because of the release behaviours, so engine drift in either mode must fail loudly.
-// The release-truth verdicts include hive's List<dynamic> keystore shapes, so the DCM
-// `avoid-dynamic` ban is lifted for this file.
+// throw HiveError at put. With asserts stripped (release, probed via subprocess) out-of-range ints wrap
+// silently into u32 and oversized String keys corrupt the whole box file. The 1.0 write-path corruption
+// gate exists because of the release behaviours, so engine drift in either mode must fail loudly. The
+// release-truth verdicts include hive's List<dynamic> keystore shapes, so the DCM `avoid-dynamic` ban
+// is lifted for this file.
 // ignore_for_file: avoid-dynamic
 @TestOn('vm')
 @Tags(['integration'])

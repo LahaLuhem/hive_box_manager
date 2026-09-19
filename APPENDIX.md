@@ -12,7 +12,7 @@ completed; the empirical claims (probe results, benchmark numbers) are pinned by
 <!-- TOC start -->
 
 - [`AGENTS.md` and `CLAUDE.md` are symlinks into `.ai/`](#ai-files-symlinked)
-- [Dependabot automerges the boring tier, behind four aggregate checks](#dependabot-automerge)
+- [Dependabot automerges the boring tier, behind 4 aggregate checks](#dependabot-automerge)
 - [Pure-Dart package, no Flutter dependency](#pure-dart-not-flutter)
 - [The fpdart, no-null surface](#fpdart-surface)
 - [Packaging: engine deps in core, adapters in companions](#packaging-core-and-companions)
@@ -22,7 +22,7 @@ completed; the empirical claims (probe results, benchmark numbers) are pinned by
 - [Core abstraction: engine + policies + thin façades](#core-abstraction)
 - [The seam model](#seam-model)
 - [Variant taxonomy & naming](#variant-taxonomy)
-- [Key strategy: two codecs, tiered validation](#key-strategy)
+- [Key strategy: 2 codecs, tiered validation](#key-strategy)
 - [Collection handling: cast at the read boundary](#collection-handling)
 - [Observability: semantic observers, split watch events](#observability)
 - [Absence & error semantics](#absence-and-errors)
@@ -42,13 +42,13 @@ tools that look at the repo root (and humans) find them. `.gitignore` commits th
 ignores the root symlinks; `.pubignore` excludes both the symlinks and the targets so none of it
 ships in the published tarball.
 
-Relative links in the two `.ai/` files are written to resolve from the repo root (the symlink
+Relative links in the 2 `.ai/` files are written to resolve from the repo root (the symlink
 location), because the root symlink is how agents and GitHub read them.
 
 ---
 
 <a id="dependabot-automerge"></a>
-## Dependabot automerges the boring tier, behind four aggregate checks
+## Dependabot automerges the boring tier, behind 4 aggregate checks
 
 [`dependabot-automerge.yml`](./.github/workflows/dependabot-automerge.yml) arms GitHub's native
 auto-merge (rebase) for patch and minor bumps in the `uv` and `github-actions` ecosystems; every
@@ -83,7 +83,7 @@ Renovate does, so the mechanism is a workflow rather than a setting. The sibling
   matrix out of [`lint-checks.json`](./.github/lint-checks.json), so those contexts move whenever a
   linter does, and a required context that stops reporting leaves every PR waiting forever. Each
   workflow instead closes with one `*-ok` job that `needs` its siblings and fails on `failure` or
-  `cancelled`; four names are the contract, the jobs behind them are free to move. Same shape as
+  `cancelled`; 4 names are the contract, the jobs behind them are free to move. Same shape as
   chrysalis's `images-ok`. They inspect `needs.*.result` by hand because a job skipped by a failed
   upstream reports success, as does one skipped by its own `if` (which is what keeps
   `conventions-ok` green on bot PRs).
@@ -112,7 +112,7 @@ Flutter.
 <a id="fpdart-surface"></a>
 ## The fpdart, no-null surface
 
-The package's first aim is a clean functional surface, chosen for two reasons. First, it removes a
+The package's first aim is a clean functional surface, chosen for 2 reasons. First, it removes a
 whole class of caller-side bugs: a read either yields a value or an explicit `Option`, so "did this
 key exist?" is answered by the type instead of a nullable that every caller has to remember to check.
 Second, the maintainer's apps already lean heavily on [`fpdart`](https://pub.dev/packages/fpdart), so
@@ -163,21 +163,21 @@ packages.
 <a id="sdk-floor"></a>
 ## SDK floor & dependency set
 
-The floor is **Dart ≥ 3.13** (`pubspec.yaml`), raised from 3.9 for the 1.0 rewrite in three steps:
-3.10 for static dot shorthands (a CODESTYLE idiom), 3.12 for private named parameters
+The floor lives in `pubspec.yaml`'s `sdk:` constraint. It came up from 3.9 for the 1.0 rewrite in 3
+steps: 3.10 for static dot shorthands (a CODESTYLE idiom), 3.12 for private named parameters
 (`Foo({required this._bar})`), and 3.13 for primary constructors, which superseded that spelling and
 now declare the constructor-assigned fields on every façade, both engines, and both watch events
-([`CODESTYLE.md#class-structure`](./CODESTYLE.md#class-structure)). One floor serves consumers
-and contributors alike: the test toolchain (`test`, `build_runner`) floors at 3.11, inside the
-package floor. 1.0 was the sanctioned breaking release, so the bump rode it; since a floor can only
-be raised without a breaking change, any further bump is recorded here.
+([`CODESTYLE.md#class-structure`](./CODESTYLE.md#class-structure)). One floor serves consumers and
+contributors alike, the test toolchain (`test`, `build_runner`) flooring below the package. 1.0 was
+the sanctioned breaking release, so the bump rode it, and since a floor can only be raised without a
+breaking change, any further bump is recorded here.
 
-Runtime dependencies are exactly three: `hive_ce` (floored at `^2.19.3`, the version every
-behaviour pin was taken against; ≥2.12 is *contractual*, because non-null delete-event values on
-the eager axis arrive there), `fpdart`, and `meta`. One sizing note on `meta`: its floor matches
-`hive_ce`'s (`^1.14.0`) rather than the registry's latest, because Flutter's SDK pins `meta`
-exactly and a higher floor here locks every Flutter app out of the package: discovered live when
-the example app first resolved against the core.
+The runtime dependencies are `hive_ce`, `fpdart` and `meta`, and `pubspec.yaml` carries the
+constraints. `hive_ce` is floored at the version every behaviour pin was taken against, though ≥2.12
+is the *contractual* part, because that is where non-null delete-event values on the eager axis
+arrive. One sizing note on `meta`: its floor matches `hive_ce`'s rather than the registry's latest,
+because Flutter's SDK pins `meta` exactly and a higher floor here locks every Flutter app out of the
+package. Discovered live, when the example app first resolved against the core.
 
 ---
 
@@ -187,7 +187,7 @@ the example app first resolved against the core.
 1.0 was scoped as a capability list (typed CRUD on both axes, a single-value box, collections per
 key, composite keys with reverse queries, typed watch, encryption pass-through, per-instance
 observability, full lifecycle) rather than a class list, so the taxonomy stayed free until the
-architecture was settled. Two scope calls deserve their reasoning on record:
+architecture was settled. 2 scope calls deserve their reasoning on record:
 
 - **Web is a supported, tested platform from 1.0.** Key encoding is persisted data; shipping a
   web-unsafe encoding would have made adding web later a data-breaking change, the most expensive
@@ -205,7 +205,7 @@ architecture was settled. Two scope calls deserve their reasoning on record:
 
 The 0.0.x design baked in beliefs about hive that turned out false or unproven (negative-key
 handling, collection reads, "bitwise beats math", memory folklore). The rewrite inverted that:
-seven probes ran against live `hive_ce` before any architecture leaned on the answers, with
+7 probes ran against live `hive_ce` before any architecture leaned on the answers, with
 decision rules pre-registered so the data could not be rationalised after the fact. The probes'
 findings are pinned as tests (`test/integration/hive_ce_pins/`), so an engine upgrade that shifts
 any of them fails loudly. Highlights that shaped the design: release-mode hive validates **no**
@@ -219,8 +219,8 @@ in `benchmark/` as regression tooling.
 <a id="core-abstraction"></a>
 ## Core abstraction: engine + policies + thin façades
 
-CRUD is written exactly once per synchronicity axis, in two private engines; everything that
-varies enters as an injected policy (key codec, value codec, observer), and the eight public
+CRUD is written exactly once per synchronicity axis, in 2 private engines; everything that
+varies enters as an injected policy (key codec, value codec, observer), and the 8 public
 façades are thin delegations that configure an engine and narrow the surface. A façade *cannot*
 reimplement CRUD because it owns none. The rejected alternatives: a refined inheritance family
 (the 0.0.x failure: the eager/lazy axis multiplies through every variant and template seams
@@ -261,7 +261,7 @@ touching the public surface: the scan strategy simply implements them as no-ops.
 <a id="variant-taxonomy"></a>
 ## Variant taxonomy & naming
 
-Four shapes × two synchronicities = eight `interface class` façades: `KeyedBox`,
+4 shapes × 2 synchronicities = 8 `interface class` façades: `KeyedBox`,
 `SingleValueBox`, `ListBox`, `DualKeyBox`, each with a `Lazy` twin. The names say what you
 hold and mirror hive's own `Box` / `LazyBox` split; the 0.0.x `Manager` suffix died because the
 1.0 types are a different contract, and same-name-changed-contract misleads migrators.
@@ -278,7 +278,7 @@ and hands the shared engine a plain raw key, like every other family.
 ---
 
 <a id="key-strategy"></a>
-## Key strategy: two codecs, tiered validation
+## Key strategy: 2 codecs, tiered validation
 
 Both dual codecs ship because the pre-registered benchmark rule fired: arithmetic int packing
 beats the String composite by ≥1.5x on several end-to-end hot paths (eager gets, open, batch
@@ -296,7 +296,7 @@ on the opt-in codec), preconditions hive itself throws for get **no wrapper chec
 That carve-out is earned by measurement, not caution: release-mode hive_ce silently corrupts on
 out-of-range int keys and structurally destroys the box file on oversized String keys (its only
 guard is assert-stripped), and the violating class of key (data-derived, e.g. 64-bit server ids)
-is exactly the class development runs never see. Cost: two comparisons and a byte-length check
+is exactly the class development runs never see. Cost: 2 comparisons and a byte-length check
 against a ~10 µs write.
 
 ---
@@ -371,10 +371,10 @@ named example tables) via a thin zero-dependency vocabulary copied from the main
 package: the value is the shape, which forces naming the system under test, not a framework.
 `bdd_framework` itself is Flutter-only, so it serves the example app's suites instead. Mocks are
 generated (mockito + build_runner, committed because CI runs no codegen); hand-written doubles
-are reserved for the two seams where *stateful* behaviour is the point (the in-memory box fakes,
+are reserved for the 2 seams where *stateful* behaviour is the point (the in-memory box fakes,
 the recording observer), and a growing custom-fake count is treated as a design smell.
 
-Three tagged lanes: `unit` (fast, in-memory), `integration` (real hive_ce on temp dirs), and
+3 tagged lanes: `unit` (fast, in-memory), `integration` (real hive_ce on temp dirs), and
 `browser` (chrome, dart2js + dart2wasm). The hive_ce behaviour pins are the load-bearing lane:
 they encode everything the probes discovered, so the `hive_ce` caret can stay open, because an
 engine release that shifts pinned semantics fails the suite instead of silently invalidating the
@@ -387,7 +387,7 @@ being wrapped costs enough to be a denominator: a same-slot `SingleValueBox.get`
 hive, so the `Option` allocation alone reads +89% while costing +11 ns, and no amount of optimising
 would move that percentage anywhere useful. The aim is now two-currency: **tens of nanoseconds per
 op on the memory paths, single-digit percent on anything that reaches disk**, with the per-op
-figure authoritative wherever the two disagree. `DualKeyBox`'s eager get used to be the one surface
+figure authoritative wherever the 2 disagree. `DualKeyBox`'s eager get used to be the one surface
 that genuinely missed, at 1.4x to 1.8x raw. That turned out not to be the record allocation or the
 double dispatch, both of which are free: it was a `(K1, K2)` record parameter typed from the
 adapter's own type parameters, costing ~350 ns per call on a subtype check. Encoding at the façade
@@ -399,7 +399,7 @@ attribution reproducible.
 <a id="build-phases"></a>
 ## Build phases & checkpoints
 
-The rewrite ran as six linear phases (teardown + truth pins → core internals → keyed façades →
+The rewrite ran as 6 linear phases (teardown + truth pins → core internals → keyed façades →
 single-value + iterable → dual + query → example + docs), each ending at a full-stop checkpoint:
 diff summary, verification evidence, an explicit not-verified list, and maintainer review +
 commit before the next phase started. Truth-pins-first de-risked everything after (the
@@ -418,7 +418,7 @@ Migration is document-only in 1.0 ([MIGRATION.md](./MIGRATION.md)): data compati
 free by design (same box names and frames, the single-value slot key kept, packed keys
 bit-identical to `.bitShift`), so a helper API would mostly wrap a one-shot loop the recipe shows
 anyway. The one incompatible case (`.negative` dual boxes) gets a shim-codec recipe. Post-publish
-rollback is **forward-fix**, never retraction: pub.dev reserves retracted versions for seven
+rollback is **forward-fix**, never retraction: pub.dev reserves retracted versions for 7
 days, and 0.0.8 stays installable forever via pinning. The `hive_ce` caret stays open with the
 pin suite standing guard, which trades a rare loud CI failure for never shipping a stale engine
 constraint.

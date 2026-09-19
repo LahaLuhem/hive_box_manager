@@ -1,12 +1,13 @@
-// Pins hive_ce 2.19.3's disk truth for collections of a custom type (probe P3; upstream issue #150):
-// what a restart actually reads back, which the 1.0 value-codec design builds on. Same-session cache
-// reads flatter the engine, so every disk-truth scenario closes and reopens before asserting. The typed
-// collection box guard (typedMapOrIterableCheck) is assert-gated: asserts on (dart test, debug builds)
-// refuse the open outright; asserts off (release, probed via subprocess) let it open and blow up at
-// the first get, which is the actual #150 trap.
+// Pins what hive_ce actually reads back for a collection of a custom type after a restart, which is
+// what the value-codec design rests on. Same-session cache reads flatter the engine, so every scenario
+// here closes and reopens before asserting.
 //
-// The pinned subject is `dynamic` itself (what hive reifies for collections), so the DCM ban is
-// lifted for this file.
+// The typed collection box guard is assert-gated. With asserts on it refuses the open outright, and
+// with asserts off (probed through a subprocess) it opens and then blows up at the first get, which
+// is the real trap.
+//
+// The pinned subject is `dynamic` itself (what hive reifies for collections), so the DCM ban is lifted
+// for this file.
 // ignore_for_file: avoid-dynamic
 @TestOn('vm')
 @Tags(['integration'])
@@ -30,8 +31,8 @@ void main() {
   setUp(() {
     tempDir = Directory.systemTemp.createTempSync('hbm_pins_');
     Hive.init(tempDir.path);
-    // Guarded rather than `override: true`: adapters outlive Hive.close(), and re-overriding prints
-    // an engine warning into every test's output.
+    // Guarded rather than `override: true`, because adapters outlive Hive.close() and re-overriding
+    // prints an engine warning into every test's output.
     if (!Hive.isAdapterRegistered(PersonAdapter().typeId)) {
       Hive.registerAdapter(PersonAdapter());
     }

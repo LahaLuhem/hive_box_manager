@@ -1,7 +1,5 @@
-// Browser smoke for the first public surface: the KeyedBox family's core read/write paths
-// against hive_ce's IndexedDB backend, with close + reopen before every read assertion so CI
-// asserts IndexedDB truth, not write-cache truth (same-browser-process stays the documented
-// residual, as with the phase-0 pins).
+// Browser smoke: the KeyedBox read and write paths against hive_ce's IndexedDB backend. Every read assertion
+// comes after a close and reopen, so this is IndexedDB truth rather than write-cache truth.
 @TestOn('browser')
 @Tags(['browser'])
 library;
@@ -14,8 +12,8 @@ import 'package:test/test.dart';
 import '../../../support/bdd.dart';
 
 void main() {
-  // hive_ce's web backend ignores the path (storage is IndexedDB); the argument only satisfies
-  // the shared VM/web signature.
+  // hive_ce's web backend ignores the path, since storage is IndexedDB. The argument is only there to
+  // satisfy the shared VM and web signature.
   setUpAll(() => Hive.init('hive_web_smoke'));
 
   feature('KeyedBox family on the browser (IndexedDB truth)', () {
