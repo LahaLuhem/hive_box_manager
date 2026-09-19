@@ -17,7 +17,8 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: dart-lang/setup-dart@v1
+    # https://github.com/dart-lang/setup-dart/issues/198
+    - uses: dart-lang/setup-dart@65eb853c7ba17dde3be364c3d2858773e7144260
       with:
         sdk: ${{ inputs.sdk }}
 
