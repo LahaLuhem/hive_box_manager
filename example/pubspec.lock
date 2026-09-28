@@ -77,10 +77,10 @@ packages:
     dependency: "direct dev"
     description:
       name: checks
-      sha256: "016871c84732c1ac9856b8940236d5a5802ba638b3bd3e0ea7027b51a35f7aa7"
+      sha256: "9c360a078576950976c9045fe28392dfb5f3b0b648ae897e8c1fe307a6ffbed2"
       url: "https://pub.dev"
     source: hosted
-    version: "0.3.1"
+    version: "0.3.2"
   clock:
     dependency: transitive
     description:
@@ -133,10 +133,10 @@ packages:
     dependency: "direct main"
     description:
       name: cupertino_ui
-      sha256: "7ed8ce4159d342eec4c65f4ea6eec57adaf9365404378541f38efc1da20a5b3d"
+      sha256: c23816577a1280cff409e989541767887011f8f1d8c1863a794ed308af46f2a9
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.0"
+    version: "1.1.1"
   dependency_validator:
     dependency: "direct dev"
     description:
@@ -363,10 +363,10 @@ packages:
     dependency: "direct main"
     description:
       name: material_ui
-      sha256: "4f3f38b9953df0a87d6bf5f21880029f77c47048487d5339410c39936be4683b"
+      sha256: "32d98f11cf5942a095a8c3e01b03e4de3b17941437713dcf36b1088fb62e23d2"
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.1"
+    version: "1.5.0"
   meta:
     dependency: transitive
     description:
@@ -375,6 +375,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.19.0"
+  minted:
+    dependency: transitive
+    description:
+      name: minted
+      sha256: "8467d9531843a4734c7ee2ef0547fd2c5edeefe4250df766875705764fd0cf2a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.1.1"
+  minted_chronology:
+    dependency: transitive
+    description:
+      name: minted_chronology
+      sha256: fb633451ac302797567c735f1e6f9df909103261919c971d3509baf343cfc3d5
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
+  minted_constraints:
+    dependency: transitive
+    description:
+      name: minted_constraints
+      sha256: e965a2dd11342478174610296a09a928fb18ecd5353c7e1bd9fc7f156a26ce95
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.0"
   nested:
     dependency: transitive
     description:
@@ -467,10 +491,10 @@ packages:
     dependency: "direct main"
     description:
       name: platform_adaptive_widgets
-      sha256: "2e167f0db485929cebe37621608a44a1db93871e4ead97ab14417883fcddb548"
+      sha256: bc3c7d9fd1300605253972e138a31379132e6b82a6c0c98561b3219cc3074100
       url: "https://pub.dev"
     source: hosted
-    version: "2.1.2"
+    version: "2.2.0"
   platform_icons:
     dependency: "direct main"
     description:
