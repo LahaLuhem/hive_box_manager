@@ -571,8 +571,7 @@ Structure and spelling here, voice in [Prose & voice](#prose).
   runs from the [`linterpol`](https://github.com/LahaLuhem/linterpol) Docker image
   (`docker run --rm -v "$PWD:/work:ro" ghcr.io/lahaluhem/linterpol:latest shellcheck scripts/*.sh`),
   so the only local requirement is Docker (plus `jq`). Both `scripts/release.sh`'s preflight and
-  [`.github/workflows/repo.yml`](./.github/workflows/repo.yml) enforce it; they read the check set
-  (shellcheck, actionlint, rumdl, ryl) and the image tag from one manifest,
+  dartender's CI enforce it, reading the check set and the image tag from one manifest,
   [`.github/lint-checks.json`](./.github/lint-checks.json), so neither can drift.
 - **Prefer `# shellcheck disable=SC<code>` + a one-line "why" over refactoring for simple cases.**
   Refactor when the warning points at a real bug; reach for the directive when the code is correct

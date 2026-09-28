@@ -60,9 +60,8 @@ fi
 MAIN_BRANCH="master"
 
 # Container-based lint checks (tool + args) and the linterpol image tag live in
-# one manifest, shared with .github/workflows/repo.yml so this preflight and CI
-# run the identical set and can't drift. Add a linter = one entry there; the
-# preflight picks it up with no change here. https://github.com/LahaLuhem/linterpol
+# the manifest dartender's setup.sh writes, which dartender's CI reads too, so
+# this preflight and CI run the identical set. https://github.com/LahaLuhem/linterpol
 LINT_MANIFEST="${REPO_ROOT}/.github/lint-checks.json"
 
 BUMP=""
@@ -307,7 +306,7 @@ log "'## Unreleased' populated."
 # Preflight: lint / format / analyze / test (cheapest → slowest)
 # ---------------------------------------------------------------------------
 step 'Preflight: lint checks (via linterpol)'
-# Image + checks come from the manifest shared with CI (repo.yml), so both gates
+# Image + checks come from the manifest shared with dartender's CI, so both gates
 # run the identical set. Validate it parses and is non-empty first: an unreadable
 # manifest must fail loudly here, not silently skip every lint.
 if ! jq -e '.image and (.checks | length > 0)' "$LINT_MANIFEST" >/dev/null 2>&1; then
@@ -319,7 +318,7 @@ while IFS=$'\t' read -r lint_name lint_cmd; do
     log "lint: ${lint_name}"
     # $lint_cmd is intentionally unquoted so it word-splits into the tool + args
     # and glob-expands (e.g. scripts/*.sh) against the checkout, matching how
-    # repo.yml's matrix invokes it.
+    # dartender's lint job invokes it.
     # shellcheck disable=SC2086
     if ! docker run --rm -v "${REPO_ROOT}:/work:ro" "$lint_image" $lint_cmd; then
         err "${lint_name} failed (via linterpol)."

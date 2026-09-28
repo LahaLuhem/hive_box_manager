@@ -1,4 +1,4 @@
-[![Package checks](https://github.com/LahaLuhem/hive_box_manager/actions/workflows/package.yml/badge.svg?branch=master)](https://github.com/LahaLuhem/hive_box_manager/actions/workflows/package.yml)
+[![CI](https://github.com/LahaLuhem/hive_box_manager/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/LahaLuhem/hive_box_manager/actions/workflows/ci.yml)
 [![Coverage Status](https://coveralls.io/repos/github/LahaLuhem/hive_box_manager/badge.svg?branch=master)](https://coveralls.io/github/LahaLuhem/hive_box_manager?branch=master)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/LahaLuhem/hive_box_manager/pulls)
 [![Pub Version](https://img.shields.io/pub/v/hive_box_manager.svg)](https://pub.dev/packages/hive_box_manager)
