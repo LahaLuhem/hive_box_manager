@@ -1,0 +1,24 @@
+name: Browser tests
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  browser-test:
+    # hive's own ruleset requires this name.
+    name: Browser tests (dart2js + dart2wasm)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: LahaLuhem/dartender/actions/setup-flutter@main
+      # dart_test.yaml retries the browser tag once for headless Chrome's flaky startup.
+      - run: dart test -p chrome --tags browser
+      - run: dart test -p chrome -c dart2wasm --tags browser
