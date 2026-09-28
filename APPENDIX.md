@@ -12,7 +12,7 @@ completed; the empirical claims (probe results, benchmark numbers) are pinned by
 <!-- TOC start -->
 
 - [`AGENTS.md` and `CLAUDE.md` are symlinks into `.ai/`](#ai-files-symlinked)
-- [Dependabot automerges the boring tier, behind 4 aggregate checks](#dependabot-automerge)
+- [Dependabot's PRs auto-merge through dartender](#dependabot-automerge)
 - [Pure-Dart package, no Flutter dependency](#pure-dart-not-flutter)
 - [The fpdart, no-null surface](#fpdart-surface)
 - [Packaging: engine deps in core, adapters in companions](#packaging-core-and-companions)
@@ -48,48 +48,17 @@ location), because the root symlink is how agents and GitHub read them.
 ---
 
 <a id="dependabot-automerge"></a>
-## Dependabot automerges the boring tier, behind 4 aggregate checks
+## Dependabot's PRs auto-merge through dartender
 
-[`dependabot-automerge.yml`](./.github/workflows/dependabot-automerge.yml) arms GitHub's native
-auto-merge (rebase) for patch and minor bumps in the `uv` and `github-actions` ecosystems; every
-`pub` bump and every major waits for a human. Dependabot has no `automerge` config key the way
-Renovate does, so the mechanism is a workflow rather than a setting. The sibling
-[`chrysalis`](https://github.com/LahaLuhem/chrysalis) and
-[`linterpol`](https://github.com/LahaLuhem/linterpol) repos run the same policy through Renovate's
-`platformAutomerge`.
+Every Dependabot PR, majors included, auto-merges through the `Auto-merge` job in
+[dartender](https://github.com/LahaLuhem/dartender)'s shared `ci.yml`. 2 things still bite here:
 
-- **`pub` stays manual** because a root-pubspec bump reaches every consumer's resolution and is
-  semver-relevant (hard rule 7). Bots are exempt from
-  [`changelog.yml`](./.github/workflows/changelog.yml), so an automerged `pub` bump would land on
-  pub.dev with no release note and no moment where anyone would think to write one. `uv` is
-  benchmark tooling and `github-actions` is CI wiring; neither reaches a published byte.
-- **Minor, not just patch,** because `dependabot.yml` groups minor and patch per ecosystem and
-  `fetch-metadata` reports a group's *highest* semver step. Patch-only would skip any batch holding
-  one minor, which is most of them, and splitting the groups would double the PR count to recover a
-  distinction that does not matter for CI-only tooling.
-- **The ruleset is the load-bearing half.** Auto-merge waits only on *required* checks and ignores
-  failing ones that aren't required, so this is safe only while `master`'s ruleset is **active** and
-  requires `repo-ok`, `package-ok`, `example-ok`, `conventions-ok`. Keep `required_signatures` out
-  of it: GitHub's rebase-merge emits unsigned commits (`6d0d385` is the evidence), so that rule
-  would block every automerge.
-- **`GITHUB_TOKEN` enables the merge, not the changelog App.** The App sits in the ruleset's bypass
-  list so it can push `CHANGELOG.md` straight to `master`, and a bypass covers the ruleset whole,
-  status checks included. Merging as it would skip the gate this whole design rests on.
-  `github-actions[bot]` isn't in that list, so it has to wait like anyone else. The cost is that a
-  `GITHUB_TOKEN` merge triggers no further workflows, so
-  [`package.yml`](./.github/workflows/package.yml)'s push-to-master run is skipped on automerged
-  PRs; for `uv` and `github-actions` bumps that run only re-tests Dart neither ecosystem touches.
-- **Aggregates, not the real job names.** [`repo.yml`](./.github/workflows/repo.yml) fans its lint
-  matrix out of [`lint-checks.json`](./.github/lint-checks.json), so those contexts move whenever a
-  linter does, and a required context that stops reporting leaves every PR waiting forever. Each
-  workflow instead closes with one `*-ok` job that `needs` its siblings and fails on `failure` or
-  `cancelled`; 4 names are the contract, the jobs behind them are free to move. Same shape as
-  chrysalis's `images-ok`. They inspect `needs.*.result` by hand because a job skipped by a failed
-  upstream reports success, as does one skipped by its own `if` (which is what keeps
-  `conventions-ok` green on bot PRs).
-- **`pull_request_target`** because Dependabot's `pull_request` runs get a read-only token, and
-  enabling auto-merge needs write. Safe for the same reason as `changelog.yml`: the workflow loads
-  from `master` and PR code is never checked out.
+- **The rulesets are the load-bearing half.** Auto-merge only waits on required checks, so it's
+  safe only while `master` requires `ci / ok`, `conventions / ok` and the browser check. Keep
+  `required_signatures` out: GitHub's rebase-merge makes unsigned commits (`6d0d385` is the
+  evidence), so that rule would block every merge.
+- **A merge made with `GITHUB_TOKEN` starts no workflows,** so `master`'s push run is skipped for
+  auto-merged PRs.
 
 ---
 

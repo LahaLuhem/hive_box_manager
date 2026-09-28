@@ -31,15 +31,16 @@ engine; `fpdart` is the paradigm. Rationale:
   [`APPENDIX.md#sdk-floor`](./APPENDIX.md#sdk-floor).
 - **`dart test`** for tests; **`dart --no-version-check analyze .`** for pedantic static analysis
   (pedantic mode is intentional). No Flutter dependency in the package, no platform channels. The
-  `example/` app is Flutter and carries its own pubspec; its CI is wired separately once it lands.
+  `example/` app is Flutter and carries its own pubspec, which dartender's CI checks too.
 - **`dependency_validator`** guards the dependency set; `dart_dependency_validator.yaml` scopes it
   to the published surface and skips the example.
 - **Container-based linters** run from the [`linterpol`](https://github.com/LahaLuhem/linterpol)
   Docker image, not local installs, so only Docker (plus `jq`) is needed. The check set and image
-  tag live in one manifest, [`.github/lint-checks.json`](./.github/lint-checks.json). `repo.yml`
-  fans a CI matrix over it and `scripts/release.sh`'s preflight loops the same file, so the 2
-  can't drift. **Adding a linter is one entry in that manifest.** Per-tool config tuned to the repo
-  lives in `.rumdl.toml` and `.yamllint.yaml`.
+  tag live in one manifest, [`.github/lint-checks.json`](./.github/lint-checks.json), which
+  dartender's `setup.sh` writes. dartender's CI fans a matrix over it and `scripts/release.sh`'s
+  preflight loops the same file, so the 2 can't drift. **A linter only this repo needs goes in a
+  workflow of its own**, since the next setup run rewrites the manifest. Per-tool config tuned to
+  the repo lives in `.rumdl.toml` and `.yamllint.yaml`.
 - **CHANGELOG and the `version:` field are owned by [`scripts/release.sh`](./scripts/release.sh)**
   (via `cider`). Do not run `cider` by hand and do not edit `CHANGELOG.md` or `version:` directly.
   The `cider:` block in `pubspec.yaml` is static config (URLs, link templates) and is hand-editable.
@@ -63,7 +64,7 @@ hive_box_manager/
 ├── test/                           unit/ + integration/ mirror lib/src/ (box/ by family; hive_ce_pins/);
 │                                   support/ (bdd + mocks at root; doubles/, codecs/, fixtures/, pins/)
 ├── benchmark/                      Maintainer tooling: key-codec matrix + wrapper-overhead lane
-├── example/                        Flutter demo app (own pubspec; CI wiring is a tracked follow-up)
+├── example/                        Flutter demo app, with its own pubspec
 ├── analysis_options.yaml           Strict-mode + opinionated lints
 ├── dart_dependency_validator.yaml  Scopes dependency_validator (excludes example/)
 ├── pubspec.yaml                    Deps + cider config + topics
@@ -114,24 +115,24 @@ hold, and nothing internal can leak by accident.
    find-and-replace), and reserves a major bump for a break that needs real restructuring. The
    `IterableBox` → `ListBox` rename is breaking and is planned to ship as `1.1.0`, not `2.0.0`,
    on exactly that reasoning.
-9. **`repo-ok`, `package-ok`, `example-ok` and `conventions-ok` are `master`'s required checks.**
-   Each is the closing aggregate job of one PR workflow, and the job id *is* the check context, so
-   renaming one, giving it a `name:`, or dropping it un-gates Dependabot automerge silently. Touch
-   one and update the ruleset in the same pass:
+9. **`master` requires `ci / ok` and `conventions / ok`, from the `dartender` ruleset, and
+   `Browser tests (dart2js + dart2wasm)`, from this repo's own `Protected` ruleset.** The last one
+   is the browser job's `name:` in `.github/workflows/browser.yml`, and a required check that stops
+   reporting blocks every PR, so rename it and `Protected` in the same pass:
    [`APPENDIX.md#dependabot-automerge`](./APPENDIX.md#dependabot-automerge).
 10. **`CHANGELOG.md` is bot-owned. Do not edit any section, including `## Unreleased`.** Release
-   headers are written by [`scripts/release.sh`](./scripts/release.sh); the `## Unreleased` buffer
-   is appended to by [`.github/workflows/changelog.yml`](./.github/workflows/changelog.yml) from the
-   merged PR title (governed by its `sem-*` label). Same prohibition on the `version:` field.
+   headers are written by [`scripts/release.sh`](./scripts/release.sh), and the `## Unreleased`
+   lines by [`.github/workflows/changelog.yml`](./.github/workflows/changelog.yml), from the
+   merged PR's title and `sem-*` label. Same prohibition on the `version:` field.
 
 ## PR conventions
 
-Enforced by [`.github/workflows/pr-conventions.yml`](./.github/workflows/pr-conventions.yml).
+Enforced by dartender's `conventions.yml`, through
+[`.github/workflows/conventions.yml`](./.github/workflows/conventions.yml).
 
 - **Branch name**: `<type>/#<issue>-<slug>`, with `<type>` one of `feature`, `bugfix`, `chore`,
-  `refactor`, `acceptance-test-issues`, `hotfix`. Example: `feature/#12-lazy-auto-init`.
-- **Exactly one `sem-*` label per PR.** Selects the changelog category for the post-merge
-  automation:
+  `refactor`. Example: `feature/#12-lazy-auto-init`.
+- **Exactly one `sem-*` label per PR.** Selects the changelog category for the PR's line:
 
   | Label           | Cider type   | When to use                                    |
   |-----------------|--------------|------------------------------------------------|
