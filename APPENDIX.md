@@ -58,7 +58,9 @@ Every Dependabot PR, majors included, auto-merges through the `Auto-merge` job i
   `required_signatures` out: GitHub's rebase-merge makes unsigned commits (`6d0d385` is the
   evidence), so that rule would block every merge.
 - **A merge made with `GITHUB_TOKEN` starts no workflows,** so `master`'s push run is skipped for
-  auto-merged PRs.
+  auto-merged PRs. The changelog App's token would start them, but don't swap it in: the App is on
+  every ruleset's bypass list so it can commit `CHANGELOG.md`, and a bypass lets it merge past the
+  required checks.
 
 ---
 

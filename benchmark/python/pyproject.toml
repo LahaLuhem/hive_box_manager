@@ -27,8 +27,8 @@ dependencies = [
 ]
 
 [dependency-groups]
-# Maintainer-only linter / formatter. ruff replaces black + flake8 + isort.
-dev = ["ruff>=0.16.3,<1.0"]
+# Maintainer-only linter / formatter and test runner. ruff replaces black + flake8 + isort.
+dev = ["pytest>=9.1.1,<10.0", "ruff>=0.16.3,<1.0"]
 
 [tool.ruff]
 line-length = 100
@@ -41,3 +41,6 @@ select = ["E", "F", "I", "B", "UP", "SIM", "N", "RUF"]
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
