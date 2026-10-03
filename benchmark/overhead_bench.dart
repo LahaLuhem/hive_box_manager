@@ -288,7 +288,7 @@ Future<void> runPutAll(String impl, int n) async {
 /// Both impls start from the same flat list and pay for whatever they need on the way to hive.
 ///
 /// map `Map.fromIterables(values, values)` then `putAll`: what a consumer writes without it. facade
-/// `putAllBy(values, key: ...)`.
+/// `putAllBy(values, keyOf: ...)`.
 ///
 /// Keys are the values themselves (`KeyedBox<String, String>`), so the extractor is identity and costs
 /// the same on both sides. Anything expensive there would add a constant to both impls and bury the
@@ -302,7 +302,7 @@ Future<void> runPutAllBy(String impl, int n) async {
   final box = await KeyedBox.open<String, String>(boxName).run();
   if (impl == 'facade') {
     stopwatch.start();
-    await box.putAllBy(values, key: (value) => value).run();
+    await box.putAllBy(values, keyOf: (value) => value).run();
     stopwatch.stop();
   } else {
     stopwatch.start();

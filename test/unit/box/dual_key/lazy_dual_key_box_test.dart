@@ -121,8 +121,8 @@ void main() {
       await facade
           .putAllBy(
             ['a', 'bb', 'ccc'],
-            primary: (value) => value.length,
-            secondary: (value) => value.codeUnitAt(0),
+            primaryOf: (value) => value.length,
+            secondaryOf: (value) => value.codeUnitAt(0),
           )
           .run();
 
@@ -134,8 +134,8 @@ void main() {
       check(
         () => facade.putAllBy(
           ['ab', 'cd'],
-          primary: (value) => value.length,
-          secondary: (value) => value.length,
+          primaryOf: (value) => value.length,
+          secondaryOf: (value) => value.length,
         ),
       ).throws<AssertionError>();
 

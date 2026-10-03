@@ -157,7 +157,7 @@ void main() {
     });
 
     scenario('putAllGrouped collects a flat iterable into one list per extracted key', () async {
-      await facade.putAllGrouped(['bb', 'a', 'dd', 'c'], key: (value) => value.length).run();
+      await facade.putAllGrouped(['bb', 'a', 'dd', 'c'], keyOf: (value) => value.length).run();
 
       check(await facade.getOr(2).run()).deepEquals(['bb', 'dd']);
       check(await facade.getOr(1).run()).deepEquals(['a', 'c']);
@@ -167,7 +167,7 @@ void main() {
     scenario('putAllGrouped replaces the stored list, it does not append', () async {
       await facade.put(1, ['old']).run();
 
-      await facade.putAllGrouped(['a'], key: (value) => value.length).run();
+      await facade.putAllGrouped(['a'], keyOf: (value) => value.length).run();
 
       check(await facade.getOr(1).run()).deepEquals(['a']);
     });
