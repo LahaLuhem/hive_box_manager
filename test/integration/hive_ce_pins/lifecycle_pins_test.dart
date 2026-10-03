@@ -1,7 +1,5 @@
-// Pins hive_ce 2.19.3's lifecycle semantics (probe P5): idempotent double open, wrong-kind reopen throwing
-// while open, and isBoxOpen tracking. The 1.0 lifecycle core leans on these, and the tier-3 rule (never
-// duplicate a precondition the engine already throws for) requires the engine to keep erroring where
-// it errors today.
+// Pins hive_ce's lifecycle semantics. The package skips its own checks where hive already throws, so
+// hive has to keep throwing where it does today.
 @TestOn('vm')
 @Tags(['integration'])
 library;
@@ -41,7 +39,7 @@ void main() {
       await check(Hive.openLazyBox<String>('lifecycle')).throws<HiveError>();
     });
 
-    scenario('isBoxOpen tracks open and close; a closed name reopens fine', () async {
+    scenario('isBoxOpen tracks open and close, and a closed name reopens fine', () async {
       final box = await Hive.openBox<String>('lifecycle');
       check(Hive.isBoxOpen('lifecycle')).isTrue();
 

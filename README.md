@@ -48,6 +48,7 @@ Pure Dart, so it runs anywhere Hive does: Flutter apps, Dart servers, CLIs, and 
     * [🔗 DualKeyBox](#-dualkeybox)
 - [🎛️ Make it yours](#-make-it-yours)
 - [📏 Eager or lazy? (measured)](#-eager-or-lazy-measured)
+    * [💥 When a record won't decode](#-when-a-record-wont-decode)
 - [🛡️ Safer than raw hive, at near-native speed](#-safer-than-raw-hive-at-near-native-speed)
     * [⚡ What that costs](#-what-that-costs)
     * [⚡ Codec choice](#-codec-choice)
@@ -357,6 +358,17 @@ reads are where they part ways:
 So reach for **eager** on hot, value-heavy-*read* boxes that fit comfortably in RAM, and **lazy**
 on value-heavy boxes you read only now and then. Neither opens "instantly" at scale, and keys are
 a RAM cost you pay regardless.
+
+### 💥 When a record won't decode
+
+An eager box decodes every value while it opens, so one record its adapter can't read stops the
+whole box from opening. hive_ce won't skip it ([hive_ce#318](https://github.com/IO-Design-Team/hive_ce/issues/318)).
+A lazy box decodes on read instead, and `values` throws an `UndecodableValueException` naming the
+key.
+
+Keep fields you add to a model after its first release nullable, since older records won't have
+them. If a box already won't open, open it lazily, delete each key an `UndecodableValueException`
+names, then `compact()`. The eager open works again after that.
 
 ## 🛡️ Safer than raw hive, at near-native speed
 
