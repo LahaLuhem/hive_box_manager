@@ -8,6 +8,7 @@ export 'src/box/keyed/keyed_box.dart' show KeyedBox;
 export 'src/box/keyed/lazy_keyed_box.dart' show LazyKeyedBox;
 export 'src/box/list/lazy_list_box.dart' show LazyListBox;
 export 'src/box/list/list_box.dart' show ListBox;
+export 'src/box/set/set_box.dart' show SetBox;
 export 'src/box/single_value/lazy_single_value_box.dart' show LazySingleValueBox;
 export 'src/box/single_value/single_value_box.dart' show SingleValueBox;
 export 'src/codec/dual/dual_key_codec.dart' show DualKeyCodec;
