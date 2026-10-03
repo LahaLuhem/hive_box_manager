@@ -15,10 +15,10 @@
 # — it cross-checks pubspec version against CHANGELOG headers AND that no
 # checked-in files are modified, so both signals must be satisfied before the
 # tag is ever created. Failure mid-release auto-reverts via the ERR trap:
-# pre-commit failures restore files from HEAD; post-commit failures
+# pre-commit failures restore files from HEAD, and post-commit failures
 # `git reset --hard HEAD~1` to drop the prep commit. Tag/push failures and
-# (rare) server-side validation failures in publish.yml need manual recovery;
-# the script prints the recipe.
+# (rare) server-side validation failures in publish.yml need manual recovery,
+# and the script prints the recipe.
 #
 # Tags are pushed without a `v` prefix, matching the trigger pattern in
 # .github/workflows/publish.yml (`[0-9]+.[0-9]+.[0-9]+`) and pub.dev's
@@ -43,7 +43,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
 # Resolve `dart`: prefer the project's FVM symlink (gives the `.fvmrc`-pinned
-# SDK); fall back to whatever's on PATH for non-FVM users. Done before
+# SDK), falling back to whatever's on PATH for non-FVM users. Done before
 # anything that calls `dart` so the rest of the script can use plain
 # invocations.
 if [ -x "${REPO_ROOT}/.fvm/flutter_sdk/bin/dart" ]; then
@@ -194,7 +194,7 @@ fi
 log 'docker available (lint checks run via linterpol).'
 
 # example/pubspec.yaml uses `path: ../`, so example/pubspec.lock records the parent
-# version and must be regenerated after the bump; otherwise a later `flutter pub get`
+# version and must be regenerated after the bump. Otherwise a later `flutter pub get`
 # (CI publish, pana, an IDE) rewrites the committed lock and trips a "modified
 # checked-in file" complaint during `dart pub publish`.
 if ! command -v flutter >/dev/null 2>&1; then
@@ -408,7 +408,7 @@ fi
 #   cider_phase=0 — past dry-run (tag/push window) OR before bump → no auto-revert
 #
 # `cider_phase=0` after dry-run because the tag + push window is the user's
-# domain by then; automatic cleanup would silently nuke real work if the push
+# domain by then, and automatic cleanup would silently nuke real work if the push
 # happened to be the failing step.
 cider_phase=0
 # ShellCheck's flow analysis doesn't follow assignments across a quoted trap string.
@@ -487,7 +487,7 @@ if [ -n "${TAG_MESSAGE}" ]; then
 else
     # Lightweight tag — just a ref pointer, no body, no signature. The
     # per-command `-c tag.gpgSign=false` overrides the user's global
-    # `tag.gpgSign=true` for *this* invocation only; without it git would
+    # `tag.gpgSign=true` for *this* invocation only. Without it git would
     # auto-promote a plain `git tag NAME` into a signed-annotated tag and
     # demand a message via the editor. This bypass is the documented intent
     # of "no -m → lightweight" — the user explicitly opted in by omitting -m.

@@ -1,4 +1,4 @@
-# AI symlink points into the adjacent .ai/ folder; target is committed, symlink is not.
+# AI symlink points into the adjacent .ai/ folder. Target is committed, symlink is not.
 /AGENTS.md
 
 # Created by https://www.toptal.com/developers/gitignore/api/linux,macos,windows,androidstudio,visualstudiocode,flutter

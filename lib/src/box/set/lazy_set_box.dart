@@ -19,7 +19,7 @@ import 'element_id.dart';
 /// A **lazy** box holding a `Set` of [T] per [K] key, read off disk when asked.
 ///
 /// Same rules as [SetBox]: pass `idOf` unless the elements are strings, numbers, bools or enums, and
-/// every write keeps the first element per id.
+/// every write leaves one element per id.
 ///
 /// It opens on the first effect. Until then the sync inspectors ([length], [isEmpty], [isNotEmpty],
 /// [keys], [contains]) throw a [StateError].

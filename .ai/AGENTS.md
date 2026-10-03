@@ -6,7 +6,7 @@ this package. Claude-Code-specific guidance lives in [CLAUDE.md](./CLAUDE.md).
 ## Project goal
 
 A developer-experience wrapper over [`hive_ce`](https://pub.dev/packages/hive_ce) (the community
-Hive fork; docs at <https://docs.hive.isar.community>), giving Hive's `Box` / `LazyBox` a typed,
+Hive fork, docs at <https://docs.hive.isar.community>), giving Hive's `Box` / `LazyBox` a typed,
 functional surface. It adds no storage engine of its own. 4 aims:
 
 - **fpdart-first surface.** Reads and writes hand back lazy [`fpdart`](https://pub.dev/packages/fpdart)
@@ -16,11 +16,11 @@ functional surface. It adds no storage engine of its own. 4 aims:
 - **Purpose-built box variants.** Façade families, each in an eager and a lazy variant:
   `KeyedBox`, `SingleValueBox`, `ListBox`, `SetBox`, and `DualKeyBox` (with reverse queries folded
   in), each adding semantic ergonomics over raw Hive.
-- **Hive's performance, kept.** Raw speed is `hive_ce`'s headline; the wrapper must not trade it
+- **Hive's performance, kept.** Raw speed is `hive_ce`'s headline. The wrapper must not trade it
   away (held by the wrapper-overhead benchmark lane in `benchmark/`).
 
 Pure Dart, so it works in Flutter apps, Dart servers, and CLIs alike. `hive_ce` is the storage
-engine; `fpdart` is the paradigm. Rationale:
+engine, and `fpdart` is the paradigm. Rationale:
 [`APPENDIX.md#pure-dart-not-flutter`](./APPENDIX.md#pure-dart-not-flutter),
 [`APPENDIX.md#fpdart-surface`](./APPENDIX.md#fpdart-surface).
 
@@ -29,10 +29,10 @@ engine; `fpdart` is the paradigm. Rationale:
 - **Dart, floored by the `sdk:` constraint in `pubspec.yaml`** (SDK channel pinned in `.fvmrc`).
   One floor for consumers and contributors alike. Rationale and history:
   [`APPENDIX.md#sdk-floor`](./APPENDIX.md#sdk-floor).
-- **`dart test`** for tests; **`dart --no-version-check analyze .`** for pedantic static analysis
+- **`dart test`** for tests, **`dart --no-version-check analyze .`** for pedantic static analysis
   (pedantic mode is intentional). No Flutter dependency in the package, no platform channels. The
   `example/` app is Flutter and carries its own pubspec, which dartender's CI checks too.
-- **`dependency_validator`** guards the dependency set; `dart_dependency_validator.yaml` scopes it
+- **`dependency_validator`** guards the dependency set. `dart_dependency_validator.yaml` scopes it
   to the published surface and skips the example.
 - **Container-based linters** run from the [`linterpol`](https://github.com/LahaLuhem/linterpol)
   Docker image, not local installs, so only Docker (plus `jq`) is needed. The check set and image
@@ -44,7 +44,7 @@ engine; `fpdart` is the paradigm. Rationale:
 - **CHANGELOG and the `version:` field are owned by [`scripts/release.sh`](./scripts/release.sh)**
   (via `cider`). Do not run `cider` by hand and do not edit `CHANGELOG.md` or `version:` directly.
   The `cider:` block in `pubspec.yaml` is static config (URLs, link templates) and is hand-editable.
-- **Published to pub.dev.** `.pubignore` controls the tarball; `.editorconfig` is the source of
+- **Published to pub.dev.** `.pubignore` controls the tarball. `.editorconfig` is the source of
   truth for text-file conventions (line width 100, LF, UTF-8).
 
 ## Repo layout
@@ -91,7 +91,7 @@ hold, and nothing internal can leak by accident.
    [`CODESTYLE.md#manager-contract`](./CODESTYLE.md#manager-contract).
 2. **The public API lives only in `lib/hive_box_manager.dart`**, which re-exports from `lib/src/`.
    Don't make users import `package:hive_box_manager/src/…`. Shared internals stay in `lib/src/`.
-3. **No `null` in the public surface.** Absence is `Option` / `TaskOption`; laziness is `Task` over
+3. **No `null` in the public surface.** Absence is `Option` / `TaskOption`. Laziness is `Task` over
    an eager `Future`. This is aim #1, not a preference.
 4. **No `dynamic` escape hatches.** `strict-casts`, `strict-inference`, `strict-raw-types` are all
    on. This one carries scar tissue: the pre-1.0 collection box leaked `dynamic` through the class
@@ -101,7 +101,7 @@ hold, and nothing internal can leak by accident.
 6. **Public symbols carry `///` dartdoc** explaining the guarantee and the semantics (eager vs
    lazy, how keys are handled), not the mechanical *what*. `public_member_api_docs` is on.
 7. **Pure Dart, dependency-light core.** `hive_ce` (the storage engine) and `fpdart` (the surface
-   paradigm) are the load-bearing core dependencies; every other dependency is a promise to all
+   paradigm) are the load-bearing core dependencies. Every other dependency is a promise to all
    downstream users. Flutter-specific adapters (a `ValueListenable` view, a widget binding) go in
    companion packages, never in core. See
    [`APPENDIX.md#packaging-core-and-companions`](./APPENDIX.md#packaging-core-and-companions).
@@ -144,7 +144,7 @@ Enforced by dartender's `conventions.yml`, through
   | `sem-security`  | `security`   | Security-relevant fix                          |
   | `sem-skip`      | (skip)       | Internal-only change (CI, docs, tests, …)      |
 
-  The PR title becomes the changelog line verbatim; phrase it as a release-note bullet.
+  The PR title becomes the changelog line verbatim, so phrase it as a release-note bullet.
 - **PR body must not be empty**, **no merge commits in the PR range** (rebase to integrate `main`),
   **commit subjects ≤ 82 characters**.
 
@@ -153,11 +153,11 @@ Enforced by dartender's `conventions.yml`, through
 Full guide: [`CODESTYLE.md`](./CODESTYLE.md). The lint posture is deliberately strict. Top rules to
 keep in working memory:
 
-- Type-annotate every public symbol; `final` by default for fields and locals; constrain generics
-  to `<T extends Object>` so `null` / `dynamic` can't sneak into `T`.
+- Type-annotate every public symbol, make fields and locals `final` by default, and constrain
+  generics to `<T extends Object>` so `null` / `dynamic` can't sneak into `T`.
 - Nullability is explicit and rare: prefer `Option` to `T?` on the public surface, and never `as T`
   a nullable.
-- 100-column line width; blank lines separate logical chunks within a method.
+- 100-column line width, and blank lines separate logical chunks within a method.
 - No magic numbers in `lib/` code.
 - Public symbols carry `///` dartdoc explaining *why* and *what guarantee*.
 - British spelling in prose and identifiers, except names fixed by the SDK or a dependency
@@ -188,7 +188,7 @@ keep in working memory:
   commit that lane so the attribution stays reproducible instead of remembered. The corollary holds
   when reading results too: check a lane's own run-to-run spread before believing a delta, and
   prefer a ratio against an unchanged control over absolute timings on a drifting host.
-- **Verify Hive's real behaviour; don't code to assumptions about it.** The pre-1.0 design baked in
+- **Verify Hive's real behaviour. Don't code to assumptions about it.** The pre-1.0 design baked in
   several beliefs about `hive_ce`'s limits (key types, negative-number keys, dataset-size ceilings,
   reading collections of custom types) that turned out false or merely unproven. Before building on
   "Hive can't do X", confirm it against the current `hive_ce` and its docs, and record the finding.
@@ -199,7 +199,7 @@ keep in working memory:
   refactor as its own step before building on top. Public-API breakage is semver-significant and
   slow to walk back once published, so surface the refactor and get sign-off before anything that
   touches the public API or adds a dependency.
-- **The user manages git state; some tracked files won't show in `git status`.** The user may mark
+- **The user manages git state. Some tracked files won't show in `git status`.** The user may mark
   tracked files so their local edits are hidden from `git status` (typically
   `git update-index --skip-worktree` / `--assume-unchanged`). They are tracked, not gitignored, so
   a file you just edited can be genuinely changed on disk yet absent from `git status` and from

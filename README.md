@@ -69,7 +69,7 @@ Start here. Match what you're storing to a family, then grab its eager or lazy v
 | A set of values per key       | `SetBox<T, K>`          | members per team, favourites per user       |
 | Values addressed by 2 parts   | `DualKeyBox<T, K1, K2>` | (user, day) events, (row, column) grids     |
 
-Every family has an eager and a `Lazy...` twin; [Eager or lazy?](#-eager-or-lazy-measured) picks
+Every family has an eager and a `Lazy...` twin. [Eager or lazy?](#-eager-or-lazy-measured) picks
 the axis with measured numbers. Reverse queries ("everything for this user") live on the
 dual-key family.
 
@@ -142,8 +142,8 @@ final orEmpty = todos.getOr(2, Todo.empty());
 todos.watch().listen((event) => print('${event.key} -> ${event.value}'));
 ```
 
-That's the whole loop. Reads come straight off the in-memory cache, so they're synchronous;
-writes are lazy `Task`s you `run()` at the edge. And since you get the box from an `open`
+That's the whole loop. Reads come straight off the in-memory cache, so they're synchronous.
+Writes are lazy `Task`s you `run()` at the edge. And since you get the box from an `open`
 factory, holding one means it's already open. There's no init step to forget.
 
 ## 🧰 The box families
@@ -157,7 +157,7 @@ carries everywhere. The shape, in short:
 - `watch` is typed, and `close()` / `deleteFromDisk()` are terminal (reacquire, don't reuse).
 
 <details>
-<summary>📋 <b>The full method table</b> (KeyedBox shown; the others mirror it)</summary>
+<summary>📋 <b>The full method table</b> (KeyedBox shown, the others mirror it)</summary>
 
 |                                                     | `KeyedBox<T, K>`              | `LazyKeyedBox<T, K>`              |
 |-----------------------------------------------------|-------------------------------|-----------------------------------|
@@ -171,7 +171,7 @@ carries everywhere. The shape, in short:
 | `watch({key})`                                      | `Stream<TypedBoxEvent<T, K>>` | `Stream<LazyTypedBoxEvent<T, K>>` |
 | `flush` / `compact` / `close` / `deleteFromDisk`    | `Task<Unit>`                  | `Task<Unit>`                      |
 
-Watch is typed on both axes: an eager delete event still carries the value that was removed; a
+Watch is typed on both axes: an eager delete event still carries the value that was removed, and a
 lazy event carries an `Option<T>` that's `None` on deletes, because a lazy box holds no value to
 hand back.
 
@@ -265,10 +265,10 @@ final maybe = tags.get(1); // Option<List<String>>: None = absent, Some([]) = st
 
 Worth knowing:
 
-- Lists you read out are **unmodifiable views**; lists you put in are **copied**. Mutating your
+- Lists you read out are **unmodifiable views**, and lists you put in are **copied**. Mutating your
   original afterwards never leaks into the box. `add` / `addAll` / `remove` are read-modify-writes,
   O(n) in the stored list.
-- **Absent isn't the same as empty.** `get` keeps them apart; `getOr` folds both to `[]` on
+- **Absent isn't the same as empty.** `get` keeps them apart, while `getOr` folds both to `[]` on
   purpose.
 - **List semantics only:** order preserved, duplicates allowed. For no duplicates, there's
   [`SetBox`](#-setbox). Nested collections of custom types stay out, since the cast only reaches
@@ -342,7 +342,7 @@ Both parts round-trip through one `DualKeyCodec`. `(int, int)` defaults to the s
 in 16 bits and the numbers matter to you, opt into `PackedIntDualCodec`
 (`codec: const PackedIntDualCodec()`). It packs both parts into a single u32 key and is
 **bit-identical to the old `0.0.x` `.bitShift` scheme**, so those boxes read in place. The 2
-codecs trade off measurably; [Codec choice](#-codec-choice) has the head-to-head. Rolling your own
+codecs trade off measurably. [Codec choice](#-codec-choice) has the head-to-head. Rolling your own
 part types? Implement `DualKeyCodec<K1, K2>` and keep the encoding bijective, or reverse queries
 will lie to you.
 
@@ -399,7 +399,7 @@ final todos = await KeyedBox.open<Todo, int>(
 ).run();
 ```
 
-Extend `BoxObserver` and override only the events you care about; `PrintingBoxObserver` is the
+Extend `BoxObserver` and override only the events you care about. `PrintingBoxObserver` is the
 ready-made sink. 2 notes on the engine side: `hive_ce`'s own warnings stay on its global logging
 channel (its [logging options](https://docs.hive.isar.community) filter them), and the
 [Hive Inspector DevTools extension](https://pub.dev/packages/hive_ce) is handy for eyeballing box
@@ -417,7 +417,7 @@ Apple Silicon, AOT, hive_ce 2.19.3) disagrees:
   every frame to build the keystore on any open. What lazy skips is holding onto the *values*.
 - **Keys always live in RAM**, eager or lazy: 22 to 64 MB at 100K entries, 210 to 340 MB at 1M.
   The spread is the key encoding, not the box kind: String keys run 50 to 80% heavier than int keys.
-- **Reads are where they split.** An eager get is ~1.1 to 1.4 µs from memory; a lazy get pays for
+- **Reads are where they split.** An eager get is ~1.1 to 1.4 µs from memory. A lazy get pays for
   a disk read at ~26 µs.
 
 Open cost tracks file size on both axes (the 2 lines sit right on top of each other), while
@@ -518,7 +518,7 @@ baseline is the code you would hand-write, and there are 2 of those. Against the
 per-element part is the cast view's type check, one per element you actually touch). Against the
 version without a cast, your hand-roll is *faster and broken*: a stored `List<Person>` reads back as
 `List<dynamic>` after a restart and the cast throws. Memory matches a correct hand-roll on every
-lane, reads included, so the read view really is copy-free; it just isn't check-free.
+lane, reads included, so the read view really is copy-free, just not check-free.
 
 ### ⚡ Codec choice
 
@@ -535,11 +535,11 @@ lane, reads included, so the read view really is copy-free; it just isn't check-
 | lazy get / single put         | codec-indifferent (disk dominates) |                  |
 
 Medians measured **through `DualKeyBox` itself** (macOS Apple Silicon, AOT, constant 1-byte values to
-isolate key cost), not through a hand-rolled stand-in. Web is unmeasured; its ordering is assumed to
-follow the VM. `StringCompositeDualCodec` is the safe default; reach for `PackedIntDualCodec` when
+isolate key cost), not through a hand-rolled stand-in. Web is unmeasured. Its ordering is assumed to
+follow the VM. `StringCompositeDualCodec` is the safe default. Reach for `PackedIntDualCodec` when
 these wins matter and both parts fit in 16 bits.
 
-The table rows are the 100K slice of these curves; the gap widens as boxes grow:
+The table rows are the 100K slice of these curves, and the gap widens as boxes grow:
 
 ![Eager get time by box size: packed-int stays below String composite, the gap widening with scale](https://raw.githubusercontent.com/LahaLuhem/hive_box_manager/master/benchmark/reports/codec_get_scaling.png)
 

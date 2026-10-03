@@ -6,7 +6,7 @@
 # Test sources.
 test/
 
-# Local-dev config; consumer machines have their own.
+# Local-dev config. Consumer machines have their own.
 .fvmrc
 analysis_options.yaml
 dart_dependency_validator.yaml
@@ -26,10 +26,10 @@ scripts/
 benchmark/
 dart_test.yaml
 
-# Context7 doc-indexer config; repo metadata for context7.com, not a consumer file.
+# Context7 doc-indexer config, repo metadata for context7.com, not a consumer file.
 context7.json
 
-# Internal contributor / AI-agent docs; not useful to pub.dev consumers.
+# Internal contributor / AI-agent docs, not useful to pub.dev consumers.
 # `AGENTS.md` and `CLAUDE.md` at the package root are symlinks into `.ai/`. `.ai/`
 # itself is auto-excluded by pub's hidden-path rule, but pub follows symlinks before
 # that check, so the symlink targets need explicit entries.
@@ -39,7 +39,7 @@ APPENDIX.md
 CODESTYLE.md
 
 # Example platform scaffolding. pub.dev's "Example" tab renders only example/lib/,
-# example/pubspec.yaml, and example/README.md; the Flutter platform dirs are bloat with
+# example/pubspec.yaml, and example/README.md. The Flutter platform dirs are bloat with
 # no pub.dev-side benefit. (The example app is rebuilt during the redo.)
 example/android/
 example/ios/

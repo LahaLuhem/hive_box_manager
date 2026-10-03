@@ -36,7 +36,7 @@ scripts/release.sh minor -m "Big new feature"     # annotated tag with this mess
 
 By default, `git tag <version>` produces a **lightweight tag** — a bare ref pointer with no
 body, message, or signature. Pass `-m "MSG"` / `--tag-message "MSG"` to produce an
-**annotated tag** with that message; if your git config has `tag.gpgSign=true`, the
+**annotated tag** with that message. If your git config has `tag.gpgSign=true`, the
 annotated tag is also signed.
 
 The lightweight default is independent of your `tag.gpgSign` setting — for the

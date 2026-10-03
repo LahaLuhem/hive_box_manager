@@ -19,7 +19,7 @@ import 'element_id.dart';
 /// An **eager** box holding a `Set` of [T] per [K] key.
 ///
 /// A restart hands back fresh objects, so pass `idOf` to say what makes 2 elements the same. Strings,
-/// numbers, bools and enums can skip it. Every write keeps the first element per id.
+/// numbers, bools and enums can skip it. Every write leaves one element per id.
 ///
 /// Writes are copied and reads can't be changed. Everything else works like [ListBox].
 ///

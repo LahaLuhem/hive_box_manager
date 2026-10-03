@@ -7,7 +7,7 @@
 # No disk and no prepped box, unlike the other drivers: the store is an in-process Map (the bench
 # header says why). Load stamp still recorded, though these lanes barely move with it.
 #
-# Lane order is the argument, read top to bottom; raw-generic-adapter vs raw-concrete-adapter is
+# Lane order is the argument, read top to bottom. raw-generic-adapter vs raw-concrete-adapter is
 # the pair that carries it.
 # shellcheck disable=SC2129  # per-invocation appends are deliberate: one measurement per subprocess, one line each
 set -euo pipefail

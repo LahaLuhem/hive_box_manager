@@ -1,12 +1,12 @@
 # APPENDIX for `hive_box_manager`
 
 Design rationale: the "why" behind decisions that the code and the hard rules alone don't explain.
-Hard rules and workflow live in [`.ai/AGENTS.md`](./.ai/AGENTS.md); code style in
-[`CODESTYLE.md`](./CODESTYLE.md). Each heading carries an explicit `<a id="…">` anchor; link by
+Hard rules and workflow live in [`.ai/AGENTS.md`](./.ai/AGENTS.md), code style in
+[`CODESTYLE.md`](./CODESTYLE.md). Each heading carries an explicit `<a id="…">` anchor. Link by
 anchor, and keep anchors stable across renames.
 
 The 1.0 sections below were distilled from the rewrite's decision register after the build
-completed; the empirical claims (probe results, benchmark numbers) are pinned by
+completed. The empirical claims (probe results, benchmark numbers) are pinned by
 `test/integration/hive_ce_pins/` and reproducible via `benchmark/`.
 
 <!-- TOC start -->
@@ -36,10 +36,10 @@ completed; the empirical claims (probe results, benchmark numbers) are pinned by
 <a id="ai-files-symlinked"></a>
 ## `AGENTS.md` and `CLAUDE.md` are symlinks into `.ai/`
 
-The canonical files live in [`.ai/`](./.ai/); the repo-root `AGENTS.md` and `CLAUDE.md` are symlinks
+The canonical files live in [`.ai/`](./.ai/). The repo-root `AGENTS.md` and `CLAUDE.md` are symlinks
 to them. Keeping the sources in `.ai/` groups the agent-facing docs in one place while still letting
 tools that look at the repo root (and humans) find them. `.gitignore` commits the `.ai/` targets and
-ignores the root symlinks; `.pubignore` excludes both the symlinks and the targets so none of it
+ignores the root symlinks. `.pubignore` excludes both the symlinks and the targets so none of it
 ships in the published tarball.
 
 Relative links in the 2 `.ai/` files are written to resolve from the repo root (the symlink
@@ -73,7 +73,7 @@ keeps it usable in a Dart server, a CLI, a web app, and a Flutter app alike, whi
 places Hive is used.
 
 Anything that would need Flutter (a `ValueListenable` view over a box's change stream, a widget
-binding) does not go here; it goes in a companion package (see
+binding) does not go here. It goes in a companion package (see
 [packaging](#packaging-core-and-companions)). The one Flutter artefact in the repo is the `example/`
 app, which is a separate package with its own pubspec and does not make the library depend on
 Flutter.
@@ -92,15 +92,15 @@ instead of forcing an `await`-and-rewrap at every call site.
 
 The concrete commitments:
 
-- **No `null` and no bare `Future` on the public surface.** Absence is `Option` / `TaskOption`;
-  asynchrony is a lazy `Task`, not an eager `Future`. The one blessed nullable is the
+- **No `null` and no bare `Future` on the public surface.** Absence is `Option` / `TaskOption`,
+  and asynchrony is a lazy `Task`, not an eager `Future`. The one blessed nullable is the
   `watch({key})` filter: a toggle the consumer passes, never a value they receive.
 - **Laziness is deliberate.** `Task` doesn't run until `.run()`, so a box call is a description
   of an effect the consumer schedules, not an effect fired the moment the method returns. This is
   what lets reads and writes compose before anything touches the box.
-- **Absence-first reads.** `get` returns `Option` / `TaskOption`; `getOr(key, fallback)` is sugar
+- **Absence-first reads.** `get` returns `Option` / `TaskOption`. `getOr(key, fallback)` is sugar
   over it. The 0.0.x `defaultValue`-at-construction died because a box-level default conflates
-  "give me something usable" with "is it there?" at every read site; the fallback now travels with
+  "give me something usable" with "is it there?" at every read site. The fallback now travels with
   the one call that wants it.
 
 The full method-level shape is in
@@ -117,7 +117,7 @@ touches a single box type. Tree-shaking drops unused *code*, not the dependency-
 decision turns on *what a dependency is for*.
 
 - **Engine and paradigm dependencies live in core.** `hive_ce` is the storage engine the whole
-  package wraps, and `fpdart` is the surface paradigm every façade speaks; both are load-bearing,
+  package wraps, and `fpdart` is the surface paradigm every façade speaks. Both are load-bearing,
   pure-Dart, and web-safe, so they belong in core. `meta` rides along for annotations, and
   `collection` for collection helpers.
 - **Adapter dependencies go in companions.** Anything that adapts the façades to another ecosystem
@@ -159,7 +159,7 @@ key, composite keys with reverse queries, typed watch, encryption pass-through, 
 observability, full lifecycle) rather than a class list, so the taxonomy stayed free until the
 architecture was settled. 2 scope calls deserve their reasoning on record:
 
-- **Web is a supported, tested platform from 1.0.** Key encoding is persisted data; shipping a
+- **Web is a supported, tested platform from 1.0.** Key encoding is persisted data, so shipping a
   web-unsafe encoding would have made adding web later a data-breaking change, the most expensive
   kind. CI runs the browser suite on chrome under dart2js *and* dart2wasm.
 - **Deferred things are additive on proven seams.** The inverted-index reverse query, IsolatedHive
@@ -199,13 +199,13 @@ fakes), and free functions (abandons CRUD-for-free).
 
 Lifecycle is its own internal core. **Eager façades cannot exist unopened**: acquisition is a
 `Task`-returning static `open`, so sync reads are always legal by construction. **Lazy façades
-construct synchronously and auto-open single-flight** on the first effect (a memoised future;
-a failed open resets it so the next run retries), with `ensureInitialised()` as the compositional
+construct synchronously and auto-open single-flight** on the first effect (a memoised future,
+reset by a failed open so the next run retries), with `ensureInitialised()` as the compositional
 warm-up. This makes the 0.0.x init-forgotten crash unrepresentable rather than unlikely. The one
 carve-out: the lazy sync inspectors (`length`, `isEmpty`, `isNotEmpty`, `keys`, `contains`) need
 the keystore, so before the first open they throw a `StateError` naming the fix: deterministic
 and message-guided where 0.0.x gave a null cast at a distance. `close()` and `deleteFromDisk()`
-are terminal on both axes; closing a never-used lazy handle is a no-op that opens nothing yet
+are terminal on both axes, and closing a never-used lazy handle is a no-op that opens nothing yet
 still poisons the handle.
 
 ---
@@ -246,7 +246,7 @@ is read-only and free unless called, and the separate 0.0.x query types only exi
 inheritance wiring. `SingleValueBox` stays its own façade rather than a degenerate keyed box
 because the no-argument `get()` *is* the variant. The eager collection variant exists (0.0.x was
 lazy-only) because the memory folklore that forbade it was retired by measurement. Dual parts are
-generic with `(int, int)` codecs shipped; internally a dual box encodes both parts at the façade
+generic with `(int, int)` codecs shipped. Internally a dual box encodes both parts at the façade
 and hands the shared engine a plain raw key, like every other family.
 
 ---
@@ -261,8 +261,8 @@ ceiling. So `StringCompositeDualCodec` is the safe default (full-range parts, ne
 ceilings) and `PackedIntDualCodec` is the documented opt-in, **bit-identical to the 0.0.x
 `.bitShift` keys** (shift equals multiply for in-range parts), so legacy boxes read in place. The
 0.0.x `.negative` encoder was not reshipped: the composite covers negatives natively, and that
-encoder is the one that shipped the drift bug. Micro-benchmarks were treated as diagnostics only;
-the decision rule pinned end-to-end paths, which is why "bitwise beats math" folklore died.
+encoder is the one that shipped the drift bug. Micro-benchmarks were treated as diagnostics only.
+The decision rule pinned end-to-end paths, which is why "bitwise beats math" folklore died.
 
 Validation is tiered, assert-first: construction wiring asserts (codec defaulting, part domains
 on the opt-in codec), preconditions hive itself throws for get **no wrapper check at all** (tier
@@ -299,6 +299,8 @@ objects, so a type that compares by identity never matches its stored copy. `Set
 `idOf` instead (strings, numbers, bools and enums are their own id), and only on writes, which
 keeps reads a zero-copy cast view:
 
+- **Every write dedups the whole set**, not only what comes in, so an id stored twice some other way
+  (raw hive, say) is down to its first element after the next write.
 - **hive gets a plain `Set.of(...)`**, never one with custom equality. The eager cache hands back
   the written object until a restart, and a reopen builds a plain set, so a custom one would match
   by id before a restart and by `==` after. The price is that a set you read matches by `==`, the
@@ -326,7 +328,7 @@ logging channel is bypassed, not wrapped: engine warnings are the engine's domai
 
 The typed watch surface splits by axis because the engine's truth splits: eager delete events
 carry the just-deleted value (hive serves it from cache, pinned), so `TypedBoxEvent.value` is
-non-null even on deletes; a lazy box holds no values, so its deletes cannot carry one, and
+non-null even on deletes. A lazy box holds no values, so its deletes cannot carry one, and
 `LazyTypedBoxEvent.value` is an `Option` with `deleted` derived from it. Pretending otherwise on
 the lazy axis would have meant either lying (a sentinel) or a null: both banned.
 
@@ -338,8 +340,8 @@ the lazy axis would have meant either lying (a sentinel) or a null: both banned.
 The error channel is `Task`, not `TaskEither`: everything that can fail at runtime (engine
 `HiveError`s, IO, the corruption gate) is fix-your-code / fix-your-disk class, and hive provides
 no typed failure taxonomy worth an `Either` (string-matching its messages would be brittle).
-Failures propagate as thrown errors inside the task with a documented throw taxonomy per method;
-consumers lift to `TaskEither.tryCatch` where they want values. Precondition violations (the
+Failures propagate as thrown errors inside the task with a documented throw taxonomy per method.
+Consumers lift to `TaskEither.tryCatch` where they want values. Precondition violations (the
 corruption gate, a missing codec) throw **synchronously at call time**, before the task exists:
 fail at the site, not at `.run()`.
 
@@ -347,7 +349,7 @@ Reads are absence-first: `get` returns `Option` / `TaskOption`, `getOr` is sugar
 `tryGet` twin because the primary read *is* the absence-shaped one. Queries return plain,
 possibly-empty lists, never `Option`: the 0.0.x `None`-on-no-matches conflation of "absent" with
 "empty result" died, and `ListBox` keeps the same distinction between an absent key (`None`)
-and a stored empty list (`Some(empty)`). Effects are `Task<Unit>` on both axes; reads are sync
+and a stored empty list (`Some(empty)`). Effects are `Task<Unit>` on both axes. Reads are sync
 only where the eager cache makes them free.
 
 ---
@@ -359,7 +361,7 @@ Suites are BDD-shaped (`Feature` / `Scenario` / `Scenario Outline` with paramete
 named example tables) via a thin zero-dependency vocabulary copied from the maintainer's `minted`
 package: the value is the shape, which forces naming the system under test, not a framework.
 `bdd_framework` itself is Flutter-only, so it serves the example app's suites instead. Mocks are
-generated (mockito + build_runner, committed because CI runs no codegen); hand-written doubles
+generated (mockito + build_runner, committed because CI runs no codegen). Hand-written doubles
 are reserved for the 2 seams where *stateful* behaviour is the point (the in-memory box fakes,
 the recording observer), and a growing custom-fake count is treated as a design smell.
 
@@ -368,7 +370,7 @@ the recording observer), and a growing custom-fake count is treated as a design 
 they encode everything the probes discovered, so the `hive_ce` caret can stay open, because an
 engine release that shifts pinned semantics fails the suite instead of silently invalidating the
 wrapper's contracts. The wrapper-overhead benchmark lane (`benchmark/`) holds the façades to raw
-hive across fourteen operations; the measured numbers live in the README.
+hive across 14 operations, and the measured numbers live in the README.
 
 The aim was originally written as a flat "within 5% of raw", and measuring it properly showed that
 target is malformed rather than met or missed. A percentage is only meaningful when the operation
@@ -380,7 +382,7 @@ figure authoritative wherever the 2 disagree. `DualKeyBox`'s eager get used to b
 that genuinely missed, at 1.4x to 1.8x raw. That turned out not to be the record allocation or the
 double dispatch, both of which are free: it was a `(K1, K2)` record parameter typed from the
 adapter's own type parameters, costing ~350 ns per call on a subtype check. Encoding at the façade
-removed the adapter and the cost with it (#14); `benchmark/key_shape_bench.dart` keeps the
+removed the adapter and the cost with it (#14). `benchmark/key_shape_bench.dart` keeps the
 attribution reproducible.
 
 ---
@@ -394,7 +396,7 @@ diff summary, verification evidence, an explicit not-verified list, and maintain
 commit before the next phase started. Truth-pins-first de-risked everything after (the
 architecture leaned only on pinned facts), and façade phases were sized to reviewable commits.
 The protocol's one iron rule: plan-vs-reality divergences stop the build for an explicit decision
-rather than being improvised around; the handful that occurred (a lazy-close rider the engine
+rather than being improvised around. The handful that occurred (a lazy-close rider the engine
 missed, the `meta` floor colliding with Flutter's pin, an eager-get overhead regression) are
 recorded in the relevant sections above.
 
@@ -417,12 +419,15 @@ constraint.
 <a id="open-design-decisions"></a>
 ## Resolved design decisions (index)
 
-Every decision this section used to hold open is now made and argued above; the anchor stays for
-old links. The mapping: the override-hook engine → [core abstraction](#core-abstraction) and
-[the seam model](#seam-model); the composite-key strategy → [key strategy](#key-strategy);
-collection handling → [cast at the read boundary](#collection-handling); logging →
-[observability](#observability); the parked branch experiments →
-[migration & risk posture](#migration-and-risks) (dispositions: lazy auto-init adopted
-strengthened, the multi-box index deferred to 1.x on the query seam, the hashCode-key idea
-rejected as a cautionary dead-end, the example branch superseded by `example/`); web support →
-[scope](#scope); test tooling → [its own section](#test-tooling).
+Every decision this section used to hold open is now made and argued above. The anchor stays for
+old links. The mapping:
+
+- the override-hook engine → [core abstraction](#core-abstraction) and [the seam model](#seam-model)
+- the composite-key strategy → [key strategy](#key-strategy)
+- collection handling → [cast at the read boundary](#collection-handling)
+- logging → [observability](#observability)
+- the parked branch experiments → [migration & risk posture](#migration-and-risks) (dispositions:
+  lazy auto-init adopted strengthened, the multi-box index deferred to 1.x on the query seam, the
+  hashCode-key idea rejected as a cautionary dead-end, the example branch superseded by `example/`)
+- web support → [scope](#scope)
+- test tooling → [its own section](#test-tooling)
