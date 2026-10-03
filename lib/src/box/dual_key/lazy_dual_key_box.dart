@@ -145,8 +145,8 @@ interface class LazyDualKeyBox<T extends Object, K1 extends Object, K2 extends O
         return unit;
       });
 
-  /// Writes every value in [values] when run, each under the 2 parts [primary] and [secondary] extract
-  /// from it.
+  /// Writes every value in [values] when run, each under the 2 parts [primaryOf] and [secondaryOf]
+  /// return for it.
   ///
   /// Worth more here than on the keyed boxes: [putAll] makes you build a `(K1, K2)`-keyed map, and hashing
   /// a record per entry is the expensive bit. This way no record is built at all.
@@ -157,8 +157,8 @@ interface class LazyDualKeyBox<T extends Object, K1 extends Object, K2 extends O
   /// wins.
   Task<Unit> putAllBy(
     Iterable<T> values, {
-    required K1 Function(T value) primary,
-    required K2 Function(T value) secondary,
+    required K1 Function(T value) primaryOf,
+    required K2 Function(T value) secondaryOf,
   }) {
     // Built up front: the engine consumes the entries, then the query hooks replay them. That runs the
     // extractors twice per value, so keep them cheap.
@@ -166,11 +166,13 @@ interface class LazyDualKeyBox<T extends Object, K1 extends Object, K2 extends O
 
     return _engine
         .putAll(
-          valueList.map((value) => MapEntry(_rawKeyFor(primary(value), secondary(value)), value)),
+          valueList.map(
+            (value) => MapEntry(_rawKeyFor(primaryOf(value), secondaryOf(value)), value),
+          ),
         )
         .map((_) {
           for (final value in valueList) {
-            _afterWrite(primary(value), secondary(value));
+            _afterWrite(primaryOf(value), secondaryOf(value));
           }
 
           return unit;

@@ -176,14 +176,19 @@ void main() {
     });
 
     scenario('putAllGrouped collects a flat iterable into one list per extracted key', () async {
-      await facade.putAllGrouped(['ant', 'ape', 'bee', 'cow'], key: (value) => value.length).run();
+      await facade.putAllGrouped([
+        'ant',
+        'ape',
+        'bee',
+        'cow',
+      ], keyOf: (value) => value.length).run();
 
       check(facade.keys).deepEquals([3]);
       check(facade.getOr(3)).deepEquals(['ant', 'ape', 'bee', 'cow']);
     });
 
     scenario('putAllGrouped keys apart and preserves encounter order', () async {
-      await facade.putAllGrouped(['bb', 'a', 'dd', 'c'], key: (value) => value.length).run();
+      await facade.putAllGrouped(['bb', 'a', 'dd', 'c'], keyOf: (value) => value.length).run();
 
       // Asserted before the reads below, which dispatch their own events.
       check(observer.calls).deepEquals(['writtenAll:tags:2']);
@@ -195,7 +200,7 @@ void main() {
     scenario('putAllGrouped replaces the stored list, it does not append', () async {
       await facade.put(1, ['old']).run();
 
-      await facade.putAllGrouped(['a'], key: (value) => value.length).run();
+      await facade.putAllGrouped(['a'], keyOf: (value) => value.length).run();
 
       check(facade.getOr(1)).deepEquals(['a']);
     });

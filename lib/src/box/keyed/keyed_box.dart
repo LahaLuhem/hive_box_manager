@@ -75,13 +75,13 @@ interface class KeyedBox<T extends Object, K extends Object>._({
     entries.entries.map((entry) => MapEntry(_rawKeyFor(entry.key), entry.value)),
   );
 
-  /// Writes every value in [values] when run, each under the key [key] pulls out of it.
+  /// Writes every value in [values] when run, each under the key [keyOf] returns for it.
   ///
   /// Handy when values carry their own id. Use [putAll] when they don't, which is most of the time.
   /// 2 values landing on the same key trips an assert in development, and in release the later one
   /// wins.
-  Task<Unit> putAllBy(Iterable<T> values, {required K Function(T value) key}) =>
-      _engine.putAll(values.map((value) => MapEntry(_rawKeyFor(key(value)), value)));
+  Task<Unit> putAllBy(Iterable<T> values, {required K Function(T value) keyOf}) =>
+      _engine.putAll(values.map((value) => MapEntry(_rawKeyFor(keyOf(value)), value)));
 
   /// Rewrites [key] through [update] when run and returns the new value, same deal as [Map.update].
   /// An absent key is seeded by [ifAbsent], and without one the task fails with an [ArgumentError].

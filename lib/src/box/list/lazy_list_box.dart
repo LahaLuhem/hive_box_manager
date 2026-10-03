@@ -205,7 +205,7 @@ interface class LazyListBox<T extends Object, K extends Object>._({
         );
       });
 
-  /// Writes every value in [values] when run, grouped into one stored list per key [key] extracts.
+  /// Writes every value in [values] when run, grouped into one stored list per key [keyOf] returns.
   ///
   /// The list-shaped counterpart to the keyed families' `putAllBy`: a flat iterable in, one list per
   /// distinct key out, elements in encounter order. **Replaces** the list at each key rather than appending,
@@ -218,10 +218,10 @@ interface class LazyListBox<T extends Object, K extends Object>._({
   /// Reach for [putAll] when the key is not derivable from the element, or when a key needs an **empty**
   /// list: grouping can never produce one, and stored-empty is a distinct state from absent on this
   /// surface.
-  Task<Unit> putAllGrouped(Iterable<T> values, {required K Function(T value) key}) {
+  Task<Unit> putAllGrouped(Iterable<T> values, {required K Function(T value) keyOf}) {
     final grouped = <K, List<T>>{};
     for (final value in values) {
-      grouped.putIfAbsent(key(value), () => <T>[]).add(value);
+      grouped.putIfAbsent(keyOf(value), () => <T>[]).add(value);
     }
 
     return _engine.putAll(
