@@ -38,7 +38,7 @@ CHART_DPI = 150
 FIG_SIZE = (9.0, 5.4)
 
 # Above this multiple of the baseline a lane is drawn as costly. The gap is 20x, so the exact
-# threshold is irrelevant; it exists so the colouring is derived rather than hard-coded per lane.
+# threshold is irrelevant. It exists so the colouring is derived rather than hard-coded per lane.
 COSTLY_MULTIPLE = 5.0
 
 # The two annotations that carry the argument, keyed by the lane they point at.
@@ -201,7 +201,7 @@ def render_chart(by_lane, base):
         edgecolor=INK,
         linewidth=0.6,
     )
-    # Hatching so the two groups survive greyscale and colour blindness (plot.py's rule; bars
+    # Hatching so the two groups survive greyscale and colour blindness (plot.py's rule, since bars
     # cannot carry the dash/marker cues the line charts use).
     for bar, is_costly in zip(bars, costly, strict=True):
         if is_costly:

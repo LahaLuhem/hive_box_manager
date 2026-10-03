@@ -1,4 +1,4 @@
-/// @docImport '/src/codec/key/key_codec.dart';
+/// @docImport '../key/key_codec.dart';
 /// @docImport 'packed_int_dual_codec.dart';
 /// @docImport 'string_composite_dual_codec.dart';
 library;

@@ -40,11 +40,11 @@ MARKERS = ["o", "s"]
 DASHES = ["", (4, 2)]  # solid, then dashed
 INK = "#222222"  # text + annotations (a text token, never a series colour)
 
-CHART_DPI = 150  # matches the sibling; sharp on retina without bloating the PNG
+CHART_DPI = 150  # matches the sibling, sharp on retina without bloating the PNG
 FIG_SIZE = (8.0, 4.6)
 
 # Charts plot the shipped façades, because that is what the README's tables claim to describe.
-# The raw lane stays in the JSONL as the overhead denominator; switch a call's ``impl`` to
+# The raw lane stays in the JSONL as the overhead denominator. Switch a call's ``impl`` to
 # inspect it.
 FACADE = "facade"
 

@@ -20,7 +20,7 @@ of the data and how you'd read and write it helps a lot.
 What goes wrong or gets awkward today when you use the current Managers for this?
 
 **Does it fit the core, or a companion?**
-Pure-Dart behaviour over hive_ce belongs in core; anything Flutter-specific or with a
+Pure-Dart behaviour over hive_ce belongs in core, and anything Flutter-specific or with a
 heavy dependency is likely a companion package. Where do you think this sits?
 
 **Additional context**

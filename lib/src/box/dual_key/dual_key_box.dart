@@ -1,6 +1,6 @@
-/// @docImport '/src/box/keyed/keyed_box.dart';
 /// @docImport '/src/codec/dual/packed_int_dual_codec.dart';
 /// @docImport '/src/codec/dual/string_composite_dual_codec.dart';
+/// @docImport '../keyed/keyed_box.dart';
 /// @docImport 'lazy_dual_key_box.dart';
 library;
 

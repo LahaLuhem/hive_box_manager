@@ -1,4 +1,4 @@
-# ryl (YAML lint) config for hive_box_manager. yamllint-compatible; ryl reads it via
+# ryl (YAML lint) config for hive_box_manager. yamllint-compatible. ryl reads it via
 # `-c` in .github/lint-checks.json (CI matrix) and the release.sh preflight.
 #
 # Starts from yamllint's "default" rule set, then tuned to the repo's deliberate
@@ -21,7 +21,7 @@ rules:
   comments:
     min-spaces-from-content: 1
     require-starting-space: false
-  # Workflows use `on:`, which reads as a truthy key; keep value checks, not keys.
+  # Workflows use `on:`, which reads as a truthy key, so keep value checks, not keys.
   truthy:
     check-keys: false
   # Single-document files here don't lead with `---`.

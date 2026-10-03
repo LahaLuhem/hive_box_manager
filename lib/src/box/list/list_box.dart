@@ -1,4 +1,4 @@
-/// @docImport '/src/box/keyed/keyed_box.dart';
+/// @docImport '../keyed/keyed_box.dart';
 /// @docImport '../set/set_box.dart';
 /// @docImport 'lazy_list_box.dart';
 library;

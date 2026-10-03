@@ -1,10 +1,10 @@
 #!/bin/bash
-# Wrapper-overhead driver (aim #4's proof; target: within noise, under 5%).
+# Wrapper-overhead driver (aim #4's proof, target: within noise, under 5%).
 # Usage: overhead_driver.sh <bench-executable> <out.jsonl> [reps] [get_n] [put_n] [by_n]
 # AOT (the deciding lane): `dart compile exe benchmark/overhead_bench.dart` first and pass the
 # produced executable.
 #
-# GET_N sizes the read lanes (a full pass costs one op per entry); PUT_N sizes every lane that pays
+# GET_N sizes the read lanes (a full pass costs one op per entry). PUT_N sizes every lane that pays
 # a disk round-trip per op, which is the write lanes plus the lazy read lanes.
 #
 # This lane resolves single-digit percentages, so background load on the host swamps the signal
@@ -32,7 +32,7 @@ LOAD_START="$(current_load)"
 
 : > "$OUT"
 
-# Two prepped boxes. The big one serves every lane that samples keys out of it; the small one exists
+# Two prepped boxes. The big one serves every lane that samples keys out of it. The small one exists
 # for lazy `values`, which reads the *whole* box in one parallel fetch and would mean 100K concurrent
 # disk reads against the big one.
 big="$(mktemp -d "${TMPDIR:-/tmp}/hbm_overhead_big.XXXXXX")"

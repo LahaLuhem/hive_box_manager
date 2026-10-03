@@ -13,9 +13,9 @@ the new façades with no migration at all:
 |---|---|
 | Simple (`BoxManager` / `LazyBoxManager`) | **reads in place** (same box names, keys, frames) |
 | Single value (`SingleIndex*Manager`) | **reads in place** (the internal slot key is retained) |
-| Collection (`CollectionLazyBoxManager`) | **reads in place** (same list frames; new read-boundary cast) |
+| Collection (`CollectionLazyBoxManager`) | **reads in place** (same list frames, new read-boundary cast) |
 | Dual `.bitShift` | **reads in place** via `PackedIntDualCodec` (bit-identical keys) |
-| Dual `.negative` | one-time re-key needed; recipe below |
+| Dual `.negative` | one-time re-key needed, recipe below |
 
 Box kind is not persisted by hive, so moving between eager and lazy façades is also free.
 
@@ -27,16 +27,16 @@ Box kind is not persisted by hive, so moving between eager and lazy façades is 
 | `SingleIndexBoxManager` / `SingleIndexLazyBoxManager` | `SingleValueBox` / `LazySingleValueBox` |
 | `CollectionLazyBoxManager<T, I>` | `LazyListBox<T, K>` (plus a new eager `ListBox`) |
 | `DualIntIndex*` + `QueryDualIntIndex*` + `BitShiftQuery*` | `DualKeyBox` / `LazyDualKeyBox` + a codec choice |
-| `init(cipher)` | gone: eager `open(...)` factories / lazy auto-open; `cipher:` at construction |
+| `init(cipher)` | gone: eager `open(...)` factories / lazy auto-open, `cipher:` at construction |
 | `defaultValue` (mandatory) | gone: `get` returns `Option`, `getOr` is the sugar |
 | `tryGet` | `get` (absence-shaped: `Option` / `TaskOption`) |
-| `getAll` / `tryGetAll` | `values` (plain; no `None`-on-empty conflation) |
-| `watchStream()` (raw `BoxEvent`s) | `watch()` (typed events; deletes carry the value on eager) |
+| `getAll` / `tryGetAll` | `values` (plain, no `None`-on-empty conflation) |
+| `watchStream()` (raw `BoxEvent`s) | `watch()` (typed events, deletes carry the value on eager) |
 | `upsert` | `update` (mirrors `Map.update`) |
 | `storedIds` | `keys` |
 | `assignManagerLogCallback` + `LogPattern` | `observer:` (`BoxObserver`) at construction |
 | `.bitShift` encoder | `codec: const PackedIntDualCodec()` |
-| `.negative` encoder | re-key once; recipe below |
+| `.negative` encoder | re-key once, recipe below |
 
 ## Re-keying a `.negative` dual box
 
@@ -82,7 +82,7 @@ Run it once at startup behind a "migrated" flag (a `SingleValueBox<bool>` works 
 
 ## Behavioural changes worth re-reading
 
-- **No `init()` anywhere.** Holding an eager box means it's open; lazy boxes open themselves on
+- **No `init()` anywhere.** Holding an eager box means it's open, and lazy boxes open themselves on
   the first effect.
 - **Absence is `Option`, defaults are gone.** Anywhere you relied on `defaultValue`, pass the
   fallback at the read (`getOr`).
@@ -90,8 +90,8 @@ Run it once at startup behind a "migrated" flag (a `SingleValueBox<bool>` works 
   `ArgumentError` at the call site instead of silently corrupting the box in release builds.
 - **`close()` / `deleteFromDisk()` are terminal.** Reacquire a new instance instead of reusing
   the handle.
-- **Queries return plain lists.** The 0.0.x reverse queries answered "no matches" with `None`;
-  the 1.x `queryByPrimary` / `queryBySecondary` answer with an empty list, and `Option` is
+- **Queries return plain lists.** The 0.0.x reverse queries answered "no matches" with `None`.
+  The 1.x `queryByPrimary` / `queryBySecondary` answer with an empty list, and `Option` is
   reserved for genuine key absence.
-- **Collections come back unmodifiable.** `ListBox` reads hand you a view; build a new list
+- **Collections come back unmodifiable.** `ListBox` reads hand you a view, so build a new list
   (or use the `add` / `addAll` / `remove` sugar) instead of mutating in place.

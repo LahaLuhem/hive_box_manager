@@ -7,9 +7,9 @@ Maintainer tooling, excluded from the published tarball. 3 lanes live here:
   scheme (arithmetic packed int, String composite, 0.0.x bit-shift reference) at 1K/10K/100K.
 - **Wrapper-overhead lane** (`overhead_bench.dart` + `overhead_driver.sh`): façade vs raw hive_ce,
   fourteen lanes across `KeyedBox` / `LazyKeyedBox` (get, values, contains, put, putAll, delete,
-  deleteAll) and `SingleValueBox` / `LazySingleValueBox` (get, set); the aim-#4 proof. The target
+  deleteAll) and `SingleValueBox` / `LazySingleValueBox` (get, set), the aim-#4 proof. The target
   is two-currency (tens of ns per op on memory paths, single-digit percent on disk paths) because a
-  flat percentage is meaningless on the cheap lanes; see below. The eager read path carries
+  flat percentage is meaningless on the cheap lanes (see below). The eager read path carries
   `vm:prefer-inline` pragmas exactly because this lane holds it to raw speed.
 - **List-box lane** (`list_box_bench.dart` + `list_box_driver.sh`): `ListBox` against 2
   hand-rolled baselines, across 2 element types and the elements-per-key axis.
@@ -52,7 +52,7 @@ one of the 2 axes.
 ### Watch the seeding
 
 `add` and `remove` seed a box before timing, and the seed must build **a distinct list per key in
-every impl**. Raw hive_ce will happily store one list instance under 200 keys; the façade's `putAll`
+every impl**. Raw hive_ce will happily store one list instance under 200 keys. The façade's `putAll`
 materialises a private copy per key. Seed them differently and the RSS column reports that setup
 difference as a wrapper cost, which is exactly the false 2x this lane produced on its first run
 before the seeding was equalised and the RSS window moved after the seed.
@@ -60,7 +60,7 @@ before the seeding was equalised and the RSS window moved after the seed.
 > **The overhead lane needs a quiet host.** It resolves tens of nanoseconds per op, so background
 > load doesn't add noise, it drowns the signal. Passes taken on a laptop with 2 JetBrains IDEs
 > running (load average 4 to 17) put eager get anywhere from -6% to +27% and spread individual
-> samples 27x apart; the same lane on the same machine at load 3 reads +1.5%, reproducibly.
+> samples 27x apart, while the same lane on the same machine at load 3 reads +1.5%, reproducibly.
 > `python/overhead.py` cross-checks median against min and refuses to stand behind a run where they
 > diverge. Read its verdict before quoting any number from this lane.
 
@@ -93,7 +93,7 @@ claims here that survive a controlled check. Compiling this lane's source with b
 puts the façade at 310 ns per get against 390 by min (345 against 430 by median) while `correct`
 goes 140 to 125 and `naive` stays inside its own spread. Measured as the wrapper's own cost over
 `correct`, that is **+170 ns growing to +265 ns, up 56%**. 3.12.2 fitted the lane at ~197 ns + ~1.6
-ns per element; the per-element term is not pinned down at `reps 5`, 2 passes putting it at 1.8
+ns per element. The per-element term is not pinned down at `reps 5`, 2 passes putting it at 1.8
 and 2.5.
 
 The mechanism is not identified, and it is in none of the obvious places. Isolated on the same 2
@@ -119,7 +119,7 @@ compiled out: they accept silently and emit nothing. 3.13.1's
 `WriteBarrier` among them, so the stub section looks 30 KB bigger and the `SubtypeNTestCache`
 entries look brand new. They are not, and reading them as a finding is a mistake this file has
 already made once. Separate stubs from Dart functions before trusting that diff. And `--mode
-product` leaves the flags compiled out, so the build has to be `--mode release`; a self-built
+product` leaves the flags compiled out, so the build has to be `--mode release`. A self-built
 `dartaotruntime` is signed without `allow-jit` / `allow-unsigned-executable-memory` and SIGKILLs on
 loading any snapshot until you re-sign it with the entitlements the shipped one carries.
 
@@ -131,7 +131,7 @@ as the SDK, so only a two-binary pass on one host settles a version question.
 
 The overhead lane's 2 readings sort its own lanes cleanly:
 
-- **memory-path ops** (eager get, contains, values, batch writes): 1 to 22 ns of wrapper per op;
+- **memory-path ops** (eager get, contains, values, batch writes): 1 to 22 ns of wrapper per op.
 - **effectful ops** (anything returning a `Task` that hits disk): 300 to 660 ns per op, which is
   `Task` construction plus `.run()` plus the engine's guard, and lands at 2 to 3% against a
   disk read of tens of microseconds.
@@ -198,7 +198,7 @@ what #14 priced, seen from the VM side.
 ### 3.13.1's extra 5 to 6% is `Object::null()` becoming a TLS read
 
 The subtype logic itself did not change. `DEFINE_RUNTIME_ENTRY(TypeCheck)` is byte-identical between
-the tags, as are `Instance::GetType`, `RecordType::IsSubtypeOf` and `RecordType::InstantiateFrom`;
+the tags, as are `Instance::GetType`, `RecordType::IsSubtypeOf` and `RecordType::InstantiateFrom`.
 `AbstractType::IsSubtypeOf` and `Class::IsSubtypeOf` differ only by an `IsTopTypeForSubtyping` to
 `IsTopType` rename. What changed is underneath. `e98e6a1198c` "[vm] Per isolate group roots accessed
 via TLS", which is not in 3.12.2 and first ships in 3.13.0, moved `Roots` from a static global to a
@@ -218,7 +218,7 @@ fast TLS model, so each access becomes an indirect call through the TLV descript
 
 The record path allocates handles by the dozen per check, so it pays that a lot and nothing else in
 the suite does. `_tlv_get_addr` goes from 2.5% to 5.8% of busy samples, which is +10 ns of the
-+22 ns per op; the rest is the call-site overhead around it, charged to the callers. Every other
++22 ns per op. The rest is the call-site overhead around it, charged to the callers. Every other
 symbol in the profile moves by under 1.7 points, in both directions. It lands on the per-field term
 rather than the fixed one: 158 + 90.3 ns/field on 3.12.2 against 162 + 97.2 on 3.13.1, so fixed +2%
 and per field +7.6%.
@@ -272,7 +272,7 @@ Every matrix lane runs twice, once per `impl`:
   measured raw) and the denominator for the matrix lane's overhead percentages.
 
 The driver preps one box file per (keyKind, scale) and points both impls at it. That works only
-because the shipped codecs encode byte-identically to `key_codecs.dart`; keep them that way or
+because the shipped codecs encode byte-identically to `key_codecs.dart`, so keep them that way or
 the 2 impls quietly stop comparing like with like.
 
 `bitshift` is raw-only. No shipped codec packs that way, because `PackedIntDualCodec` is
@@ -322,7 +322,7 @@ The reader prints the table, checks each claim, and writes
 
 ![What the dual-key overhead actually was](reports/key_shape_attribution.png)
 
-AOT only; a JIT pass answers a different question, since the effect is an AOT subtype-check path.
+AOT only. A JIT pass answers a different question, since the effect is an AOT subtype-check path.
 This lane touches no disk and prepares no box: the store is an in-process Map, because the question
 is a type shape rather than a storage cost.
 
@@ -356,7 +356,7 @@ benchmark/driver.sh /tmp/hbm_bench benchmark/results/results_aot.jsonl 9
 benchmark/driver_1m.sh /tmp/hbm_bench benchmark/results/results_1m.jsonl
 ```
 
-Each invocation is one fresh process per measurement; the driver writes one JSON line per run.
+Each invocation is one fresh process per measurement, and the driver writes one JSON line per run.
 
 ## `results/`
 
@@ -373,14 +373,14 @@ Raw JSONL backing the top-level README's performance tables and codec-crossover 
 
 Environment for all of them: macOS 15.7.8 on Apple Silicon (arm64), Dart 3.13.1, hive_ce 2.19.3,
 2026-08-21, all 6 re-run in one session. Values were a constant 1 byte by design, isolating key
-cost; web performance is unmeasured (ordering assumed to follow the VM).
+cost. Web performance is unmeasured (ordering assumed to follow the VM).
 
 `results_overhead.jsonl` carries a load stamp, but see the precision note above before quoting a
 single figure from it: a repeat pass moved `put` 2x and flipped `get (lazy)`'s sign. The 3.13.1
 pass reproduced that and worse. 2 passes 10 minutes apart, same binary, flipped the sign on 4
 lanes (`contains (eager)`, `get (lazy)`, `single get (lazy)`, `deleteAll`), moved `single set
 (eager)` 2x, and each printed CONTAMINATED on a different lazy lane. The file below is one of those
-passes, kept because its load stamp matches the 3.12.2 pass most closely; treat it as unresolved,
+passes, kept because its load stamp matches the 3.12.2 pass most closely. Treat it as unresolved,
 not as percentages. Re-run before anything from this lane lands in the top-level README:
 
 ```sh
@@ -392,7 +392,7 @@ uv run --project benchmark/python python overhead.py   # must not print CONTAMIN
 This lane also carries `putallby`, which does **not** go through the wrapper-overhead machinery: its
 impl axis is `map` vs `facade` (the 2 ways to write one call) rather than `raw` vs `facade`, since
 there is no raw hive_ce counterpart. It is also the one lane that times the caller's batch
-construction, because removing that map is the entire point of `putAllBy`; every other write lane
+construction, because removing that map is the entire point of `putAllBy`. Every other write lane
 treats the batch as given input. It gets its own `by_n` (6th driver argument, default 100000): one
 batched call is cheap at that size, and a few-percent effect does not clear rep noise at `put_n`,
 where each op is a disk round-trip and 100K would be unaffordable.

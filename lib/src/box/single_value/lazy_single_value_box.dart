@@ -1,4 +1,4 @@
-/// @docImport '/src/box/list/lazy_list_box.dart';
+/// @docImport '../list/lazy_list_box.dart';
 /// @docImport 'single_value_box.dart';
 library;
 

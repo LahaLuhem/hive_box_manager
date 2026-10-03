@@ -6,8 +6,8 @@
 # See AGENTS.md for how the lint set is wired into CI + the release preflight.
 
 [global]
-# CHANGELOG.md is bot-owned (cider + the release automation); the issue templates
-# are GitHub-specific Markdown; example/ios and example/android are Flutter-generated
+# CHANGELOG.md is bot-owned (cider + the release automation). The issue templates
+# are GitHub-specific Markdown. example/ios and example/android are Flutter-generated
 # platform scaffolding (e.g. the Xcode asset-catalog READMEs) we don't hand-maintain.
 # None of these belong under the doc lint.
 exclude = [
@@ -22,7 +22,7 @@ exclude = [
 # MD057 relative-link-exists: false positives from the .ai/ symlink indirection
 #   (the real files link to root-level docs that resolve via the root symlink).
 # MD004/MD007 list marker + indent: the README's table of contents is generated
-#   by bitdowntoc (https://bitdowntoc.derlin.ch/); its `*` markers and 4-space
+#   by bitdowntoc (https://bitdowntoc.derlin.ch/), and its `*` markers and 4-space
 #   nesting are the generator's output, not ours to reformat by hand.
 disable = ["MD033", "MD022", "MD041", "MD057", "MD004", "MD007"]
 

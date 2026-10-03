@@ -1,5 +1,5 @@
-Example-app code style. Package (library) style lives in [`../CODESTYLE.md`](../CODESTYLE.md);
-example scope and facts live in [`.ai/AGENTS.md`](.ai/AGENTS.md).
+Example-app code style. Package (library) style lives in [`../CODESTYLE.md`](../CODESTYLE.md),
+and example scope and facts in [`.ai/AGENTS.md`](.ai/AGENTS.md).
 
 The example inherits the package's strict lint set (via `include: ../analysis_options.yaml`),
 relaxing only `public_member_api_docs`. The package's generic style applies here: explicit types,
@@ -14,7 +14,7 @@ Use a scoped `ValueNotifier` (exposed as a `ValueListenable` getter) + `ValueLis
 state that rebuilds a **small** part of a view. Only call `notifyListeners()` on the `ViewModel`
 (which rebuilds the whole `MVVM.builder` subtree) when **many** sites must update together.
 
-- **Why:** `notifyListeners()` rebuilds everything under the view's consumer; if a control only
+- **Why:** `notifyListeners()` rebuilds everything under the view's consumer, so if a control only
   changes its own widget, rebuilding the whole screen is wasteful. The flip side: one
   `ValueListenableBuilder` per field is O(n) subscriptions, so when a single change touches many
   places at once, one `notifyListeners()` beats many builders.
@@ -66,7 +66,7 @@ package's same-area/cross-area split (see [`#idioms-imports`](../CODESTYLE.md#id
 the **feature** as the area: an import within the **same feature** uses the relative-from-file path
 (bare `sibling.dart`, or `../sub/x.dart` inside the feature), and one from a **different feature**
 uses the root-relative path (`/features/<feature>/...`). `prefer_relative_imports` is on, and a
-leading-`/` path is still a relative import (anchored at `lib/`); tests reach `lib/` through the
+leading-`/` path is still a relative import (anchored at `lib/`). Tests reach `lib/` through the
 package URI.
 
 ### Views and view-models
@@ -74,9 +74,9 @@ package URI.
 - A view is a `StatelessWidget` whose `build` returns
   `MVVM.builder(viewModel: XxxViewModel(), viewBuilder: ...)`, wrapping its body in a
   `DemoScaffold(title: ...)`.
-- A view-model is a `final class XxxViewModel extends ViewModel`. Expose state through getters; name
+- A view-model is a `final class XxxViewModel extends ViewModel`. Expose state through getters. Name
   mutation handlers `on<Thing>Changed` / `on<Thing>Toggled`. A boolean handler takes a named
-  `{required bool value}` (per `avoid_positional_boolean_parameters`); `value` is the assigned-value
+  `{required bool value}` (per `avoid_positional_boolean_parameters`). `value` is the assigned-value
   parameter, exempt from the package's [predicate-naming rule](../CODESTYLE.md#naming) the same way a
   setter's `value` is. The view adapts it:
   `onChanged: (value) => viewModel.onThingToggled(value: value)`.
@@ -93,20 +93,20 @@ Members in a `ViewModel` sit in a fixed top-to-bottom order, so every VM reads t
 5. const / static config, public before private
 6. `init()`
 7. public getters and setters
-8. getter-like / setter-like methods (accessor substitutes; usually none here)
+8. getter-like / setter-like methods (accessor substitutes, usually none here)
 9. other methods (the `on<Thing>` action handlers)
 10. private helper methods (a private getter counts as one)
 11. `onUnmount()` (dispose), always last
 
 Getters are **not** co-located with the field they front: a private notifier is tier 3, its
 exposing getter tier 7 (so the `_prettyPrint` / `prettyPrint` / `setPrettyPrint` triad from the
-state-management section above spreads across tiers 3 / 7 / 8; that snippet shows the pattern, not
+state-management section above spreads across tiers 3 / 7 / 8. That snippet shows the pattern, not
 the in-class placement). `init()` and `onUnmount()` bookend the members as the lifecycle pair.
 
 ### Widget composition
 
 - **Import base widgets from `package:flutter/widgets.dart`, not `material_ui` / `cupertino_ui`.**
-  Platform-adaptive widgets come from `platform_adaptive_widgets`; the framework base
+  Platform-adaptive widgets come from `platform_adaptive_widgets`, and the framework base
   (`StatelessWidget`, `Column`, `Padding`, `ValueListenableBuilder`, ...) comes from
   `flutter/widgets.dart`. When a view genuinely needs a Material- or Cupertino-only symbol (`Theme`,
   `IconButton`, `MaterialPageRoute`), import it from `material_ui` / `cupertino_ui` behind an
@@ -115,9 +115,9 @@ the in-class placement). `init()` and `onUnmount()` bookend the members as the l
   interspersed between children.** For a one-off gap that isn't between flex children, reach for
   [`Gap`](https://pub.dev/packages/gap) (it takes no axis argument, unlike `SizedBox`), not a
   child-less `Padding`. `spacing:` covers every gap the demos need, so `gap` isn't a dependency yet.
-- **Simple, single-use sub-trees stay inline; don't extract a widget for them.** Pull a private
+- **Simple, single-use sub-trees stay inline. Don't extract a widget for them.** Pull a private
   `StatelessWidget` out only when the sub-tree is reused (like the hub's `_DemoTile`) or complex
-  enough to earn a name; a one-off `ValueListenableBuilder` or list reads fine inline in `build`.
+  enough to earn a name. A one-off `ValueListenableBuilder` or list reads fine inline in `build`.
   Still **no `Widget _buildX()` helpers** (DCM `avoid-returning-widgets`), and a `switch` that
   yields a widget goes in a local inside `build`, not a helper method.
 - **Discard unused callback parameters with `_`**, `BuildContext` most often: a
@@ -133,15 +133,15 @@ the in-class placement). `init()` and `onUnmount()` bookend the members as the l
   constructor, then `build`. That inverts the usual Flutter constructor-first habit, on purpose.
 - **In the widget tree, prefer collection-`for` / `if` / spread to `.map(...).toList()`.** The
   package's [pipeline-over-comprehension rule](../CODESTYLE.md#idioms-collection-literals) is a
-  *domain* rule; the View is its exception. A `children:` list is an eager `List<Widget>`
+  *domain* rule, and the View is its exception. A `children:` list is an eager `List<Widget>`
   regardless, so laziness buys nothing, and
   `[Header(), for (final item in items) ItemTile(item), if (isLoading) Spinner()]` reads as the
   tree it builds, where the spread-of-a-pipeline form (`...items.map(ItemTile.new)`) staples
-  machinery into it. Domain transforms stay pipelines; the view stays a tree.
+  machinery into it. Domain transforms stay pipelines, and the view stays a tree.
 
 ### Icons
 
-Prefer `platform_icons` (`PlatformIcon(PlatformIcons.x)`); reach for
+Prefer `platform_icons` (`PlatformIcon(PlatformIcons.x)`), and reach for
 `platformValue(material:, cupertino:)` only when the glyph isn't in the library. The stack is
 mobile-adaptive: `platformValue` throws on desktop/web, so the example targets Android and iOS.
 
@@ -154,17 +154,17 @@ BDD suites use [`bdd_framework`](https://pub.dev/packages/bdd_framework) (`BddFe
 
 **Name the system-under-test local `sut`, never `vm` or the view-model's type.** The `feature`,
 `scenario`, and given/when/then lines already say which system is under test and how it should
-behave, so the variable holding it shouldn't restate the type; `sut` keeps the run body reading as
+behave, so the variable holding it shouldn't restate the type. `sut` keeps the run body reading as
 "drive the subject, check the result" whichever view-model it wraps, and keeps same-shaped bodies
 portable across suites. Declare it once in the harness (`late KeyedViewModel sut;`) and use `sut`
 throughout.
 
 **Input values live in `.example(val('name', value))` rows, read back in `run` through the context
 (`ctx.example.val('name') as T`), never scattered as literals through the run body.** This is the
-example-app twin of the package rule that parameters live in one place as named tables; `run`
+example-app twin of the package rule that parameters live in one place as named tables. `run`
 executes once per example row, so same-shaped scenarios collapse into one scenario with rows (the
 dual-query demo's two axes and its no-match case are one scenario, four rows). Rendering is
-covered by plain `testWidgets` smokes (the hub tile check); `checks` has no finder API, so bridge a
+covered by plain `testWidgets` smokes (the hub tile check). `checks` has no finder API, so bridge a
 `flutter_test` finder by evaluating it: `check(find.text('...').evaluate()).length.equals(1)`. When
 something animates indefinitely (a spinner), drive fixed `pump()`s, never `pumpAndSettle`. Rationale
 in the package [`CODESTYLE.md`](../CODESTYLE.md#test-style).

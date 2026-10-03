@@ -1,14 +1,14 @@
 # AGENTS.md for `example/`
 
 Tool-agnostic brief for the runnable demo app under `example/`. Package (library) conventions live
-in the parent [`AGENTS.md`](../AGENTS.md); example-specific code style lives in
+in the parent [`AGENTS.md`](../AGENTS.md), and example-specific code style in
 [`CODESTYLE.md`](CODESTYLE.md). Read both before working in this subdirectory.
 
 ## Scope
 
 - Runnable demo of `hive_box_manager`, wired to the parent package via
   `hive_box_manager: { path: ../ }`.
-- Not published to pub.dev (`publish_to: 'none'` in `pubspec.yaml`). No semver discipline; it may
+- Not published to pub.dev (`publish_to: 'none'` in `pubspec.yaml`). No semver discipline. It may
   freely depend on Flutter and ecosystem packages.
 - Local only, no publish impact. Keep it building and analysing clean on the strict lint set (the
   example inherits the package's `analysis_options.yaml` via `include`, relaxing only
@@ -39,7 +39,7 @@ panel from `features/core/`:
 | `dual_query` | lazy `LazyDualKeyBox<String, int, int>` | (user, day) composite keys, reverse queries by either part |
 
 Demo values are primitives (`String`) on purpose, so the example needs no `TypeAdapter` and no
-codegen; the package README points real apps at `hive_ce_generator`.
+codegen. The package README points real apps at `hive_ce_generator`.
 
 **Adding a demo:** create `lib/features/<name>/<name>_view.dart` + `_view_model.dart`, add a tile to
 the home hub, and a BDD suite under `test/features/<name>/`. Reuse `DemoScaffold` and the `core`
