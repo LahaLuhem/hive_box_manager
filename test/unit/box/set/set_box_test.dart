@@ -11,26 +11,22 @@ import '../../../support/bdd.dart';
 import '../../../support/codecs/date_key_codec.dart';
 import '../../../support/doubles/fake_boxes.dart';
 import '../../../support/doubles/recording_box_observer.dart';
-
-/// Compares by identity, so only `idOf` can tell 2 copies apart.
-final class _Member(final int id, final String name);
-
-int _idOf(_Member member) => member.id;
+import '../../../support/fixtures/member.dart';
 
 void main() {
   late FakeEagerBox box;
   late RecordingBoxObserver observer;
   late SetBox<String, int> facade;
-  late SetBox<_Member, int> members;
+  late SetBox<Member, int> members;
 
   setUp(() {
     box = FakeEagerBox(name: 'tags');
     observer = RecordingBoxObserver();
     facade = setBoxAround(box, observer: observer);
-    members = setBoxAround(FakeEagerBox(name: 'members'), idOf: _idOf);
+    members = setBoxAround(FakeEagerBox(name: 'members'), idOf: (member) => member.id);
   });
 
-  Iterable<String> namesIn(Set<_Member> set) => set.map((member) => member.name);
+  Iterable<String> namesIn(Set<Member> set) => set.map((member) => member.name);
 
   feature('SetBox wiring', () {
     scenario('a custom codec owns the raw encoding and the decode round-trip', () async {
@@ -48,7 +44,7 @@ void main() {
     });
 
     scenario('a custom element type without idOf fails the wiring assert', () {
-      check(() => setBoxAround<_Member, int>(box)).throws<AssertionError>();
+      check(() => setBoxAround<Member, int>(box)).throws<AssertionError>();
     });
   });
 
@@ -125,49 +121,49 @@ void main() {
     });
 
     scenario('put keeps the first element per id', () async {
-      await members.put(1, [_Member(1, 'first'), _Member(1, 'second')]).run();
+      await members.put(1, [Member(1, 'first'), Member(1, 'second')]).run();
 
       check(namesIn(members.getOr(1))).deepEquals(['first']);
     });
 
     scenario('add keeps the stored element with the same id, and creates on absence', () async {
-      await members.add(1, _Member(1, 'stored')).run();
-      await members.add(1, _Member(1, 'incoming')).run();
-      await members.add(1, _Member(2, 'new')).run();
+      await members.add(1, Member(1, 'stored')).run();
+      await members.add(1, Member(1, 'incoming')).run();
+      await members.add(1, Member(2, 'new')).run();
 
       check(namesIn(members.getOr(1))).deepEquals(['stored', 'new']);
     });
 
     scenario('addAll keeps stored elements and appends new ids in order', () async {
-      await members.put(1, [_Member(1, 'stored')]).run();
+      await members.put(1, [Member(1, 'stored')]).run();
 
-      await members.addAll(1, [_Member(3, 'c'), _Member(1, 'incoming'), _Member(2, 'b')]).run();
+      await members.addAll(1, [Member(3, 'c'), Member(1, 'incoming'), Member(2, 'b')]).run();
 
       check(namesIn(members.getOr(1))).deepEquals(['stored', 'c', 'b']);
     });
 
     scenario('upsert replaces the stored element with the same id where it sits', () async {
-      await members.put(1, [_Member(1, 'a'), _Member(2, 'old'), _Member(3, 'c')]).run();
+      await members.put(1, [Member(1, 'a'), Member(2, 'old'), Member(3, 'c')]).run();
 
-      await members.upsert(1, _Member(2, 'new')).run();
+      await members.upsert(1, Member(2, 'new')).run();
 
       check(namesIn(members.getOr(1))).deepEquals(['a', 'new', 'c']);
     });
 
     scenario('upsertAll replaces in place, appends new ids, and creates on absence', () async {
-      await members.upsertAll(9, [_Member(1, 'only')]).run();
-      await members.put(1, [_Member(1, 'old')]).run();
+      await members.upsertAll(9, [Member(1, 'only')]).run();
+      await members.put(1, [Member(1, 'old')]).run();
 
-      await members.upsertAll(1, [_Member(2, 'b'), _Member(1, 'new')]).run();
+      await members.upsertAll(1, [Member(2, 'b'), Member(1, 'new')]).run();
 
       check(namesIn(members.getOr(9))).deepEquals(['only']);
       check(namesIn(members.getOr(1))).deepEquals(['new', 'b']);
     });
 
     scenario("update's result is deduped by id", () async {
-      await members.put(1, [_Member(1, 'a')]).run();
+      await members.put(1, [Member(1, 'a')]).run();
 
-      await members.update(1, (stored) => {...stored, _Member(1, 'copy')}).run();
+      await members.update(1, (stored) => {...stored, Member(1, 'copy')}).run();
 
       check(namesIn(members.getOr(1))).deepEquals(['a']);
     });
@@ -175,9 +171,9 @@ void main() {
 
   feature('SetBox remove', () {
     scenario('remove matches a fresh copy by id', () async {
-      await members.put(1, [_Member(1, 'a'), _Member(2, 'b')]).run();
+      await members.put(1, [Member(1, 'a'), Member(2, 'b')]).run();
 
-      await members.remove(1, _Member(1, 'fresh copy')).run();
+      await members.remove(1, Member(1, 'fresh copy')).run();
 
       check(namesIn(members.getOr(1))).deepEquals(['b']);
     });
@@ -223,13 +219,13 @@ void main() {
     });
 
     scenario('putAllGrouped groups by key, dedups each group, and replaces', () async {
-      await members.put(2, [_Member(9, 'old')]).run();
+      await members.put(2, [Member(9, 'old')]).run();
 
       await members.putAllGrouped([
-        _Member(1, 'a'),
-        _Member(10, 'bb'),
-        _Member(10, 'dd'),
-        _Member(20, 'cc'),
+        Member(1, 'a'),
+        Member(10, 'bb'),
+        Member(10, 'dd'),
+        Member(20, 'cc'),
       ], keyOf: (member) => member.name.length).run();
 
       check(namesIn(members.getOr(1))).deepEquals(['a']);
