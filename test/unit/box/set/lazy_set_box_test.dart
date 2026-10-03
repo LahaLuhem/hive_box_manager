@@ -18,6 +18,7 @@ void main() {
   late int openCalls;
   late LazySetBox<String, int> facade;
   late LazySetBox<Member, int> members;
+  late FakeLazyBox memberBox;
 
   setUp(() {
     box = FakeLazyBox(name: 'tags');
@@ -28,7 +29,7 @@ void main() {
 
       return box;
     }, observer: observer);
-    final memberBox = FakeLazyBox(name: 'members');
+    memberBox = FakeLazyBox(name: 'members');
     members = lazySetBoxAround('members', () async => memberBox, idOf: (member) => member.id);
   });
 
@@ -167,6 +168,26 @@ void main() {
 
       check(await namesUnder(1)).deepEquals(['a']);
     });
+
+    scenarioOutline<Future<Object> Function()>(
+      'a write that keeps the stored set also drops an id stored twice, keeping the first',
+      examples: {
+        'add': () => members.add(1, Member(3, 'new')).run(),
+        'upsert': () => members.upsert(1, Member(3, 'new')).run(),
+        'remove': () => members.remove(1, Member(2, 'other')).run(),
+        'update': () => members.update(1, (stored) => stored).run(),
+      },
+      outline: (write) async {
+        // Written past the box, since its own writes never store an id twice.
+        memberBox.store[1] = {Member(1, 'first'), Member(1, 'second'), Member(2, 'other')};
+
+        await write();
+        final readSet = await members.getOr(1).run();
+
+        check(readSet.where((member) => member.id == 1).map((member) => member.name))
+            .deepEquals(['first']);
+      },
+    );
 
     scenario('putAllGrouped groups by key, dedups each group, and replaces', () async {
       await members.put(2, [Member(9, 'old')]).run();

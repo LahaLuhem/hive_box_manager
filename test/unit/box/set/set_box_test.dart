@@ -18,12 +18,14 @@ void main() {
   late RecordingBoxObserver observer;
   late SetBox<String, int> facade;
   late SetBox<Member, int> members;
+  late FakeEagerBox memberBox;
 
   setUp(() {
     box = FakeEagerBox(name: 'tags');
     observer = RecordingBoxObserver();
     facade = setBoxAround(box, observer: observer);
-    members = setBoxAround(FakeEagerBox(name: 'members'), idOf: (member) => member.id);
+    memberBox = FakeEagerBox(name: 'members');
+    members = setBoxAround(memberBox, idOf: (member) => member.id);
   });
 
   Iterable<String> namesIn(Set<Member> set) => set.map((member) => member.name);
@@ -167,6 +169,25 @@ void main() {
 
       check(namesIn(members.getOr(1))).deepEquals(['a']);
     });
+
+    scenarioOutline<Future<Object> Function()>(
+      'a write that keeps the stored set also drops an id stored twice, keeping the first',
+      examples: {
+        'add': () => members.add(1, Member(3, 'new')).run(),
+        'upsert': () => members.upsert(1, Member(3, 'new')).run(),
+        'remove': () => members.remove(1, Member(2, 'other')).run(),
+        'update': () => members.update(1, (stored) => stored).run(),
+      },
+      outline: (write) async {
+        // Written past the box, since its own writes never store an id twice.
+        memberBox.store[1] = {Member(1, 'first'), Member(1, 'second'), Member(2, 'other')};
+
+        await write();
+
+        check(members.getOr(1).where((member) => member.id == 1).map((member) => member.name))
+            .deepEquals(['first']);
+      },
+    );
   });
 
   feature('SetBox remove', () {
