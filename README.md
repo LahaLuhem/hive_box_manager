@@ -95,8 +95,7 @@ None of `hive_ce`'s symbols are re-exported. This package wraps boxes, and the e
 <details>
 <summary>A type from another package</summary>
 
-It likely ships `toJson` / `fromJson` already. One adapter over that pair stores it, with no
-adapters for the types nested inside:
+One adapter over its `toJson` / `fromJson` is enough. Nested types need none of their own:
 
 ```dart
 import 'dart:convert';
@@ -122,8 +121,7 @@ Hive.registerAdapter(
 );
 ```
 
-The adapter names no fields, so whatever the owning package's `toJson` writes is what gets
-stored. A sealed hierarchy needs only one, registered for the base type.
+For a sealed hierarchy, register it once for the base type.
 
 </details>
 

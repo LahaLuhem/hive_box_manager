@@ -227,14 +227,9 @@ strategy stay internal until a second implementation exists (IsolatedHive and th
 both 1.x). The query seam already carries write/delete hooks so the 1.x index plugs in without
 touching the public surface: the scan strategy implements them as no-ops.
 
-**A value codec restores a type hive loses. It never serialises.** Serialising is the adapter's
-job, and adapters are the consumer's, so the package ships none. The identity and collection-cast
-codecs only put back the static type hive's reader erases while hive and the consumer's adapters
-write the bytes, and the Set, map and nested-collection codecs on the roadmap are the same kind.
-JSON is the case that settled it. As a codec it would parse on every eager read where an adapter
-parses once at open, and offered on the lazy axis only it would write files the eager boxes can't
-decode. One consumer adapter over the type's own `toJson` / `fromJson` has neither problem, and
-the README's quickstart shows it.
+**A value codec restores a type hive loses. It never serialises.** That's the adapter's job, and
+adapters are the consumer's. JSON settled it: as a codec it would parse on every eager read, where an
+adapter parses once at open.
 
 ---
 
