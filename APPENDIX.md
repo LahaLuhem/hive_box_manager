@@ -118,9 +118,8 @@ decision turns on *what a dependency is for*.
 
 - **Engine and paradigm dependencies live in core.** `hive_ce` is the storage engine the whole
   package wraps, and `fpdart` is the surface paradigm every façade speaks; both are load-bearing,
-  pure-Dart, and web-safe, so they belong in core. `meta` rides along for annotations. That is the
-  whole runtime set: `collection` was dropped for 1.0 (its one use disappeared with the new
-  `putAll` shape) and returns only as a dev dependency for benchmark tooling.
+  pure-Dart, and web-safe, so they belong in core. `meta` rides along for annotations, and
+  `collection` for collection helpers.
 - **Adapter dependencies go in companions.** Anything that adapts the façades to another ecosystem
   is genuinely opt-in and must never burden core: a Flutter binding, a `riverpod` / `bloc` glue
   layer, a codec for a specific serialisation. Each becomes its own package depending on core plus
@@ -143,12 +142,12 @@ contributors alike, the test toolchain (`test`, `build_runner`) flooring below t
 the sanctioned breaking release, so the bump rode it, and since a floor can only be raised without a
 breaking change, any further bump is recorded here.
 
-The runtime dependencies are `hive_ce`, `fpdart` and `meta`, and `pubspec.yaml` carries the
-constraints. `hive_ce` is floored at the version every behaviour pin was taken against, though ≥2.12
-is the *contractual* part, because that is where non-null delete-event values on the eager axis
-arrive. One sizing note on `meta`: its floor matches `hive_ce`'s rather than the registry's latest,
-because Flutter's SDK pins `meta` exactly and a higher floor here locks every Flutter app out of the
-package. Discovered live, when the example app first resolved against the core.
+The runtime dependencies are `hive_ce`, `fpdart`, `meta` and `collection`, and `pubspec.yaml` carries
+the constraints. `hive_ce` is floored at the version every behaviour pin was taken against, though
+≥2.12 is the *contractual* part, because that is where non-null delete-event values on the eager axis
+arrive. Flutter's SDK constrains `meta` and `collection` too, so neither floor goes above what
+Flutter stable accepts, or Flutter apps can't resolve. Discovered live with `meta`, back when Flutter
+pinned it exactly.
 
 ---
 
