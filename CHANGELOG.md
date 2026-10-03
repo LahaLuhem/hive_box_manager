@@ -1,3 +1,7 @@
+## [Unreleased]
+### Fixed
+- Document eager boxes over an undecodable record, raise the hive\_ce floor
+
 ## [1.1.1] - 2026-08-28
 ### Added
 - `UndecodableValueException`, naming the key whose stored value failed to decode
@@ -92,6 +96,7 @@
 - Collection BoxManagers
 - (Lazy) Dual Int Index LazyBoxManager
 
+[Unreleased]: https://github.com/LahaLuhem/hive_box_manager/compare/1.1.1...HEAD
 [1.1.1]: https://github.com/LahaLuhem/hive_box_manager/compare/1.1.0...1.1.1
 [1.1.0]: https://github.com/LahaLuhem/hive_box_manager/compare/1.0.0...1.1.0
 [1.0.0]: https://github.com/LahaLuhem/hive_box_manager/compare/0.0.8...1.0.0
