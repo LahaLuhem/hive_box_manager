@@ -368,8 +368,9 @@ pipeline (`firstWhereOrNull`, `where`, `map`, `fold`, `any` / `every`, several f
 pipeline reads as the data's journey; the loop hides it in accumulate-and-return bookkeeping. Stay
 lazy: don't end a chain with a reflexive `.toList()`; leave it an `Iterable` and let the terminal
 consumer drive evaluation. Do side effects with a plain `for` loop, never `forEach` with a closure
-(`avoid_function_literals_in_foreach_calls`). `package:collection` is not a runtime dependency
-(dropped for 1.0); add it as a dev dependency when tests or tooling genuinely need its utilities.
+(`avoid_function_literals_in_foreach_calls`). A pipeline only wins when it costs no extra pass: a
+lazy `Iterable` walked twice reruns every step, so materialise it once or restructure. Reach for
+`package:collection` first, since collections are its whole job, then fpdart's `Iterable` extensions.
 
 <a id="idioms-observers"></a>
 ### Observability: semantic event observers, not level-based loggers

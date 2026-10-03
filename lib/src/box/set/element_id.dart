@@ -1,3 +1,5 @@
+import 'package:collection/collection.dart';
+
 /// What a set box tells [T] elements apart by: [idOf], or the element itself for value types.
 Object Function(T element) resolveIdOf<T extends Object>(Object Function(T element)? idOf) {
   if (idOf == null) {
@@ -23,12 +25,8 @@ Object Function(T element) resolveIdOf<T extends Object>(Object Function(T eleme
 
 /// [elements] with the first one per id, as a plain set so it compares the same after a restart.
 Set<T> dedupedById<T extends Object>(Iterable<T> elements, Object Function(T element) idOf) {
-  final firstPerId = <Object, T>{};
-  for (final element in elements) {
-    firstPerId[idOf(element)] ??= element;
-  }
-
-  final deduped = Set<T>.of(firstPerId.values);
+  final firstPerId = _firstPerId(elements, idOf);
+  final deduped = Set.of(firstPerId.values);
   assert(
     deduped.length == firstPerId.length,
     'Elements with different ids are == to each other, so the set would merge them. Make == and '
@@ -37,6 +35,27 @@ Set<T> dedupedById<T extends Object>(Iterable<T> elements, Object Function(T ele
 
   return deduped;
 }
+
+/// [stored] with each element [incoming] shares an id with replaced where it sits, and the rest of
+/// [incoming] on the end.
+Set<T> upsertedById<T extends Object>(
+  Iterable<T> stored,
+  Iterable<T> incoming,
+  Object Function(T element) idOf,
+) {
+  final incomingById = _firstPerId(incoming, idOf);
+
+  return dedupedById(
+    // A replaced element already sits in place, so dedup drops its copy from the appended values.
+    stored.map((element) => incomingById[idOf(element)] ?? element).followedBy(incomingById.values),
+    idOf,
+  );
+}
+
+Map<Object, T> _firstPerId<T extends Object>(
+  Iterable<T> elements,
+  Object Function(T element) idOf,
+) => elements.groupFoldBy(idOf, (first, element) => first ?? element);
 
 // A type can't be tested directly, but an empty list of it can.
 bool _isValueType<T>() {

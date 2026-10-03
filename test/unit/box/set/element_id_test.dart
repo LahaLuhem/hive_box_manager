@@ -118,4 +118,31 @@ void main() {
       ).throws<AssertionError>();
     });
   });
+
+  feature('upserting by id', () {
+    String idOf(_Thing thing) => thing.id;
+
+    scenario('replaces a stored element with the same id where it sits', () {
+      final replacement = _Thing('b');
+
+      final upserted = upsertedById([_Thing('a'), _Thing('b'), _Thing('c')], [replacement], idOf);
+
+      check(upserted.map(idOf)).deepEquals(['a', 'b', 'c']);
+      check(identical(upserted.elementAt(1), replacement)).isTrue();
+    });
+
+    scenario('puts new ids on the end, in encounter order', () {
+      final upserted = upsertedById([_Thing('a')], [_Thing('c'), _Thing('b')], idOf);
+
+      check(upserted.map(idOf)).deepEquals(['a', 'c', 'b']);
+    });
+
+    scenario('within one call, the first incoming element per id wins', () {
+      final first = _Thing('a');
+
+      final upserted = upsertedById([_Thing('a')], [first, _Thing('a')], idOf);
+
+      check(identical(upserted.single, first)).isTrue();
+    });
+  });
 }
