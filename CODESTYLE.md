@@ -120,9 +120,8 @@ under [*Hard rules* in `.ai/AGENTS.md`](./.ai/AGENTS.md#hard-rules).
   2 carve-outs: a name fixed by a dependency keeps its spelling (`crashRecovery`, `deleted` mirror
   `hive_ce`), and a setter / handler parameter stays the conventional `value` (per the
   callback-parameter exemption above).
-- **Name an extractor for what it returns, ending in `Of`** (`keyOf:`, `primaryOf:`), the way
-  package:collection does (`groupSetsBy`, `sortedBy`). It reads as a call where it's used
-  (`keyOf(value)`), while a bare noun (`key:`) reads like a value you pass in.
+- **Name an extractor for what it returns, ending in `Of`** (`keyOf:`, `primaryOf:`), like
+  package:collection. A bare noun (`key:`) reads like a value, not a function.
 
 ---
 
