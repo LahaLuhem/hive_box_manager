@@ -1,4 +1,5 @@
 /// @docImport '/src/box/keyed/keyed_box.dart';
+/// @docImport '../set/set_box.dart';
 /// @docImport 'lazy_list_box.dart';
 library;
 
@@ -28,9 +29,9 @@ import 'list_edits.dart';
 /// back as one. The cast costs the same either way, so this surface doesn't branch on it (`benchmark/list_box_bench.dart`).
 /// The view allocates nothing, so what you pay per element is the type check, not a copy.
 ///
-/// Lists only, so order is kept and duplicates are fine. Sets, maps and nested collections of custom
-/// types are out, because the outer cast can't fix the inner reification. Store flat lists, or model
-/// richer shapes as their own adapter-registered types.
+/// Lists only, so order is kept and duplicates are fine. For no duplicates, use [SetBox]. Nested
+/// collections of custom types are out, since the cast only reaches the outer list. Model those as
+/// their own adapter-registered types.
 ///
 /// The aliasing contract, both directions:
 ///

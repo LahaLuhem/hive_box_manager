@@ -1,4 +1,5 @@
 /// @docImport '/src/box/keyed/lazy_keyed_box.dart';
+/// @docImport '../set/lazy_set_box.dart';
 /// @docImport 'list_box.dart';
 library;
 
@@ -25,8 +26,8 @@ import 'list_edits.dart';
 /// so the element type gets restored with a cast at the read boundary. Reach for [ListBox] when the
 /// lists are small and read often.
 ///
-/// List semantics only: order-preserving, duplicates allowed. Sets, maps, and nested collections of
-/// custom types are deliberately out (the outer cast could not fix inner reification).
+/// List semantics only: order-preserving, duplicates allowed. For no duplicates, use [LazySetBox].
+/// Nested collections of custom types are out, since the cast only reaches the outer list.
 ///
 /// The aliasing contract, both directions:
 ///

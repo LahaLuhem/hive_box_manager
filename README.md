@@ -22,7 +22,7 @@ that's the gap this fills:
   there" is a case the compiler makes you handle, never a crash waiting to happen.
 - 🧰 **CRUD is already written.** get, put, update, delete, clear and watch ship on every box, so
   you stop rewriting the same boilerplate for every type you store.
-- 🧩 **4 boxes for 4 real shapes of data**, each in an eager and a lazy flavour, so the box
+- 🧩 **5 boxes for 5 real shapes of data**, each in an eager and a lazy flavour, so the box
   fits the problem instead of the other way round.
 - 🛡️ **Safer than raw Hive.** The write path rejects keys release-mode `hive_ce` accepts and then
   silently corrupts on, and `ListBox` closes the `List<dynamic>` trap that breaks a naive
@@ -45,6 +45,7 @@ Pure Dart, so it runs anywhere Hive does: Flutter apps, Dart servers, CLIs, and 
     * [🔑 KeyedBox](#-keyedbox)
     * [📍 SingleValueBox](#-singlevaluebox)
     * [🗂️ ListBox](#-listbox)
+    * [🧺 SetBox](#-setbox)
     * [🔗 DualKeyBox](#-dualkeybox)
 - [🎛️ Make it yours](#-make-it-yours)
 - [📏 Eager or lazy? (measured)](#-eager-or-lazy-measured)
@@ -65,7 +66,8 @@ Start here. Match what you're storing to a family, then grab its eager or lazy v
 | Many values, one key each     | `KeyedBox<T, K>`        | users, todos, cache entries                 |
 | Exactly one value             | `SingleValueBox<T>`     | a session token, the theme, one config blob |
 | A list of values per key      | `ListBox<T, K>`         | tags per post, history per day              |
-| Values addressed by 2 parts | `DualKeyBox<T, K1, K2>` | (user, day) events, (row, column) grids     |
+| A set of values per key       | `SetBox<T, K>`          | members per team, favourites per user       |
+| Values addressed by 2 parts   | `DualKeyBox<T, K1, K2>` | (user, day) events, (row, column) grids     |
 
 Every family has an eager and a `Lazy...` twin; [Eager or lazy?](#-eager-or-lazy-measured) picks
 the axis with measured numbers. Reverse queries ("everything for this user") live on the
@@ -146,7 +148,7 @@ factory, holding one means it's already open. There's no init step to forget.
 
 ## 🧰 The box families
 
-Here's the good part: all 4 families wear the **same surface**, so you learn it once and it
+Here's the good part: every family has the **same surface**, so you learn it once and it
 carries everywhere. The shape, in short:
 
 - Absence is always `Option` / `TaskOption`, never `null` and never a magic default.
@@ -268,10 +270,47 @@ Worth knowing:
   O(n) in the stored list.
 - **Absent isn't the same as empty.** `get` keeps them apart; `getOr` folds both to `[]` on
   purpose.
-- **List semantics only:** order preserved, duplicates allowed. Sets, maps, and nested
-  collections of custom types stay out (the read-boundary cast can't fix inner reification). Model
-  richer shapes as adapter-registered value types instead.
+- **List semantics only:** order preserved, duplicates allowed. For no duplicates, there's
+  [`SetBox`](#-setbox). Nested collections of custom types stay out, since the cast only reaches
+  the outer list. Model those as adapter-registered value types instead.
 - `LazyListBox` is the same surface on the lazy axis.
+
+</details>
+
+### 🧺 SetBox
+
+A set of values per key, no duplicates. Members of a team, a user's favourites.
+
+<details>
+<summary>Telling elements apart, and add vs upsert</summary>
+
+After a restart hive hands back fresh objects, so a plain set can't tell that 2 copies are the same
+member. `idOf` tells it:
+
+```dart
+final teams = await SetBox.open<Member, String>(
+  'team_members',
+  idOf: (member) => member.id,
+).run();
+
+await teams.put('core', [Member(1, 'Ada'), Member(2, 'Grace')]).run(); // first one per id wins
+await teams.add('core', Member(1, 'Ada L.')).run(); // id 1 is stored, so 'Ada' stays
+await teams.upsert('core', Member(1, 'Ada L.')).run(); // replaces 'Ada' where she sits
+await teams.remove('core', Member(2, 'Grace')).run(); // a fresh copy, matched by id
+
+final core = teams.getOr('core'); // Set<Member>: unmodifiable view, empty when absent
+```
+
+Worth knowing:
+
+- `idOf` returns a String, number, bool or enum. Elements of those types are their own id, so
+  `SetBox.open<String, int>('favourites')` needs none. Any other element type without one trips an
+  assert while wiring.
+- Sets you read keep their **insertion order**, even after a restart. They're plain sets though, so
+  `core.contains(...)` uses `==`, not `idOf`. Look an id up with `any` instead.
+- Writes are copied, reads come back typed after a restart, and absent isn't empty, all like
+  `ListBox`.
+- `LazySetBox` is the same surface on the lazy axis.
 
 </details>
 
@@ -518,8 +557,7 @@ Additive candidates for 1.x, in no committed order:
 - **IsolatedHive support** behind the box-acquisition seam (`hive_ce` itself recommends it for
   multi-isolate apps), plus `BoxCollection` wrapping if there's demand.
 - **A migration helper API** (1.0 documents recipes in [MIGRATION.md](MIGRATION.md) for now).
-- **Sets, maps, and nested collections** on the value-codec seam (`ListBox` is list-only
-  today).
+- **Maps and nested collections** on the value-codec seam.
 - **A consumer fakes package** (in-memory façades for app tests) and Flutter companions (a
   `ValueListenable` adapter), as separate packages so the core stays pure Dart.
 
