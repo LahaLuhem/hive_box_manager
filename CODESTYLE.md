@@ -301,9 +301,8 @@ learns one shape and applies it across every variant. Rationale:
 - **`<T extends Object>` on every value / key generic.** A stored value is a real object; `null`
   is never a valid stored value. See [type safety](#type-safety).
 
-The per-family member sets live in the dartdoc of the 8 façades (`KeyedBox`,
-`SingleValueBox`, `ListBox`, `DualKeyBox`, and their `Lazy` twins); the design reasoning per
-axis lives in `APPENDIX.md`'s 1.0 sections.
+The per-family member sets live in each façade's dartdoc, and the design reasoning per axis in
+`APPENDIX.md`'s 1.0 sections.
 
 ---
 

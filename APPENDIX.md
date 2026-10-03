@@ -189,9 +189,9 @@ in `benchmark/` as regression tooling.
 <a id="core-abstraction"></a>
 ## Core abstraction: engine + policies + thin façades
 
-CRUD is written exactly once per synchronicity axis, in 2 private engines; everything that
-varies enters as an injected policy (key codec, value codec, observer), and the 8 public
-façades are thin delegations that configure an engine and narrow the surface. A façade *cannot*
+CRUD is written exactly once per synchronicity axis, in 2 private engines. Everything that
+varies enters as an injected policy (key codec, value codec, observer), and the public façades
+are thin delegations that configure an engine and narrow the surface. A façade *cannot*
 reimplement CRUD because it owns none. The rejected alternatives: a refined inheritance family
 (the 0.0.x failure: the eager/lazy axis multiplies through every variant and template seams
 re-fork), extension types (stateless, so no memoised open, and not implementable for consumer
@@ -235,9 +235,9 @@ adapter parses once at open.
 <a id="variant-taxonomy"></a>
 ## Variant taxonomy & naming
 
-4 shapes × 2 synchronicities = 8 `interface class` façades: `KeyedBox`,
-`SingleValueBox`, `ListBox`, `DualKeyBox`, each with a `Lazy` twin. The names say what you
-hold and mirror hive's own `Box` / `LazyBox` split; the 0.0.x `Manager` suffix died because the
+5 shapes × 2 synchronicities = 10 `interface class` façades: `KeyedBox`, `SingleValueBox`,
+`ListBox`, `SetBox`, `DualKeyBox`, each with a `Lazy` twin. The names say what you
+hold and mirror hive's own `Box` / `LazyBox` split. The 0.0.x `Manager` suffix died because the
 1.0 types are a different contract, and same-name-changed-contract misleads migrators.
 (`ListBox` rather than `CollectionBox` because hive_ce already exports the latter.)
 
@@ -282,7 +282,7 @@ Hive reifies collections from disk as `List<dynamic>` whatever the write-side el
 naive `Box<List<Person>>` opens fine and throws on the first post-restart read. The probe
 established that a thin `.cast<T>()` at the read boundary suffices, so the fix is an internal
 value codec, not a `dynamic`-typed variant class (the 0.0.x approach, whose `dynamic` leak is
-part of why the rewrite exists). Boxes open `Object?`-parameterised internally; `dynamic` never
+part of why the rewrite exists). Boxes open `Object?`-parameterised internally. `dynamic` never
 reaches the public surface.
 
 The aliasing contract closes the mutation hole from both directions: everything inward (`put`,
@@ -290,9 +290,24 @@ The aliasing contract closes the mutation hole from both directions: everything 
 iterables at write anyway, so the copy is half-free), and everything outward is an unmodifiable
 zero-copy **view**: eager gets alias hive's own cache, so a per-read defensive copy would tax the
 hot path for a hole the view closes for free. This is the sanctioned scenario call under
-CODESTYLE's unmodifiable-collections idiom. List semantics only in 1.0: Sets, maps, and nested
-collections are deferred to the value-codec seam because the outer cast cannot fix inner
-reification.
+CODESTYLE's unmodifiable-collections idiom. Nested collections stay out, because the outer cast
+can't reach the inner ones.
+
+Sets come back as `Set<dynamic>` and cast just as well. What they need on top is equality that
+survives a restart. A set dedups with the element's `==`, and a read from disk builds fresh
+objects, so a type that compares by identity never matches its stored copy. `SetBox` dedups by an
+`idOf` instead (strings, numbers, bools and enums are their own id), and only on writes, which
+keeps reads a zero-copy cast view:
+
+- **hive gets a plain `Set.of(...)`**, never one with custom equality. The eager cache hands back
+  the written object until a restart, and a reopen builds a plain set, so a custom one would match
+  by id before a restart and by `==` after. The price is that a set you read matches by `==`, the
+  same as a list read from `ListBox`.
+- **Merging writes are 2 named families.** `add` keeps a stored element with the same id, `upsert`
+  replaces it where it sits. A `shouldOverwrite` flag lost, since a name says what happens at the
+  call site and a 3rd policy would break a bool.
+- **The asserts are development-only.** Without `idOf` a set box falls back to `==` and still
+  works, where a box with no key codec can't work at all.
 
 ---
 

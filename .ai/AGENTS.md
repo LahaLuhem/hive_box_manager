@@ -13,9 +13,9 @@ functional surface. It adds no storage engine of its own. 4 aims:
   `Task` / `TaskOption` / `Option`, never a bare `Future` or `null`. Absence is an `Option`.
 - **CRUD for free.** The per-box get / put / update / delete / clear boilerplate consumers usually
   hand-write ships as ready-made box façades.
-- **Purpose-built box variants.** 4 façade families, each in an eager and a lazy variant:
-  `KeyedBox`, `SingleValueBox`, `ListBox`, and `DualKeyBox` (with reverse queries folded in),
-  each adding semantic ergonomics over raw Hive.
+- **Purpose-built box variants.** Façade families, each in an eager and a lazy variant:
+  `KeyedBox`, `SingleValueBox`, `ListBox`, `SetBox`, and `DualKeyBox` (with reverse queries folded
+  in), each adding semantic ergonomics over raw Hive.
 - **Hive's performance, kept.** Raw speed is `hive_ce`'s headline; the wrapper must not trade it
   away (held by the wrapper-overhead benchmark lane in `benchmark/`).
 
@@ -54,7 +54,7 @@ hive_box_manager/
 ├── lib/
 │   ├── hive_box_manager.dart       Public entry; `show`-scoped `export 'src/…'` lines only
 │   └── src/
-│       ├── box/                    The 8 public façades + their hidden testing seams
+│       ├── box/                    The public façades + their hidden testing seams
 │       ├── codec/{key,dual}/       KeyCodec / DualKeyCodec seams + shipped codecs + resolution
 │       ├── core/                   box_provider, raw_key_gate, engine/, value_codec/,
 │       │                           constants/, utils/  (all internal)
