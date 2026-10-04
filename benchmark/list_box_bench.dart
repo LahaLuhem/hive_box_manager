@@ -65,8 +65,7 @@ int weighPerson(Person element) => element.name.length;
 /// Everything a lane needs about its element type, so `ListBox<T, K>` and the raw casts can stay statically
 /// typed while the element type varies per invocation.
 ///
-/// [weigh] exists to force iteration: without touching each element the read lanes would measure obtaining
-/// the cast view (O(1)) instead of walking it (O(n)), which is the cost under test.
+/// [weigh] forces iteration, since the per-element cost is what the read lanes are there to measure.
 @immutable
 class const ElementSpec<T extends Object>({
   required final T Function(int index) at,
@@ -245,9 +244,8 @@ Future<LaneResult> runPut<T extends Object>(
   );
 }
 
-/// Reads every key and **fully iterates** each list. Iteration is the point: the façade hands back an
-/// unmodifiable cast view, which costs nothing to obtain and one type check per element to walk, so
-/// a lane that only called `get` would measure the cheap half and miss the cost entirely.
+/// Reads every key and walks each list. `correct` only pays for its cast while walking, so a lane that
+/// stopped at `get` would leave that out.
 ///
 /// On the `obj` axis the naive impl throws here rather than returning a number. That is the finding:
 /// this box was written by a previous process, which is exactly the condition `as List<T>` cannot survive
