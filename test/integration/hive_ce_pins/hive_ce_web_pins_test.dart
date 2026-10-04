@@ -19,6 +19,14 @@ import '../../support/support.dart';
 const boundaryParts = [0, 1, 42, partMask - 1, partMask];
 
 void main() {
+  setUpAll(() {
+    // hive_ce's web backend ignores the path, since storage is IndexedDB. The argument is only there
+    // to satisfy the shared VM and web signature.
+    Hive
+      ..init('hive_web_pins')
+      ..registerAdapter(const PersonAdapter());
+  });
+
   feature('composite-key packing under web number semantics', () {
     scenarioOutline<({int Function(int, int) pack, (int, int) Function(int) unpack})>(
       'int packing round-trips exactly and stays non-negative at boundary values',
@@ -51,12 +59,6 @@ void main() {
 
   feature('hive_ce IndexedDB disk truth', () {
     scenario('keys, custom types, and collection casts survive close + reopen', () async {
-      // hive_ce's web backend ignores the path, since storage is IndexedDB. The argument is only there
-      // to satisfy the shared VM and web signature.
-      Hive
-        ..init('hive_web_pins')
-        ..registerAdapter(const PersonAdapter());
-
       // These pins must start from an empty box.
       final boxName = uniqueBoxName('pins');
       var box = await Hive.openBox<Object>(boxName);
@@ -79,5 +81,18 @@ void main() {
 
       await box.deleteFromDisk();
     });
+
+    scenarioOutline<Future<ShapeVerdicts> Function()>(
+      'the wiring check allows exactly the element shapes that read back typed',
+      examples: nestedElementShapes,
+      outline: (verdictsOf) async {
+        final verdicts = await verdictsOf();
+
+        check(
+          because: 'hive reads it back typed: ${verdicts.readsBackTyped}',
+          verdicts.isAllowed,
+        ).equals(verdicts.readsBackTyped);
+      },
+    );
   });
 }

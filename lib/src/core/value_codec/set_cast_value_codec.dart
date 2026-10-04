@@ -8,9 +8,11 @@ import 'value_codec.dart';
 
 /// [CollectionCastValueCodec] for sets, which hive reads back as `Set<dynamic>` unless they hold
 /// `int`, `double` or `String`.
-final class const SetCastValueCodec<E extends Object>() implements ValueCodec<Set<E>> {
-  /// Const so engines can default to it without an allocation per box.
-  this;
+final class SetCastValueCodec<E extends Object>() implements ValueCodec<Set<E>> {
+  /// Trips a development assert for an [E] that can't read back typed after a restart.
+  this {
+    assertRestorableElementType<E>();
+  }
 
   @override
   Object toStorable(Set<E> value) => value;

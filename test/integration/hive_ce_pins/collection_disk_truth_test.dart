@@ -101,6 +101,21 @@ void main() {
     });
   });
 
+  feature('nested element shapes after a reopen', () {
+    scenarioOutline<Future<ShapeVerdicts> Function()>(
+      'the wiring check allows exactly the element shapes that read back typed',
+      examples: nestedElementShapes,
+      outline: (verdictsOf) async {
+        final verdicts = await verdictsOf();
+
+        check(
+          because: 'hive reads it back typed: ${verdicts.readsBackTyped}',
+          verdicts.isAllowed,
+        ).equals(verdicts.readsBackTyped);
+      },
+    );
+  });
+
   feature('the #150 trap with asserts stripped (release truth, via subprocess)', () {
     late Map<String, Object?> verdicts;
 

@@ -297,7 +297,9 @@ iterables at write anyway, so the copy is half-free), and everything outward is 
 zero-copy **view**: eager gets alias hive's own cache, so a per-read defensive copy would tax the
 hot path for a hole the view closes for free. This is the sanctioned scenario call under
 CODESTYLE's unmodifiable-collections idiom. Nested collections stay out, because the outer cast
-can't reach the inner ones.
+can't reach the inner ones, and a development assert refuses them while wiring. The exception is
+the few shapes hive keeps typed, pinned on the VM and both web compilers so the assert can't drift
+from what hive does.
 
 Sets come back as `Set<dynamic>` and cast just as well. What they need on top is equality that
 survives a restart. A set dedups with the element's `==`, and a read from disk builds fresh

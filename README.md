@@ -271,8 +271,11 @@ Worth knowing:
 - **Absent isn't the same as empty.** `get` keeps them apart, while `getOr` folds both to `[]` on
   purpose.
 - **List semantics only:** order preserved, duplicates allowed. For no duplicates, there's
-  [`SetBox`](#-setbox). Nested collections of custom types stay out, since the cast only reaches
-  the outer list. Model those as adapter-registered value types instead.
+  [`SetBox`](#-setbox).
+- **Nesting:** a list or set of `int`, `double` or `String` nests fine (lists of `bool` and
+  `Uint8List` too), since hive keeps those typed. Anything else nested, a `List<Person>` say, trips
+  a development assert when you open the box, because the cast only reaches the outer list. Model
+  those as adapter-registered value types instead. Same goes for `SetBox`.
 - `LazyListBox` is the same surface on the lazy axis.
 
 </details>
