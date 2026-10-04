@@ -1,5 +1,5 @@
-# ryl (YAML lint) config for hive_box_manager. yamllint-compatible. ryl reads it via
-# `-c` in .github/lint-checks.json (CI matrix) and the release.sh preflight.
+# ryl (YAML lint) config for hive_box_manager. yamllint-compatible. ryl finds it on its own when
+# CI runs `ryl .` from .github/lint-checks.json.
 #
 # Starts from yamllint's "default" rule set, then tuned to the repo's deliberate
 # YAML style rather than the other way round: the wide section dividers in
