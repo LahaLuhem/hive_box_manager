@@ -37,13 +37,14 @@ engine, and `fpdart` is the paradigm. Rationale:
 - **Container-based linters** run from the [`linterpol`](https://github.com/LahaLuhem/linterpol)
   Docker image, not local installs, so only Docker (plus `jq`) is needed. The check set and image
   tag live in one manifest, [`.github/lint-checks.json`](./.github/lint-checks.json), which
-  dartender's `setup.sh` writes. dartender's CI fans a matrix over it and `scripts/release.sh`'s
-  preflight loops the same file, so the 2 can't drift. **A linter only this repo needs goes in a
-  workflow of its own**, since the next setup run rewrites the manifest. Per-tool config tuned to
-  the repo lives in `.rumdl.toml` and `.yamllint.yaml`.
-- **CHANGELOG and the `version:` field are owned by [`scripts/release.sh`](./scripts/release.sh)**
-  (via `cider`). Do not run `cider` by hand and do not edit `CHANGELOG.md` or `version:` directly.
-  The `cider:` block in `pubspec.yaml` is static config (URLs, link templates) and is hand-editable.
+  dartender's `setup.sh` writes, and dartender's CI fans a matrix over it. **A linter only this
+  repo needs goes in a workflow of its own**, since the next setup run rewrites the manifest.
+  Per-tool config tuned to the repo lives in `.rumdl.toml` and `.yamllint.yaml`.
+- **CHANGELOG and the `version:` field are owned by the release run** (via `cider`), which the
+  user starts from the Actions tab, see
+  [dartender's Releasing](https://github.com/LahaLuhem/dartender#releasing). Do not run `cider`
+  by hand and do not edit `CHANGELOG.md` or `version:` directly. The `cider:` block in
+  `pubspec.yaml` is static config (URLs, link templates) and is hand-editable.
 - **Published to pub.dev.** `.pubignore` controls the tarball. `.editorconfig` is the source of
   truth for text-file conventions (line width 100, LF, UTF-8).
 
@@ -108,7 +109,7 @@ hold, and nothing internal can leak by accident.
 8. **Semver, strictly.** Any change to a public signature, a deletion, or a behavioural change of a
    documented contract is breaking. `cider` enforces the version-bump discipline. (The `1.0`
    rewrite is itself the one sanctioned wholesale break.) Breaking does not automatically mean a
-   major bump: `scripts/release.sh` takes `major` / `minor` / `patch` as its own deliberate call
+   major bump: the release run's `major` / `minor` / `patch` is its own deliberate call
    at release time, decoupled from the `sem-*` label a PR carries (that label only routes the
    CHANGELOG entry to a section, e.g. `sem-change` → `### Changed`). This repo keeps a breaking
    change on the current major's minor line when the migration is mechanical (a rename, a plain
@@ -121,7 +122,7 @@ hold, and nothing internal can leak by accident.
    reporting blocks every PR, so rename it and `Protected` in the same pass:
    [`APPENDIX.md#dependabot-automerge`](./APPENDIX.md#dependabot-automerge).
 10. **`CHANGELOG.md` is bot-owned. Do not edit any section, including `## Unreleased`.** Release
-   headers are written by [`scripts/release.sh`](./scripts/release.sh), and the `## Unreleased`
+   headers and Dependabot's lines are written by the release run, and the `## Unreleased`
    lines by [`.github/workflows/changelog.yml`](./.github/workflows/changelog.yml), from the
    merged PR's title and `sem-*` label. Same prohibition on the `version:` field.
 

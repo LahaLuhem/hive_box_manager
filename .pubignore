@@ -17,8 +17,7 @@ coverage/
 *.iml
 .idea/
 
-# Maintainer-only tooling + CI.
-scripts/
+# Maintainer-only CI.
 .github/
 .editorconfig
 .rumdl.toml

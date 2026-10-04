@@ -561,7 +561,6 @@ Structure and spelling here, voice in [Prose & voice](#prose).
   existing anchor, or `rg` the repo and update every caller in the same change.
 - **Bare `dart` in command examples, never `fvm dart`.** FVM is a local implementation detail
   (`.fvmrc` pins the SDK). Docs stay tool-agnostic so external contributors aren't forced into FVM.
-  Scripts under `scripts/` handle the FVM-vs-PATH resolution themselves.
 - **British spelling in prose and identifiers** (`normalise`, `behaviour`, `initialise`), with one
   carve-out: names fixed by the SDK or a dependency stay as they are (`toJson`, `compareTo`,
   `hashCode`, and Hive's own `Box` / `LazyBox` API).
@@ -571,12 +570,11 @@ Structure and spelling here, voice in [Prose & voice](#prose).
 <a id="shell-scripts"></a>
 ## Shell scripts
 
-- **`shellcheck` is the lint contract** for `scripts/*.sh`, mirroring `dart analyze` for Dart. It
+- **`shellcheck` is the lint contract** for `benchmark/*.sh`, mirroring `dart analyze` for Dart. It
   runs from the [`linterpol`](https://github.com/LahaLuhem/linterpol) Docker image
-  (`docker run --rm -v "$PWD:/work:ro" ghcr.io/lahaluhem/linterpol:latest shellcheck scripts/*.sh`),
-  so the only local requirement is Docker (plus `jq`). Both `scripts/release.sh`'s preflight and
-  dartender's CI enforce it, reading the check set and the image tag from one manifest,
-  [`.github/lint-checks.json`](./.github/lint-checks.json), so neither can drift.
+  (`docker run --rm -v "$PWD:/work:ro" ghcr.io/lahaluhem/linterpol:latest shellcheck benchmark/*.sh`),
+  so the only local requirement is Docker. dartender's CI enforces it, reading the check set and
+  the image tag from [`.github/lint-checks.json`](./.github/lint-checks.json).
 - **Prefer `# shellcheck disable=SC<code>` + a one-line "why" over refactoring for simple cases.**
   Refactor when the warning points at a real bug. Reach for the directive when the code is correct
   and ShellCheck is just over-conservative. Always pair the directive with a comment.
