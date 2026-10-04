@@ -8,7 +8,7 @@ export 'package:hive_box_manager/src/core/constants/hive_key_limits.dart';
 abstract final class ProbeKeyLimits() {
   /// The first integer a JS double cannot represent exactly (2^53 + 1). hive_ce warns above 2^53, and
   /// the key pins show it wraps into u32 like any other out-of-range int. An expression because a literal
-  /// this large would trip `avoid_js_rounded_ints`, and only VM code consumes it.
+  /// this large would trip `avoid_js_rounded_ints`, and only the VM and dart2wasm consume it.
   static const firstWebImpreciseInt = (1 << 53) + 1;
 
   /// An arbitrary far-beyond-the-limit String-key length: the second corruption sample, showing the
