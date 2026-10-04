@@ -6,7 +6,7 @@ import 'package:listenable_collections/listenable_collections.dart';
 import 'package:material_ui/material_ui.dart' show TextEditingController;
 import 'package:pmvvm/pmvvm.dart';
 
-import '../core/observers/log_panel_observer.dart';
+import '/features/core/observers/log_panel_observer.dart';
 
 /// Drives the eager list-box demo: tag lists per int key, changed through add and remove, read back
 /// as unmodifiable views.

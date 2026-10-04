@@ -8,6 +8,7 @@ panel** so you can watch the semantic events (opens, reads, writes, deletes, err
 | KeyedBox | eager, `<String, int>` | add and delete entries, reads are sync `Option`s |
 | SingleValueBox | lazy + `HiveAesCipher` | save and clear an encrypted token, the screen tracks `watch()` |
 | ListBox | eager, tags per key | `add` / `remove` sugar, per-key lists, duplicates allowed |
+| SetBox | eager, tags that ignore case | `add` keeps the stored spelling, `upsert` swaps in yours |
 | DualKeyBox | lazy, `(user, day)` keys | seed a grid, then reverse-query by either part |
 
 Values are plain `String`s on purpose, so no `TypeAdapter` or codegen is involved. Real apps

@@ -7,7 +7,7 @@ import 'package:hive_ce/hive.dart' show HiveAesCipher;
 import 'package:material_ui/material_ui.dart' show TextEditingController;
 import 'package:pmvvm/pmvvm.dart';
 
-import '../core/observers/log_panel_observer.dart';
+import '/features/core/observers/log_panel_observer.dart';
 
 /// Drives the encrypted single-value demo: a lazy box holding one AES-encrypted token, with the watch
 /// stream feeding the current value.

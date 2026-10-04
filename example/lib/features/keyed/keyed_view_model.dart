@@ -5,7 +5,7 @@ import 'package:listenable_collections/listenable_collections.dart';
 import 'package:material_ui/material_ui.dart' show TextEditingController;
 import 'package:pmvvm/pmvvm.dart';
 
-import '../core/observers/log_panel_observer.dart';
+import '/features/core/observers/log_panel_observer.dart';
 
 /// Drives the eager keyed demo: an int-keyed `KeyedBox` of strings, read synchronously and written through
 /// tasks run at the handler edge.

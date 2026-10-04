@@ -6,10 +6,10 @@ import 'package:hbm_example/features/core/views/home_hub_view.dart';
 import 'package:material_ui/material_ui.dart';
 
 void main() {
-  testWidgets('the hub lists all four family demos', (tester) async {
+  testWidgets('the hub lists every family demo', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: HomeHubView()));
 
-    for (final title in ['KeyedBox', 'SingleValueBox', 'ListBox', 'DualKeyBox']) {
+    for (final title in ['KeyedBox', 'SingleValueBox', 'ListBox', 'SetBox', 'DualKeyBox']) {
       check(find.text(title).evaluate()).length.equals(1);
     }
   });
