@@ -81,20 +81,25 @@ Neither is a performance problem, and quoting either percentage would be a lie b
 `overhead.py` prints a per-op nanosecond column and, below `CHEAP_OP_NS`, says outright that the
 percentage is a fact about the denominator.
 
-The list-box lane has the same hazard from the other direction: its `get` ratio runs 3.0x at one
-element per key and 1.1x at a thousand, which reads like the wrapper getting cheaper at scale. It
-isn't. Fitting the 4 lengths gives **~292 ns fixed per get + ~1.8 ns per element** (within 8% at
-every length), so both terms are real and the ratio only moves because the fixed term stops
-dominating. Quote the two-term model, never the ratio at one list length.
+The list-box lane has the same hazard from the other direction: on `List<String>` its `get` ratio
+falls from 2.6x at one element per key to 0.97x at a thousand, which looks like the wrapper getting
+cheaper at scale. It isn't. A **~290 ns fixed term per get** just stops dominating. What each element
+adds over `correct` depends on its type:
+
+| Element type | Per element | Why |
+|---|---|---|
+| `List<String>` | nothing, less than `correct` | hive reads it back typed, so it goes out without a cast |
+| `List<Person>` | ~8 ns at 100 per key, ~13 at 1000 | it comes back `List<dynamic>`, so each element gets checked once at the read |
+
+The second isn't linear in length, so quote it per length. Never quote the ratio at one length.
 
 That fixed term is an SDK regression, not a wrapper change, and it is one of only 2 cross-version
 claims here that survive a controlled check. Compiling this lane's source with both 3.12.2 and
 3.13.1 and alternating the binaries on one host, 7 interleaved rounds at one element per key,
 puts the façade at 310 ns per get against 390 by min (345 against 430 by median) while `correct`
 goes 140 to 125 and `naive` stays inside its own spread. Measured as the wrapper's own cost over
-`correct`, that is **+170 ns growing to +265 ns, up 56%**. 3.12.2 fitted the lane at ~197 ns + ~1.6
-ns per element. The per-element term is not pinned down at `reps 5`, 2 passes putting it at 1.8
-and 2.5.
+`correct`, that is **+170 ns growing to +265 ns, up 56%**. 3.12.2 fitted the fixed term at
+~197 ns.
 
 The mechanism is not identified, and it is in none of the obvious places. Isolated on the same 2
 SDKs, the cast view's construction, walking it through the extra `UnmodifiableListView` layer, the
@@ -374,6 +379,10 @@ Raw JSONL backing the top-level README's performance tables and codec-crossover 
 Environment for all of them: macOS 15.7.8 on Apple Silicon (arm64), Dart 3.13.1, hive_ce 2.19.3,
 2026-08-21, all 6 re-run in one session. Values were a constant 1 byte by design, isolating key
 cost. Web performance is unmeasured (ordering assumed to follow the VM).
+
+`results_list_box.jsonl` is the exception: re-run on 2026-10-04 with macOS 15.7.9, Dart 3.13.5 and
+hive_ce 2.20.1, after reads started checking elements, at load 3.7 rising to 10.9. A second pass at
+load 12 to 17 agreed on every claim above.
 
 `results_overhead.jsonl` carries a load stamp, but see the precision note above before quoting a
 single figure from it: a repeat pass moved `put` 2x and flipped `get (lazy)`'s sign. The 3.13.1
