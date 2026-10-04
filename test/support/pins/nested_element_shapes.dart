@@ -30,16 +30,22 @@ final Map<String, Future<ShapeVerdicts> Function()> nestedElementShapes = {
 Future<ShapeVerdicts> _verdicts<E extends Object>(E sample) async =>
     (isAllowed: isRestorableElementType<E>(), readsBackTyped: await _readsBackTyped(sample));
 
-/// Stores [sample] inside a list, the way a box stores an element, and reopens before looking.
+/// Stores [sample] both ways a box holds one, in a list and as a map value, and reopens before looking.
 Future<bool> _readsBackTyped<E extends Object>(E sample) async {
   final boxName = uniqueBoxName('nested');
   final box = await Hive.openBox<Object>(boxName);
-  await box.put('element', [sample]);
+  await box.putAll({
+    'in a list': [sample],
+    'as a map value': {'key': sample},
+  });
   await box.close();
 
   final reopened = await Hive.openBox<Object>(boxName);
-  final readBack = (reopened.get('element')! as List<Object?>).single;
+  final readBack = [
+    (reopened.get('in a list')! as List<Object?>).single,
+    (reopened.get('as a map value')! as Map<Object?, Object?>).values.single,
+  ];
   await reopened.deleteFromDisk();
 
-  return readBack is E;
+  return readBack.every((element) => element is E);
 }

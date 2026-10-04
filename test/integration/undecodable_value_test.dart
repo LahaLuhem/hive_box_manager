@@ -182,10 +182,11 @@ void main() {
   });
 
   feature('a collection whose elements are not the box type fails at the read', () {
-    /// `String` elements on disk, read back by boxes that want `int` ones.
+    /// `String` elements and map keys on disk, read back by boxes that want `int` ones.
     Future<void> seedMistyped() async {
       await (await ListBox.open<String, int>('lists').run()).put(1, ['one']).run();
       await (await SetBox.open<String, int>('sets').run()).put(1, ['one']).run();
+      await (await MapBox.open<String, String, int>('maps').run()).put(1, {'one': 'x'}).run();
       await Hive.close();
     }
 
@@ -196,6 +197,8 @@ void main() {
         'LazyListBox': () => LazyListBox<int, int>('lists').values.run(),
         'SetBox': () async => (await SetBox.open<int, int>('sets').run()).values.toList(),
         'LazySetBox': () => LazySetBox<int, int>('sets').values.run(),
+        'MapBox': () async => (await MapBox.open<int, String, int>('maps').run()).values.toList(),
+        'LazyMapBox': () => LazyMapBox<int, String, int>('maps').values.run(),
       },
       outline: (readAll) async {
         await seedMistyped();
@@ -214,6 +217,8 @@ void main() {
         'LazyListBox': () => LazyListBox<int, int>('lists').get(1).run(),
         'SetBox': () async => (await SetBox.open<int, int>('sets').run()).get(1),
         'LazySetBox': () => LazySetBox<int, int>('sets').get(1).run(),
+        'MapBox': () async => (await MapBox.open<int, String, int>('maps').run()).get(1),
+        'LazyMapBox': () => LazyMapBox<int, String, int>('maps').get(1).run(),
       },
       outline: (read) async {
         await seedMistyped();
@@ -251,6 +256,20 @@ void main() {
             return box.watch();
           },
           write: () => LazySetBox<String, int>('sets').put(7, ['x']).run(),
+        ),
+        'MapBox': (
+          watch: () async => (await MapBox.open<int, String, int>('maps').run()).watch(),
+          write: () async =>
+              (await MapBox.open<String, String, int>('maps').run()).put(7, {'x': 'y'}).run(),
+        ),
+        'LazyMapBox': (
+          watch: () async {
+            final box = LazyMapBox<int, String, int>('maps');
+            await box.ensureInitialised().run();
+
+            return box.watch();
+          },
+          write: () => LazyMapBox<String, String, int>('maps').put(7, {'x': 'y'}).run(),
         ),
       },
       outline: (handles) async {
