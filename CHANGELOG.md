@@ -7,6 +7,7 @@
 
 ### Fixed
 - Document eager boxes over an undecodable record, raise the hive\_ce floor
+- Mistyped collection elements fail at the read, naming the key
 
 ## [1.1.1] - 2026-08-28
 ### Added
