@@ -29,7 +29,7 @@ void main() {
 
       check(read).deepEquals(people);
       check(read).isA<List<Person>>();
-      check(() => read.add(const Person('rogue', 0))).throws<UnsupportedError>();
+      check(() => read[0] = const Person('rogue', 0)).throws<UnsupportedError>();
     });
 
     scenario('construction touches nothing; inspectors work after the first effect', () async {

@@ -21,23 +21,42 @@ void main() {
       check(view.contains('b')).isTrue();
     });
 
-    scenario('the view is unmodifiable: consumers cannot reach the box cache through it', () {
-      const codec = SetCastValueCodec<String>();
-      final view = codec.fromStored(<dynamic>{'a'});
+    scenario('elements of another type fail at the decode, not when touched', () async {
+      const codec = SetCastValueCodec<int>();
 
-      check(() => view.add('b')).throws<UnsupportedError>();
-      check(view.clear).throws<UnsupportedError>();
+      check(await thrownBy(() => codec.fromStored(<dynamic>{1, 'two'}))).isA<TypeError>();
     });
 
-    scenario('the view is zero-copy: it follows the underlying set', () {
-      const codec = SetCastValueCodec<String>();
-      final backing = <dynamic>{'a'};
-      final view = codec.fromStored(backing);
+    scenarioOutline<Set<Object?>>(
+      'the view is unmodifiable: consumers cannot reach the box cache through it',
+      examples: {
+        'read from disk': <dynamic>{'a'},
+        'already typed': <String>{'a'},
+      },
+      outline: (stored) {
+        const codec = SetCastValueCodec<String>();
+        final view = codec.fromStored(stored);
 
-      backing.add('b');
+        check(() => view.add('b')).throws<UnsupportedError>();
+        check(view.clear).throws<UnsupportedError>();
+      },
+    );
 
-      check(view).deepEquals({'a', 'b'});
-    });
+    scenarioOutline<Set<Object?>>(
+      'the view is zero-copy: it follows the underlying set',
+      examples: {
+        'read from disk': <dynamic>{'a'},
+        'already typed': <String>{'a'},
+      },
+      outline: (backing) {
+        const codec = SetCastValueCodec<String>();
+        final view = codec.fromStored(backing);
+
+        backing.add('b');
+
+        check(view).deepEquals({'a', 'b'});
+      },
+    );
 
     scenario("writes pass through untouched (materialisation is the façade's job)", () {
       const codec = SetCastValueCodec<String>();

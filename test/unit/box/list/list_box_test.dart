@@ -56,7 +56,8 @@ void main() {
     scenario('returned lists reject mutation, present or absent', () async {
       await facade.put(1, ['a']).run();
 
-      check(() => facade.getOr(1).add('rogue')).throws<UnsupportedError>();
+      // `[0] =` because the stored copy is fixed-length, so it refuses `add` even without the view.
+      check(() => facade.getOr(1)[0] = 'rogue').throws<UnsupportedError>();
       check(() => facade.getOr(9).add('rogue')).throws<UnsupportedError>();
     });
 
@@ -70,7 +71,7 @@ void main() {
 
       final result = await facade.update(1, (values) => [...values, 'b']).run();
 
-      check(() => result.add('rogue')).throws<UnsupportedError>();
+      check(() => result[0] = 'rogue').throws<UnsupportedError>();
       check(facade.getOr(1)).deepEquals(['a', 'b']);
     });
 
@@ -79,7 +80,7 @@ void main() {
 
       check(events).length.equals(1);
       check(events.first.value).deepEquals(['a']);
-      check(() => events.first.value.add('rogue')).throws<UnsupportedError>();
+      check(() => events.first.value[0] = 'rogue').throws<UnsupportedError>();
     });
   });
 

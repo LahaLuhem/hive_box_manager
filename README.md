@@ -247,7 +247,7 @@ A list of values per key. Tags on a post, history for a day.
 <details>
 <summary>List ergonomics, and the sharp edge it files off</summary>
 
-Hive reads collections back as `List<dynamic>` no matter what you wrote
+Hive reads a collection of a custom type back as `List<dynamic>`
 ([issue #150](https://github.com/IO-Design-Team/hive_ce/issues/150)), so a plain
 `Box<List<Person>>` opens fine and then throws on the first read after a restart. `ListBox`
 restores the element type at the read boundary and stacks list helpers on top:
@@ -454,15 +454,15 @@ the whole box file unreadable on its next open. This package rejects exactly tho
 There is no single number, and any package that gives you one is quoting the surface that flattered
 it. Wrapper cost depends on how expensive the thing being wrapped is, so it splits by surface:
 
-| Surface                                                             | Wrapper cost                                                        | Read as                                                   |
-|---------------------------------------------------------------------|---------------------------------------------------------------------|-----------------------------------------------------------|
-| `KeyedBox` / `SingleValueBox`, memory reads (get, contains, values) | 1 to 22 ns per op                                                   | free                                                      |
-| Any effect that reaches disk (put, delete, lazy get)                | 300 to 700 ns per op, 2 to 4%                                       | free, disk dominates                                      |
-| `ListBox` reads                                                     | ~290 ns per `get` + ~1.8 ns per element                             | 3.0x on one-element lists, 1.1x on thousand-element lists |
-| Batch writes (`putAll`, `deleteAll`)                                | 1 to 21 ns per entry                                                | free                                                      |
-| Open time, keystore RAM, file size                                  | no measurable difference                                            | identical                                                 |
-| `DualKeyBox` eager get                                              | 1.02x (+3 to +21 ns per op)                                         | free                                                      |
-| `DualKeyBox` `putAll`                                               | +45 to +85 ns per entry (int parts), +230 to +310 ns (String parts) | 1.09x to 1.36x by batch size, see below                   |
+| Surface                                                             | Wrapper cost                                                        | Read as                                                                  |
+|---------------------------------------------------------------------|---------------------------------------------------------------------|--------------------------------------------------------------------------|
+| `KeyedBox` / `SingleValueBox`, memory reads (get, contains, values) | 1 to 22 ns per op                                                   | free                                                                     |
+| Any effect that reaches disk (put, delete, lazy get)                | 300 to 700 ns per op, 2 to 4%                                       | free, disk dominates                                                     |
+| `ListBox` reads                                                     | ~290 ns per `get`, plus ~8 to 13 ns per element of a custom type    | 2.6x to 3.1x on one-element lists, 0.9x to 1.8x on thousand-element ones |
+| Batch writes (`putAll`, `deleteAll`)                                | 1 to 21 ns per entry                                                | free                                                                     |
+| Open time, keystore RAM, file size                                  | no measurable difference                                            | identical                                                                |
+| `DualKeyBox` eager get                                              | 1.02x (+3 to +21 ns per op)                                         | free                                                                     |
+| `DualKeyBox` `putAll`                                               | +45 to +85 ns per entry (int parts), +230 to +310 ns (String parts) | 1.09x to 1.36x by batch size, see below                                  |
 
 <details>
 <summary>Why percentages are the wrong unit for most of this</summary>
@@ -514,11 +514,13 @@ relationship, so this stays measured rather than remembered.
 
 **`ListBox` prices differently**, because raw hive has no list-valued box to compare against. Its
 baseline is the code you would hand-write, and there are 2 of those. Against the version with a
-`.cast<T>()` at the read boundary, `ListBox` costs the ~290 ns plus ~1.8 ns per element above (the
-per-element part is the cast view's type check, one per element you actually touch). Against the
-version without a cast, your hand-roll is *faster and broken*: a stored `List<Person>` reads back as
-`List<dynamic>` after a restart and the cast throws. Memory matches a correct hand-roll on every
-lane, reads included, so the read view really is copy-free, just not check-free.
+`.cast<T>()` at the read boundary, `ListBox` costs the ~290 ns per `get` above. Per element it
+depends on what hive hands back. A `List<String>` comes back typed and goes out without a cast, so
+it costs less per element than the hand-roll. A custom type's elements are each checked once at the
+read, which is what lets a wrong type fail there and name its key. Against the version without a
+cast, your hand-roll is *faster and broken*: a stored `List<Person>` reads back as `List<dynamic>`
+after a restart and the cast throws. Memory matches a correct hand-roll on every lane, reads
+included, so the read view really is copy-free.
 
 ### ⚡ Codec choice
 

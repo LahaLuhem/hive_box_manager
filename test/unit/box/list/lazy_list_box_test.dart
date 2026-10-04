@@ -75,7 +75,8 @@ void main() {
       final present = await facade.getOr(1).run();
       final absent = await facade.getOr(9).run();
 
-      check(() => present.add('rogue')).throws<UnsupportedError>();
+      // `[0] =` because the stored copy is fixed-length, so it refuses `add` even without the view.
+      check(() => present[0] = 'rogue').throws<UnsupportedError>();
       check(() => absent.add('rogue')).throws<UnsupportedError>();
     });
 
@@ -87,7 +88,7 @@ void main() {
 
       final result = await facade.update(1, (values) => [...values, 'b']).run();
 
-      check(() => result.add('rogue')).throws<UnsupportedError>();
+      check(() => result[0] = 'rogue').throws<UnsupportedError>();
       check(await facade.getOr(1).run()).deepEquals(['a', 'b']);
     });
   });
@@ -175,7 +176,7 @@ void main() {
 
       check(events).length.equals(2);
       check(events.first.value.toNullable()).isNotNull().deepEquals(['a']);
-      check(() => events.first.value.toNullable()!.add('rogue')).throws<UnsupportedError>();
+      check(() => events.first.value.toNullable()![0] = 'rogue').throws<UnsupportedError>();
       check(events.last.value.isNone()).isTrue();
       check(events.last.deleted).isTrue();
     });
