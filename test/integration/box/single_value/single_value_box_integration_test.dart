@@ -70,7 +70,7 @@ void main() {
       check(facade.get().toNullable()).equals('persisted');
     });
 
-    scenario('an encrypted box reads back with the same cipher', () async {
+    scenario("an encrypted box reads back with its cipher and won't open without it", () async {
       final cipher = testCipher();
       var facade = await SingleValueBox.open<String>('secret', cipher: cipher).run();
       await facade.set('ciphered').run();
@@ -79,6 +79,8 @@ void main() {
       facade = await SingleValueBox.open<String>('secret', cipher: cipher).run();
 
       check(facade.get().toNullable()).equals('ciphered');
+      await facade.close().run();
+      await check(SingleValueBox.open<String>('secret').run()).throws<HiveError>();
     });
   });
 

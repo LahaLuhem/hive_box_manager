@@ -85,7 +85,7 @@ void main() {
       check((await second.get(7).run()).toNullable()).equals('persisted');
     });
 
-    scenario('an encrypted box reads back with the same cipher', () async {
+    scenario("an encrypted box reads back with its cipher and won't open without it", () async {
       final cipher = testCipher();
       final first = LazyKeyedBox<String, int>('secret', cipher: cipher);
       await first.put(1, 'ciphered').run();
@@ -94,6 +94,8 @@ void main() {
       final second = LazyKeyedBox<String, int>('secret', cipher: cipher);
 
       check((await second.get(1).run()).toNullable()).equals('ciphered');
+      await second.close().run();
+      await check(LazyKeyedBox<String, int>('secret').get(1).run()).throws<HiveError>();
     });
 
     scenario('the corruption gate rejects bad keys before the box even opens', () {
