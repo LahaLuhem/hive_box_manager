@@ -181,6 +181,94 @@ void main() {
     });
   });
 
+  feature('a collection whose elements are not the box type fails at the read', () {
+    /// `String` elements on disk, read back by boxes that want `int` ones.
+    Future<void> seedMistyped() async {
+      await (await ListBox.open<String, int>('lists').run()).put(1, ['one']).run();
+      await (await SetBox.open<String, int>('sets').run()).put(1, ['one']).run();
+      await Hive.close();
+    }
+
+    scenarioOutline<Future<Object?> Function()>(
+      'a whole-box read names the key',
+      examples: {
+        'ListBox': () async => (await ListBox.open<int, int>('lists').run()).values.toList(),
+        'LazyListBox': () => LazyListBox<int, int>('lists').values.run(),
+        'SetBox': () async => (await SetBox.open<int, int>('sets').run()).values.toList(),
+        'LazySetBox': () => LazySetBox<int, int>('sets').values.run(),
+      },
+      outline: (readAll) async {
+        await seedMistyped();
+
+        final failure = await captureUndecodable(readAll);
+
+        check(failure.key).equals(1);
+        check(failure.cause).isA<TypeError>();
+      },
+    );
+
+    scenarioOutline<Future<Object?> Function()>(
+      'a single-key read fails at the read, not when an element is touched',
+      examples: {
+        'ListBox': () async => (await ListBox.open<int, int>('lists').run()).get(1),
+        'LazyListBox': () => LazyListBox<int, int>('lists').get(1).run(),
+        'SetBox': () async => (await SetBox.open<int, int>('sets').run()).get(1),
+        'LazySetBox': () => LazySetBox<int, int>('sets').get(1).run(),
+      },
+      outline: (read) async {
+        await seedMistyped();
+
+        // Already scoped to one record, so it surfaces unwrapped.
+        check(await thrownBy(read)).isA<TypeError>();
+      },
+    );
+
+    scenarioOutline<({Future<Stream<Object?>> Function() watch, Future<void> Function() write})>(
+      'a watch event names the key',
+      examples: {
+        'ListBox': (
+          watch: () async => (await ListBox.open<int, int>('lists').run()).watch(),
+          write: () async => (await ListBox.open<String, int>('lists').run()).put(7, ['x']).run(),
+        ),
+        'LazyListBox': (
+          watch: () async {
+            final box = LazyListBox<int, int>('lists');
+            await box.ensureInitialised().run();
+
+            return box.watch();
+          },
+          write: () => LazyListBox<String, int>('lists').put(7, ['x']).run(),
+        ),
+        'SetBox': (
+          watch: () async => (await SetBox.open<int, int>('sets').run()).watch(),
+          write: () async => (await SetBox.open<String, int>('sets').run()).put(7, ['x']).run(),
+        ),
+        'LazySetBox': (
+          watch: () async {
+            final box = LazySetBox<int, int>('sets');
+            await box.ensureInitialised().run();
+
+            return box.watch();
+          },
+          write: () => LazySetBox<String, int>('sets').put(7, ['x']).run(),
+        ),
+      },
+      outline: (handles) async {
+        final failures = <Object>[];
+        final subscription = (await handles.watch()).listen(null, onError: failures.add);
+        await pumpEventQueue();
+        await handles.write();
+        await pumpEventQueue();
+        await subscription.cancel();
+
+        check(failures).length.equals(1);
+        final failure = failures.single as UndecodableValueException;
+        check(failure.key).equals(7);
+        check(failure.cause).isA<TypeError>();
+      },
+    );
+  });
+
   feature('the eager axis still cannot open over an undecodable record', () {
     scenario('the open fails inside hive, before the package holds a box', () async {
       await seedKeyed();

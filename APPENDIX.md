@@ -179,8 +179,8 @@ handling, collection reads, "bitwise beats math", memory folklore). The rewrite 
 decision rules pre-registered so the data could not be rationalised after the fact. The probes'
 findings are pinned as tests (`test/integration/hive_ce_pins/`), so an engine upgrade that shifts
 any of them fails loudly. Highlights that shaped the design: release-mode hive validates **no**
-keys at write (its only guard is assert-stripped), disk reads reify collections as
-`List<dynamic>` whatever was written, lazy delete events carry no value while eager ones do, and
+keys at write (its only guard is assert-stripped), disk reads reify collections of custom types as
+`List<dynamic>`, lazy delete events carry no value while eager ones do, and
 open time is O(file) on *both* axes. The benchmark harness that decided the key strategy lives on
 in `benchmark/` as regression tooling.
 
@@ -278,12 +278,16 @@ against a ~10 µs write.
 <a id="collection-handling"></a>
 ## Collection handling: cast at the read boundary
 
-Hive reifies collections from disk as `List<dynamic>` whatever the write-side element type, so a
-naive `Box<List<Person>>` opens fine and throws on the first post-restart read. The probe
-established that a thin `.cast<T>()` at the read boundary suffices, so the fix is an internal
-value codec, not a `dynamic`-typed variant class (the 0.0.x approach, whose `dynamic` leak is
-part of why the rewrite exists). Boxes open `Object?`-parameterised internally. `dynamic` never
-reaches the public surface.
+Hive reifies collections of custom types from disk as `List<dynamic>`, so a naive
+`Box<List<Person>>` opens fine and throws on the first post-restart read. The probe established
+that a thin `.cast<T>()` at the read boundary suffices, so the fix is an internal value codec, not
+a `dynamic`-typed variant class (the 0.0.x approach, whose `dynamic` leak is part of why the rewrite
+exists). Boxes open `Object?`-parameterised internally. `dynamic` never reaches the public surface.
+
+The cast checks each element once, at the read, so a wrong one fails where the engine can name the
+key, not wherever the view is next touched. An already-typed collection (written this session, or
+one of hive's primitive lists) skips both the check and the cast, so the cost is one pass over a
+custom-typed collection read from disk.
 
 The aliasing contract closes the mutation hole from both directions: everything inward (`put`,
 `putAll`, `update`'s returns) is materialised into a private fixed-length copy (hive rejects lazy

@@ -22,7 +22,7 @@ import 'list_edits.dart';
 /// A typed, fpdart-first façade over a **lazy** hive box storing a `List` of [T] per [K] key.
 ///
 /// The collection variant on the lazy axis, so hive holds only the keystore and fetches each list off
-/// disk when asked. It exists because hive reads collections back as `List<dynamic>` whatever you wrote,
+/// disk when asked. It exists because hive reads a collection of a custom type back as `List<dynamic>`,
 /// so the element type gets restored with a cast at the read boundary. Reach for [ListBox] when the
 /// lists are small and read often.
 ///

@@ -1,9 +1,9 @@
 import 'dart:collection';
 
+import 'element_type_check.dart';
 import 'value_codec.dart';
 
-/// Disk reads come back as `List<dynamic>` whatever the write-side element type, so this puts the element
-/// typing back with a cast view at the read boundary.
+/// hive reads a list of a custom type back as `List<dynamic>`, so this casts it back on the way out.
 ///
 /// The result is wrapped unmodifiable on top, which costs nothing: an eager get aliases hive's own cache,
 /// so a view keeps consumers out of it without copying on every read.
@@ -15,6 +15,13 @@ final class const CollectionCastValueCodec<E extends Object>() implements ValueC
   Object toStorable(List<E> value) => value;
 
   @override
-  List<E> fromStored(Object storedValue) =>
-      UnmodifiableListView((storedValue as List<Object?>).cast<E>());
+  List<E> fromStored(Object storedValue) {
+    final storedList = storedValue as List<Object?>;
+    // Written this session, or one of hive's typed primitive lists: nothing to check or cast.
+    if (storedList is List<E>) return UnmodifiableListView(storedList);
+
+    checkElementTypes<E>(storedList);
+
+    return UnmodifiableListView(storedList.cast<E>());
+  }
 }

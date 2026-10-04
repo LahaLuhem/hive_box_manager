@@ -25,24 +25,44 @@ void main() {
       check(view.length).equals(2);
     });
 
-    scenario('the view is unmodifiable: consumers cannot reach the box cache through it', () {
-      const codec = CollectionCastValueCodec<String>();
-      final view = codec.fromStored(<dynamic>['a']);
+    scenario('elements of another type fail at the decode, not when touched', () async {
+      const codec = CollectionCastValueCodec<int>();
 
-      check(() => view.add('b')).throws<UnsupportedError>();
-      check(view.clear).throws<UnsupportedError>();
+      check(await thrownBy(() => codec.fromStored(<dynamic>[1, 'two']))).isA<TypeError>();
     });
 
-    scenario('the view is zero-copy: it follows the underlying list', () {
-      const codec = CollectionCastValueCodec<String>();
-      final backing = <dynamic>['a'];
-      final view = codec.fromStored(backing);
+    scenarioOutline<List<Object?>>(
+      'the view is unmodifiable: consumers cannot reach the box cache through it',
+      examples: {
+        'read from disk': <dynamic>['a'],
+        'already typed': <String>['a'],
+      },
+      outline: (stored) {
+        const codec = CollectionCastValueCodec<String>();
+        final view = codec.fromStored(stored);
 
-      backing.add('b');
+        // `[0] =` because the box stores fixed-length copies, which refuse `add` even without the view.
+        check(() => view[0] = 'b').throws<UnsupportedError>();
+        check(() => view.add('b')).throws<UnsupportedError>();
+      },
+    );
 
-      check(view.length).equals(2);
-      check(view.last).equals('b');
-    });
+    scenarioOutline<List<Object?>>(
+      'the view is zero-copy: it follows the underlying list',
+      examples: {
+        'read from disk': <dynamic>['a'],
+        'already typed': <String>['a'],
+      },
+      outline: (backing) {
+        const codec = CollectionCastValueCodec<String>();
+        final view = codec.fromStored(backing);
+
+        backing.add('b');
+
+        check(view.length).equals(2);
+        check(view.last).equals('b');
+      },
+    );
 
     scenario("writes pass through untouched (materialisation is the façade's job)", () {
       const codec = CollectionCastValueCodec<String>();

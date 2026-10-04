@@ -37,7 +37,7 @@ void main() {
 
       facade = await ListBox.open<Person, int>('people').run();
 
-      check(() => facade.getOr(1).add(const Person('rogue', 0))).throws<UnsupportedError>();
+      check(() => facade.getOr(1)[0] = const Person('rogue', 0)).throws<UnsupportedError>();
     });
 
     scenario('absent stays None while stored-empty stays Some(empty) across reopen', () async {
@@ -67,7 +67,7 @@ void main() {
       final facade = await ListBox.open<Person, int>('people').run();
       await facade.put(1, const [Person('a', 1)]).run();
 
-      check(() => facade.getOr(1).add(const Person('rogue', 0))).throws<UnsupportedError>();
+      check(() => facade.getOr(1)[0] = const Person('rogue', 0)).throws<UnsupportedError>();
     });
 
     scenario('a lazily-mapped iterable stores fine (materialised before hive)', () async {
