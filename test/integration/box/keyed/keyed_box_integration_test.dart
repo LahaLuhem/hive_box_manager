@@ -83,7 +83,7 @@ void main() {
       check(box.get(date).toNullable()).equals('v');
     });
 
-    scenario('an encrypted box reads back with the same cipher', () async {
+    scenario("an encrypted box reads back with its cipher and won't open without it", () async {
       final cipher = testCipher();
       var box = await KeyedBox.open<String, int>('secret', cipher: cipher).run();
       await box.put(1, 'ciphered').run();
@@ -92,6 +92,8 @@ void main() {
       box = await KeyedBox.open<String, int>('secret', cipher: cipher).run();
 
       check(box.get(1).toNullable()).equals('ciphered');
+      await box.close().run();
+      await check(KeyedBox.open<String, int>('secret').run()).throws<HiveError>();
     });
 
     scenario('the corruption gate rejects what release-mode hive corrupts on', () async {
