@@ -8,6 +8,7 @@ export 'src/box/keyed/keyed_box.dart' show KeyedBox;
 export 'src/box/keyed/lazy_keyed_box.dart' show LazyKeyedBox;
 export 'src/box/list/lazy_list_box.dart' show LazyListBox;
 export 'src/box/list/list_box.dart' show ListBox;
+export 'src/box/map/lazy_map_box.dart' show LazyMapBox;
 export 'src/box/map/map_box.dart' show MapBox;
 export 'src/box/set/lazy_set_box.dart' show LazySetBox;
 export 'src/box/set/set_box.dart' show SetBox;
