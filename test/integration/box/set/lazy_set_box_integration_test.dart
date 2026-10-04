@@ -19,7 +19,9 @@ void main() {
     tempDir = Directory.systemTemp.createTempSync('hbm_lazy_set_box_');
     Hive.init(tempDir.path);
     // Adapters outlive Hive.close(), and registering one twice prints a warning.
-    if (!Hive.isAdapterRegistered(MemberAdapter().typeId)) Hive.registerAdapter(MemberAdapter());
+    if (!Hive.isAdapterRegistered(const MemberAdapter().typeId)) {
+      Hive.registerAdapter(const MemberAdapter());
+    }
   });
 
   tearDown(() async {

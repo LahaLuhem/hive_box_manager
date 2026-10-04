@@ -57,7 +57,7 @@ void main() {
       // to satisfy the shared VM and web signature.
       Hive
         ..init('hive_web_pins')
-        ..registerAdapter(PersonAdapter(), override: true);
+        ..registerAdapter(const PersonAdapter(), override: true);
 
       // Unique per run: IndexedDB persists across tests within one browser session, and these pins must
       // start from an empty box.

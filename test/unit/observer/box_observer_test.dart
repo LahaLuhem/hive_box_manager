@@ -13,14 +13,10 @@ import '../../support/doubles/recording_box_observer.dart';
 /// Overrides nothing: every dispatch must fall through to the no-op defaults.
 // A test-helper double, not this file's subject (which is the suite itself).
 // ignore: prefer-match-file-name
-final class _SilentObserver extends BoxObserver {
-  const new();
-}
+final class const _SilentObserver() extends BoxObserver;
 
 /// Overrides a single event: the partial-override consumer shape.
-final class _WritesOnlyObserver extends BoxObserver {
-  new();
-
+final class _WritesOnlyObserver() extends BoxObserver {
   final writes = <String>[];
 
   @override

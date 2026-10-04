@@ -29,25 +29,25 @@ const sampleSeed = 7;
 /// Stands in for a consumer's adapter-registered class.
 // This file is a worker entrypoint (`key_shape_bench`, per key_shape_driver.sh)
 // ignore: prefer-match-file-name
-final class Payload {
+final class const Payload(
   /// Summed into the checksum, so no lane can be optimised away silently.
-  final int id;
-
+  final int id,
+) {
   /// Wraps [id].
-  const new(this.id);
+  this;
 }
 
 /// Stand-in for fpdart's `Some`: one allocation per hit, identical in every lane.
-final class Hit {
+final class const Hit(
   /// The value found, `null` when the key was absent.
-  final Payload? value;
-
+  final Payload? value,
+) {
   /// Wraps [value].
-  const new(this.value);
+  this;
 }
 
 /// Mirrors the package's real `KeyCodec`: encodes a semantic key into hive's raw domain.
-abstract interface class KeyCodec<K extends Object> {
+abstract interface class KeyCodec<K extends Object>() {
   /// Encodes [key] into the raw domain.
   Object encode(K key);
 
@@ -56,7 +56,7 @@ abstract interface class KeyCodec<K extends Object> {
 }
 
 /// Mirrors the package's real `DualKeyCodec`: 2 parts in, one raw key out.
-abstract interface class DualKeyCodec<K1 extends Object, K2 extends Object> {
+abstract interface class DualKeyCodec<K1 extends Object, K2 extends Object>() {
   /// Encodes ([primary], [secondary]) into the raw domain.
   Object encode(K1 primary, K2 secondary);
 
@@ -65,9 +65,9 @@ abstract interface class DualKeyCodec<K1 extends Object, K2 extends Object> {
 }
 
 /// Identity codec for `int` keys.
-final class IntKeyCodec implements KeyCodec<int> {
+final class const IntKeyCodec() implements KeyCodec<int> {
   /// Const, matching the shape the shipped codecs present at the call site.
-  const new();
+  this;
 
   @override
   Object encode(int key) => key;
@@ -77,9 +77,9 @@ final class IntKeyCodec implements KeyCodec<int> {
 }
 
 /// Identity codec for `String` keys.
-final class StringKeyCodec implements KeyCodec<String> {
+final class const StringKeyCodec() implements KeyCodec<String> {
   /// Const, as above.
-  const new();
+  this;
 
   @override
   Object encode(String key) => key;
@@ -89,9 +89,9 @@ final class StringKeyCodec implements KeyCodec<String> {
 }
 
 /// Replicates the shipped `PackedIntDualCodec`: 2 parts of 16 bits packed into one int.
-final class PackedIntDualCodec implements DualKeyCodec<int, int> {
+final class const PackedIntDualCodec() implements DualKeyCodec<int, int> {
   /// Const, as above.
-  const new();
+  this;
 
   @override
   Object encode(int primary, int secondary) => (primary << 16) | secondary;
@@ -106,11 +106,11 @@ final class PackedIntDualCodec implements DualKeyCodec<int, int> {
 
 /// Replicates the since-deleted `DualKeyCodecAdapter`: its record parameter is built from this class's
 /// own type parameters, which is the defect being priced.
-final class GenericDualAdapter<K1 extends Object, K2 extends Object> implements KeyCodec<(K1, K2)> {
-  final DualKeyCodec<K1, K2> _dualCodec;
-
+final class const GenericDualAdapter<K1 extends Object, K2 extends Object>(
+  final DualKeyCodec<K1, K2> _dualCodec,
+) implements KeyCodec<(K1, K2)> {
   /// Wraps [_dualCodec].
-  const new(this._dualCodec);
+  this;
 
   @override
   Object encode((K1, K2) key) => _dualCodec.encode(key.$1, key.$2);
@@ -121,11 +121,10 @@ final class GenericDualAdapter<K1 extends Object, K2 extends Object> implements 
 
 /// The same adapter with no class type parameters, so its record parameter is concrete. The one variable
 /// separating it from [GenericDualAdapter].
-final class ConcreteDualAdapter implements KeyCodec<(int, int)> {
-  final DualKeyCodec<int, int> _dualCodec;
-
+final class const ConcreteDualAdapter(final DualKeyCodec<int, int> _dualCodec)
+    implements KeyCodec<(int, int)> {
   /// Wraps [_dualCodec].
-  const new(this._dualCodec);
+  this;
 
   @override
   Object encode((int, int) key) => _dualCodec.encode(key.$1, key.$2);
@@ -136,11 +135,11 @@ final class ConcreteDualAdapter implements KeyCodec<(int, int)> {
 
 /// Parameter widened to `Object`, moving the record check into an explicit cast. Legal Dart, and no
 /// help: it is the same check.
-final class WidenedDualAdapter<K1 extends Object, K2 extends Object> implements KeyCodec<(K1, K2)> {
-  final DualKeyCodec<K1, K2> _dualCodec;
-
+final class const WidenedDualAdapter<K1 extends Object, K2 extends Object>(
+  final DualKeyCodec<K1, K2> _dualCodec,
+) implements KeyCodec<(K1, K2)> {
   /// Wraps [_dualCodec].
-  const new(this._dualCodec);
+  this;
 
   @override
   Object encode(Object key) {
@@ -155,12 +154,11 @@ final class WidenedDualAdapter<K1 extends Object, K2 extends Object> implements 
 
 /// Generic class, concrete record parameter. Fast, and a trap: it hides the cost while keeping a record
 /// on the boundary, so the defect returns the moment someone re-parameterises it.
-final class ObjectRecordDualAdapter<K1 extends Object, K2 extends Object>
-    implements KeyCodec<(Object, Object)> {
-  final DualKeyCodec<K1, K2> _dualCodec;
-
+final class const ObjectRecordDualAdapter<K1 extends Object, K2 extends Object>(
+  final DualKeyCodec<K1, K2> _dualCodec,
+) implements KeyCodec<(Object, Object)> {
   /// Wraps [_dualCodec].
-  const new(this._dualCodec);
+  this;
 
   @override
   Object encode((Object, Object) key) => _dualCodec.encode(key.$1 as K1, key.$2 as K2);
@@ -170,12 +168,12 @@ final class ObjectRecordDualAdapter<K1 extends Object, K2 extends Object>
 }
 
 /// Generic over the semantic key, owning its codec: the pre-fix shape.
-final class SemanticKeyEngine<T extends Object, K extends Object> {
-  final Map<Object, Object?> _store;
-  final KeyCodec<K> _keyCodec;
-
+final class SemanticKeyEngine<T extends Object, K extends Object>(
+  final Map<Object, Object?> _store,
+  final KeyCodec<K> _keyCodec,
+) {
   /// Wires the engine over [_store] with [_keyCodec].
-  new(this._store, this._keyCodec);
+  this;
 
   /// Reads [key], encoding through the codec first.
   // Inlined to match the shipped engine's pragma.
@@ -188,11 +186,9 @@ final class SemanticKeyEngine<T extends Object, K extends Object> {
 }
 
 /// Takes an already-encoded key, with no key type parameter: the post-fix shape.
-final class RawKeyEngine<T extends Object> {
-  final Map<Object, Object?> _store;
-
+final class RawKeyEngine<T extends Object>(final Map<Object, Object?> _store) {
   /// Wires the engine over [_store].
-  new(this._store);
+  this;
 
   /// Reads [rawKey] directly.
   @pragma('vm:prefer-inline')

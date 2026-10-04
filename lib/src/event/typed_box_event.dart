@@ -10,7 +10,6 @@ import 'package:meta/meta.dart';
 /// cache (pinned behaviour), so there is nothing to null-check. A lazy box can't promise that, so it
 /// carries [LazyTypedBoxEvent] instead.
 @immutable
-// ignore: public_member_api_docs -- a primary constructor has nowhere to hang a doc comment.
 final class const TypedBoxEvent<T extends Object, K extends Object>({
   /// The consumer-facing key, decoded by the box's key codec.
   required final K key,
@@ -21,6 +20,9 @@ final class const TypedBoxEvent<T extends Object, K extends Object>({
   /// Whether this change removed [key] from the box.
   required final bool deleted,
 }) {
+  /// Faking `watch` in a test? Pass the dropped value on a delete too, as eager hive does.
+  this;
+
   @override
   bool operator ==(Object other) =>
       other is TypedBoxEvent<T, K> &&

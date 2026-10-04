@@ -11,7 +11,7 @@ library;
 /// 2 ship: [StringCompositeDualCodec], the safe default with no ceilings, and [PackedIntDualCodec],
 /// the faster opt-in that caps each part at 16 bits. Implement this for other part types, and keep it
 /// bijective or the reverse queries will lie to you.
-abstract interface class DualKeyCodec<K1 extends Object, K2 extends Object> {
+abstract interface class DualKeyCodec<K1 extends Object, K2 extends Object>._() {
   /// Encodes the ([primary], [secondary]) pair into hive's raw key domain.
   Object encode(K1 primary, K2 secondary);
 

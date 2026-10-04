@@ -33,8 +33,8 @@ void main() {
     Hive.init(tempDir.path);
     // Guarded rather than `override: true`, because adapters outlive Hive.close() and re-overriding
     // prints an engine warning into every test's output.
-    if (!Hive.isAdapterRegistered(PersonAdapter().typeId)) {
-      Hive.registerAdapter(PersonAdapter());
+    if (!Hive.isAdapterRegistered(const PersonAdapter().typeId)) {
+      Hive.registerAdapter(const PersonAdapter());
     }
   });
 

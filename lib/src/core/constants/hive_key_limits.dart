@@ -1,6 +1,6 @@
 /// The limits hive_ce's raw keys have to stay inside. Release mode enforces neither itself, which is
 /// why `ensureStorableRawKey` exists.
-abstract final class HiveKeyLimits {
+abstract final class HiveKeyLimits._() {
   /// The biggest int key hive will store. They are unsigned 32-bit.
   static const maxIntKey = 0xFFFFFFFF;
 

@@ -14,9 +14,9 @@ import 'dual_key_codec.dart';
 /// of this codec. An out-of-domain part is a fix-your-data problem, and the write-path gate still catches
 /// any packed result that escapes hive's raw domain. Arithmetic rather than bitwise, because the values
 /// are identical and arithmetic stays exact under JS number semantics.
-final class PackedIntDualCodec implements DualKeyCodec<int, int> {
+final class const PackedIntDualCodec() implements DualKeyCodec<int, int> {
   /// Const so façades can default to it without an allocation per box.
-  const new();
+  this;
 
   /// Each part gets half of a u32 hive int key.
   static const bitsPerPart = 16;

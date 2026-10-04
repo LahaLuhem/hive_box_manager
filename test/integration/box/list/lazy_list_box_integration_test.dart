@@ -22,7 +22,7 @@ void main() {
     tempDir = Directory.systemTemp.createTempSync('hbm_lazy_list_box_');
     Hive
       ..init(tempDir.path)
-      ..registerAdapter(PersonAdapter(), override: true);
+      ..registerAdapter(const PersonAdapter(), override: true);
   });
 
   tearDown(() async {

@@ -10,7 +10,9 @@ import '../../../support/bdd.dart';
 
 // A test fixture, not this file's subject.
 // ignore: prefer-match-file-name
-enum _Colour { red }
+enum _Colour() {
+  red,
+}
 
 /// Compares by identity, Dart's default.
 final class _Thing(final String id);

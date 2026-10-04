@@ -10,9 +10,9 @@ import 'dual_key_codec.dart';
 /// case fits comfortably inside hive's key budget. Not zero-padded on purpose, since padding would buy
 /// lexicographic sorting and roughly double the key bytes, and memory is this scheme's weak spot. Reach
 /// for [PackedIntDualCodec] when both parts fit 16 bits and the speed is worth it.
-final class StringCompositeDualCodec implements DualKeyCodec<int, int> {
+final class const StringCompositeDualCodec() implements DualKeyCodec<int, int> {
   /// Const so façades can default to it without an allocation per box.
-  const new();
+  this;
 
   /// Separates the 2 decimal parts inside the raw key.
   static const partSeparator = ':';

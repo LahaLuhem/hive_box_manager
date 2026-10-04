@@ -10,7 +10,7 @@ import '/features/core/observers/log_panel_observer.dart';
 
 /// Drives the eager list-box demo: tag lists per int key, changed through add and remove, read back
 /// as unmodifiable views.
-final class ListBoxViewModel extends ViewModel {
+final class ListBoxViewModel() extends ViewModel {
   final observer = LogPanelObserver();
   final tagController = TextEditingController();
   final tags = ListNotifier<String>();

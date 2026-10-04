@@ -185,8 +185,9 @@ under [*Hard rules* in `.ai/AGENTS.md`](./.ai/AGENTS.md#hard-rules).
 ## Class structure
 
 - **Member order.** State first, then construction, then use. The sequence is: constructor-assigned
-  fields (declared in the primary constructor, per the next bullet) → any remaining constructor(s)
-  (unnamed before named / factory, per `sort_unnamed_constructors_first`) → other internal fields
+  fields (declared in the primary constructor, per the next bullet) → the primary constructor's
+  `this;` body, then any remaining constructor(s) (unnamed before named / factory, per
+  `sort_unnamed_constructors_first`) → other internal fields
   the class sets up itself (lazy caches, derived state. *Internal* means not-constructor-assigned,
   not private, so a public such field still sits here) → getters and setters → getter-/setter-like
   methods → other methods → private helpers (a private getter is a private helper, not a
@@ -217,14 +218,13 @@ under [*Hard rules* in `.ai/AGENTS.md`](./.ai/AGENTS.md#hard-rules).
   ```
 
   3 constraints come with it:
-  - **Every other generative constructor must redirect** to the primary one. A constructor that
-    transforms its argument in an initialiser list cannot, so `BoxProvider`
-    (`: _hive = hive ?? Hive`) stays on the classic shape. Factories are unaffected.
-  - **A public primary constructor cannot carry a dartdoc** (it has no declaration site), so it
-    trips `public_member_api_docs` and needs a one-line documented ignore. Prefer avoiding that:
-    put the *private* `._` wiring constructor in the header and leave the public one in the body
-    redirecting to it (`Foo(name) : this._(…)`), which is how every lazy façade keeps its
-    constructor documented.
+  - **Every other generative constructor must redirect** to the primary one. Factories are
+    unaffected. An argument that needs transforming goes through a field initialiser instead, which
+    can read the primary constructor's parameters (`BoxProvider`'s `_hive = hive ?? Hive`).
+  - **A primary constructor's dartdoc goes on its `this;` body.** `public_member_api_docs` and
+    `dart doc` both pick it up there. `use_primary_constructors` wants a primary constructor even on
+    a class with none, so an abstract class nothing constructs gets a private `._()`, which needs no
+    doc and adds no API.
   - **`const` goes after `class`**: `final class const TypedBoxEvent<…>({…})`.
 - **Deliberate no-op bodies call `noop()`** (the `lib/src/core/utils/` helper) instead of sitting
   empty: `void onOpened(String boxName) => noop();`. Intent reads explicitly and DCM's

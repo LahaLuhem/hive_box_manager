@@ -14,7 +14,9 @@ void main() {
   setUpAll(() {
     // hive_ce's web backend ignores the path, since storage is IndexedDB.
     Hive.init('hive_web_sets');
-    if (!Hive.isAdapterRegistered(MemberAdapter().typeId)) Hive.registerAdapter(MemberAdapter());
+    if (!Hive.isAdapterRegistered(const MemberAdapter().typeId)) {
+      Hive.registerAdapter(const MemberAdapter());
+    }
   });
 
   feature('Set boxes on the browser (IndexedDB truth)', () {

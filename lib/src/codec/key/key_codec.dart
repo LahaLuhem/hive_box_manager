@@ -14,7 +14,7 @@ library;
 ///
 /// Implement this to key boxes by any type. [IntKeyCodec] and [StringKeyCodec] ship as the identity
 /// codecs the keyed façades fall back on.
-abstract interface class KeyCodec<K extends Object> {
+abstract interface class KeyCodec<K extends Object>._() {
   /// Encodes [key] into hive's raw key domain: an `int` in u32, or a `String` of at most 255 UTF-8 bytes.
   Object encode(K key);
 

@@ -4,9 +4,9 @@ import 'key_codec.dart';
 ///
 /// Purely pass-through: domain enforcement lives in the write-path gate, which fails loudly at the call
 /// site where release-mode hive_ce would silently wrap the key and corrupt the write.
-final class IntKeyCodec implements KeyCodec<int> {
+final class const IntKeyCodec() implements KeyCodec<int> {
   /// Const so façades can default to it without an allocation per box.
-  const new();
+  this;
 
   @override
   Object encode(int key) => key;

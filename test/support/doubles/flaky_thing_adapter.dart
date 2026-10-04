@@ -7,9 +7,9 @@ const undecodableId = 'bad';
 const thingTypeId = 99;
 
 /// Writes anything, refuses to read one record: a decode fault scoped to a single key.
-final class FlakyThingAdapter extends TypeAdapter<Thing> {
+final class const FlakyThingAdapter() extends TypeAdapter<Thing> {
   @override
-  final typeId = thingTypeId;
+  int get typeId => thingTypeId;
 
   @override
   Thing read(BinaryReader reader) {
@@ -24,12 +24,10 @@ final class FlakyThingAdapter extends TypeAdapter<Thing> {
 }
 
 /// A minimal adapter-backed value. Only [id] reaches disk.
-final class Thing {
+final class const Thing(
   /// [undecodableId] here makes the adapter refuse this record.
-  final String id;
-
-  const new(this.id);
-
+  final String id,
+) {
   @override
   String toString() => 'Thing($id)';
 }

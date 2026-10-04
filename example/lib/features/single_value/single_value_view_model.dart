@@ -11,7 +11,7 @@ import '/features/core/observers/log_panel_observer.dart';
 
 /// Drives the encrypted single-value demo: a lazy box holding one AES-encrypted token, with the watch
 /// stream feeding the current value.
-final class SingleValueViewModel extends ViewModel {
+final class SingleValueViewModel() extends ViewModel {
   final observer = LogPanelObserver();
   final tokenController = TextEditingController();
   final _current = ValueNotifier<Option<String>>(const None());
