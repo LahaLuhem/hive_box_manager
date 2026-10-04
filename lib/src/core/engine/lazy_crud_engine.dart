@@ -217,23 +217,59 @@ final class LazyCrudEngine<T extends Object>({
     ensureStorableRawKey(rawKey.value);
 
     return Task(
-      () => _guarded('update', () async {
-        final box = await _obtainBox();
-        final storedValue = await box.get(rawKey.value);
-        final updatedValue = storedValue == null
-            ? (ifAbsent ??
-                  (() => throw ArgumentError.value(
-                    semanticKey,
-                    'key',
-                    'absent, and no ifAbsent was given (mirrors Map.update)',
-                  )))()
-            : update(_valueCodec.fromStored(storedValue));
-        await box.put(rawKey.value, _valueCodec.toStorable(updatedValue));
-        _observer?.onWritten(name, semanticKey, updatedValue);
+      () => _guarded(
+        'update',
+        () => _readModifyWrite(rawKey, semanticKey, (storedOrNone) {
+          final updatedValue = storedOrNone.match(
+            ifAbsent ??
+                () => throw ArgumentError.value(
+                  semanticKey,
+                  'key',
+                  'absent, and no ifAbsent was given (mirrors Map.update)',
+                ),
+            update,
+          );
 
-        return updatedValue;
-      }),
+          return (Some(updatedValue), updatedValue);
+        }),
+      ),
     );
+  }
+
+  /// [update] for a write that might not happen: [edit] sees an absent key as `None`, and `None` back writes
+  /// nothing, so observers hear nothing either.
+  Task<Unit> edit(
+    RawKey rawKey,
+    Object semanticKey,
+    Option<T> Function(Option<T> storedOrNone) edit,
+  ) {
+    ensureStorableRawKey(rawKey.value);
+
+    return Task(
+      () => _guarded(
+        'edit',
+        () => _readModifyWrite(rawKey, semanticKey, (storedOrNone) => (edit(storedOrNone), unit)),
+      ),
+    );
+  }
+
+  /// Shared by [update] and [edit], so whatever has to hold between the read and the write lives in one
+  /// place.
+  Future<R> _readModifyWrite<R>(
+    RawKey rawKey,
+    Object semanticKey,
+    (Option<T> nextValueOrNone, R result) Function(Option<T> storedOrNone) next,
+  ) async {
+    final box = await _obtainBox();
+    final (nextValueOrNone, result) = next(
+      Option.fromNullable(await box.get(rawKey.value)).map(_valueCodec.fromStored),
+    );
+    if (nextValueOrNone case Some(value: final nextValue)) {
+      await box.put(rawKey.value, _valueCodec.toStorable(nextValue));
+      _observer?.onWritten(name, semanticKey, nextValue);
+    }
+
+    return result;
   }
 
   /// Deletes [rawKey]. No gate: deletes cannot corrupt (hive no-ops absent keys before writing any frame,

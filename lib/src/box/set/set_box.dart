@@ -112,19 +112,19 @@ interface class SetBox<T extends Object, K extends Object>._({
       .map((_) => unit);
 
   /// Removes the element with [value]'s id when run. The key stays, even once its set is empty.
-  Task<Unit> remove(K key, T value) => Task(() async {
-    final rawKey = _rawKeyFor(key);
-    final storedValues = _engine.get(rawKey, key).toNullable();
-    if (storedValues == null) return unit;
+  Task<Unit> remove(K key, T value) => _engine.edit(
+    _rawKeyFor(key),
+    key,
+    (storedOrNone) => storedOrNone.flatMap((storedValues) {
+      final removedId = _idOf(value);
+      bool isRemoved(T element) => _idOf(element) == removedId;
 
-    final removedId = _idOf(value);
-    bool isRemoved(T element) => _idOf(element) == removedId;
-    if (storedValues.none(isRemoved)) return unit;
-
-    await _engine.put(rawKey, key, dedupedById(storedValues.whereNot(isRemoved), _idOf)).run();
-
-    return unit;
-  });
+      return Option.fromPredicate(
+        storedValues,
+        (values) => values.any(isRemoved),
+      ).map((values) => dedupedById(values.whereNot(isRemoved), _idOf));
+    }),
+  );
 
   /// Deletes [key] and its set when run.
   Task<Unit> delete(K key) => _engine.delete(_rawKeyFor(key), key);

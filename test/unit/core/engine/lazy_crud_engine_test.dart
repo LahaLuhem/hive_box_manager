@@ -8,6 +8,7 @@ library;
 import 'dart:async';
 
 import 'package:checks/checks.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:hive_box_manager/src/core/engine/lazy_crud_engine.dart';
 import 'package:hive_box_manager/src/core/raw_key.dart';
 import 'package:hive_box_manager/src/core/value_codec/identity_value_codec.dart';
@@ -177,6 +178,8 @@ void main() {
 
       check(() => engine.put(const RawKey(-1), -1, 'v')).throws<ArgumentError>();
       check(() => engine.putAll([entry(1, 'a'), entry(-1, 'b')])).throws<ArgumentError>();
+      check(() => engine.edit(const RawKey(-1), -1, (storedOrNone) => storedOrNone))
+          .throws<ArgumentError>();
       check(opener.count).equals(0);
     });
 
@@ -198,6 +201,44 @@ void main() {
           .equals('seed');
       await check(engine.update(const RawKey(8), 8, (value) => value).run())
           .throws<ArgumentError>();
+    });
+
+    scenario('edit writes what it returns, an absent key reaching it as None', () async {
+      final engine = makeEngine();
+      await engine.put(const RawKey(7), 7, 'v').run();
+      observer.calls.clear();
+
+      await engine
+          .edit(const RawKey(7), 7, (storedOrNone) => storedOrNone.map((value) => '$value!'))
+          .run();
+      await engine
+          .edit(const RawKey(9), 9, (storedOrNone) => Some(storedOrNone.getOrElse(() => 'seed')))
+          .run();
+
+      check(box.store).deepEquals({7: 'v!', 9: 'seed'});
+      check(observer.calls).deepEquals(['written:logs:7:v!', 'written:logs:9:seed']);
+    });
+
+    scenario('edit returning None writes nothing and dispatches nothing', () async {
+      final engine = makeEngine();
+      await engine.put(const RawKey(7), 7, 'v').run();
+      observer.calls.clear();
+
+      await engine.edit(const RawKey(7), 7, (_) => const None()).run();
+      await engine.edit(const RawKey(9), 9, (_) => const None()).run();
+
+      check(box.store).deepEquals({7: 'v'});
+      check(observer.calls).isEmpty();
+    });
+
+    scenario('a failing edit reaches the observer as edit', () async {
+      final engine = makeEngine();
+      await engine.ensureInitialised().run();
+      observer.calls.clear();
+
+      await check(engine.edit(const RawKey(7), 7, (_) => throw StateError('no')).run())
+          .throws<StateError>();
+      check(observer.calls).deepEquals(['error:logs:edit:StateError']);
     });
 
     scenario('deleteAll and clear remove batches with per-key and bulk dispatch', () async {

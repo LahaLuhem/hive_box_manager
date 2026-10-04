@@ -138,8 +138,7 @@ void main() {
       await facade.remove(9, 'a').run();
       await facade.remove(1, 'missing').run();
 
-      // The reads dispatch, and no write happens on either no-op path.
-      check(observer.calls).deepEquals(['read:tags:9:null', 'read:tags:1:[a]']);
+      check(observer.calls).isEmpty();
       check(facade.getOr(1)).deepEquals(['a']);
     });
   });

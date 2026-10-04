@@ -165,19 +165,16 @@ interface class LazyListBox<T extends Object, K extends Object>._({
   /// Removes the first [value] from the list under [key] when run, same as `List.remove`. A missing
   /// key or element is a no-op, and taking the last element out leaves an empty list rather than deleting
   /// the key. One disk read plus O(n) in the stored list.
-  Task<Unit> remove(K key, T value) => Task(() async {
-    // Encoded once, reused by both halves of the read-modify-write.
-    final rawKey = _rawKeyFor(key);
-    final storedValues = (await _engine.get(rawKey, key).run()).toNullable();
-    if (storedValues == null) return unit;
-
-    final index = storedValues.indexOf(value);
-    if (index < 0) return unit;
-
-    await _engine.put(rawKey, key, copyWithoutIndex(storedValues, index)).run();
-
-    return unit;
-  });
+  Task<Unit> remove(K key, T value) => _engine.edit(
+    _rawKeyFor(key),
+    key,
+    (storedOrNone) => storedOrNone.flatMap(
+      (storedValues) => Option.fromPredicate(
+        storedValues.indexOf(value),
+        (index) => index >= 0,
+      ).map((index) => copyWithoutIndex(storedValues, index)),
+    ),
+  );
 
   /// Deletes [key] and its whole list when run. Deleting something that isn't there is a no-op.
   Task<Unit> delete(K key) => _engine.delete(_rawKeyFor(key), key);

@@ -6,6 +6,7 @@
 library;
 
 import 'package:checks/checks.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:hive_box_manager/src/core/engine/eager_crud_engine.dart';
 import 'package:hive_box_manager/src/core/raw_key.dart';
 import 'package:hive_box_manager/src/core/value_codec/identity_value_codec.dart';
@@ -133,6 +134,32 @@ void main() {
       await check(update.run()).throws<ArgumentError>();
       check(box.store).isEmpty();
     });
+
+    scenario('edit writes what it returns, an absent key reaching it as None', () async {
+      await engine.put(const RawKey(7), 7, 'v').run();
+      observer.calls.clear();
+
+      await engine
+          .edit(const RawKey(7), 7, (storedOrNone) => storedOrNone.map((value) => '$value!'))
+          .run();
+      await engine
+          .edit(const RawKey(9), 9, (storedOrNone) => Some(storedOrNone.getOrElse(() => 'seed')))
+          .run();
+
+      check(box.store).deepEquals({7: 'v!', 9: 'seed'});
+      check(observer.calls).deepEquals(['written:users:7:v!', 'written:users:9:seed']);
+    });
+
+    scenario('edit returning None writes nothing and dispatches nothing', () async {
+      await engine.put(const RawKey(7), 7, 'v').run();
+      observer.calls.clear();
+
+      await engine.edit(const RawKey(7), 7, (_) => const None()).run();
+      await engine.edit(const RawKey(9), 9, (_) => const None()).run();
+
+      check(box.store).deepEquals({7: 'v'});
+      check(observer.calls).isEmpty();
+    });
   });
 
   feature('eager engine deletes', () {
@@ -171,6 +198,8 @@ void main() {
   feature('eager engine corruption gate', () {
     scenario('a non-storable key fails synchronously at the call site, before any Task', () {
       check(() => engine.put(const RawKey(-1), -1, 'v')).throws<ArgumentError>();
+      check(() => engine.edit(const RawKey(-1), -1, (storedOrNone) => storedOrNone))
+          .throws<ArgumentError>();
       check(box.store).isEmpty();
     });
 
@@ -244,6 +273,13 @@ void main() {
 
       await check(failing.put(const RawKey(7), 7, 'v').run()).throws<HiveError>();
       check(observer.calls).deepEquals(['error:users:put:HiveError']);
+    });
+
+    scenario('a failing edit reaches the observer as edit', () async {
+      final edit = engine.edit(const RawKey(7), 7, (_) => throw StateError('no'));
+
+      await check(edit.run()).throws<StateError>();
+      check(observer.calls).deepEquals(['error:users:edit:StateError']);
     });
 
     scenario('no observer attached costs nothing and breaks nothing', () async {
