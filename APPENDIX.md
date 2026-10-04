@@ -192,8 +192,10 @@ in `benchmark/` as regression tooling.
 CRUD is written exactly once per synchronicity axis, in 2 private engines. Everything that
 varies enters as an injected policy (key codec, value codec, observer), and the public façades
 are thin delegations that configure an engine and narrow the surface. A façade *cannot*
-reimplement CRUD because it owns none. The rejected alternatives: a refined inheritance family
-(the 0.0.x failure: the eager/lazy axis multiplies through every variant and template seams
+reimplement CRUD because it owns none. That covers read-modify-writes too. A façade hands the
+engine's `update` or `edit` a function rather than chaining its own read and write, so a fix to
+what happens between the two lands in one place. The rejected alternatives: a refined inheritance
+family (the 0.0.x failure: the eager/lazy axis multiplies through every variant and template seams
 re-fork), extension types (stateless, so no memoised open, and not implementable for consumer
 fakes), and free functions (abandons CRUD-for-free).
 

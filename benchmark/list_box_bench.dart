@@ -363,9 +363,8 @@ Future<LaneResult> runAdd<T extends Object>(
   );
 }
 
-/// Removes one mid-list element from every key. Distinct from [runAdd] because the façade implements
-/// it directly (`indexOf`, then a copy skipping that index) rather than through the update path, so
-/// it walks the list twice where `add` walks it once.
+/// Removes one mid-list element from every key. Distinct from [runAdd] because it walks the list twice,
+/// `indexOf` then a copy that skips that index, where `add` walks it once.
 Future<LaneResult> runRemove<T extends Object>(
   ElementSpec<T> spec,
   String impl,

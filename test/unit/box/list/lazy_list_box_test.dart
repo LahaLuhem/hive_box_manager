@@ -143,10 +143,12 @@ void main() {
 
     scenario('remove is a no-op for an absent key or an absent element', () async {
       await facade.put(1, ['a']).run();
+      observer.calls.clear();
 
       await facade.remove(9, 'a').run();
       await facade.remove(1, 'missing').run();
 
+      check(observer.calls).isEmpty();
       check(await facade.getOr(1).run()).deepEquals(['a']);
     });
 
