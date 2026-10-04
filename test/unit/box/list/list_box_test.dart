@@ -34,6 +34,12 @@ void main() {
     scenario('a key type without an identity default and no codec fails the wiring assert', () {
       check(() => listBoxAround<String, DateTime>(box)).throws<AssertionError>();
     });
+
+    scenario('an element type hive hands back untyped fails the wiring assert', () {
+      check(() => listBoxAround<List<Person>, int>(box)).throws<AssertionError>();
+      check(() => ListBox.open<List<Person>, int>('nested')).throws<AssertionError>();
+      check(() => listBoxAround<List<String>, int>(box)).returnsNormally();
+    });
   });
 
   feature('ListBox aliasing contract', () {

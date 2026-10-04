@@ -45,6 +45,17 @@ void main() {
       check(() => lazySetBoxAround<Member, int>('tags', () async => box)).throws<AssertionError>();
     });
 
+    scenario('an element type hive hands back untyped fails the wiring assert', () {
+      // With an idOf, so this assert is the only one that can fire.
+      int idOf(List<Object> elements) => elements.length;
+
+      check(() => lazySetBoxAround<List<Person>, int>('tags', () async => box, idOf: idOf))
+          .throws<AssertionError>();
+      check(() => LazySetBox<List<Person>, int>('nested', idOf: idOf)).throws<AssertionError>();
+      check(() => lazySetBoxAround<List<String>, int>('tags', () async => box, idOf: idOf))
+          .returnsNormally();
+    });
+
     scenario('the sync inspectors throw StateError before the first open, then work', () async {
       check(() => facade.length).throws<StateError>();
       check(() => facade.keys).throws<StateError>();

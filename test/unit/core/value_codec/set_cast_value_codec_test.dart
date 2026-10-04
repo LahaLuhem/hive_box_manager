@@ -12,7 +12,7 @@ import '../../../support/support.dart';
 void main() {
   feature('SetCastValueCodec', () {
     scenario('restores element typing from a Set<dynamic> disk shape', () {
-      const codec = SetCastValueCodec<String>();
+      final codec = SetCastValueCodec<String>();
 
       final view = codec.fromStored(<dynamic>{'a', 'b'});
 
@@ -22,7 +22,7 @@ void main() {
     });
 
     scenario('elements of another type fail at the decode, not when touched', () async {
-      const codec = SetCastValueCodec<int>();
+      final codec = SetCastValueCodec<int>();
 
       check(await thrownBy(() => codec.fromStored(<dynamic>{1, 'two'}))).isA<TypeError>();
     });
@@ -34,7 +34,7 @@ void main() {
         'already typed': <String>{'a'},
       },
       outline: (stored) {
-        const codec = SetCastValueCodec<String>();
+        final codec = SetCastValueCodec<String>();
         final view = codec.fromStored(stored);
 
         check(() => view.add('b')).throws<UnsupportedError>();
@@ -49,7 +49,7 @@ void main() {
         'already typed': <String>{'a'},
       },
       outline: (backing) {
-        const codec = SetCastValueCodec<String>();
+        final codec = SetCastValueCodec<String>();
         final view = codec.fromStored(backing);
 
         backing.add('b');
@@ -59,7 +59,7 @@ void main() {
     );
 
     scenario("writes pass through untouched (materialisation is the façade's job)", () {
-      const codec = SetCastValueCodec<String>();
+      final codec = SetCastValueCodec<String>();
       final value = {'a', 'b'};
 
       check(identical(codec.toStorable(value), value)).isTrue();

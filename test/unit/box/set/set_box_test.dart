@@ -41,6 +41,15 @@ void main() {
     scenario('a custom element type without idOf fails the wiring assert', () {
       check(() => setBoxAround<Member, int>(box)).throws<AssertionError>();
     });
+
+    scenario('an element type hive hands back untyped fails the wiring assert', () {
+      // With an idOf, so this assert is the only one that can fire.
+      int idOf(List<Object> elements) => elements.length;
+
+      check(() => setBoxAround<List<Person>, int>(box, idOf: idOf)).throws<AssertionError>();
+      check(() => SetBox.open<List<Person>, int>('nested', idOf: idOf)).throws<AssertionError>();
+      check(() => setBoxAround<List<String>, int>(box, idOf: idOf)).returnsNormally();
+    });
   });
 
   feature('SetBox aliasing contract', () {

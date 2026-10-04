@@ -17,5 +17,6 @@ export 'harness/temp_hive.dart';
 export 'harness/thrown_by.dart';
 export 'harness/unique_box_name.dart';
 export 'mocks.dart';
+export 'pins/nested_element_shapes.dart';
 export 'pins/probe_key_limits.dart';
 export 'pins/release_probe_runner.dart';

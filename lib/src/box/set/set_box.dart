@@ -187,6 +187,8 @@ interface class SetBox<T extends Object, K extends Object>._({
     CompactionStrategy? compactionStrategy,
     bool crashRecovery = true,
   }) {
+    // Built before the Task, so its wiring assert fires at the call like the key codec's.
+    final valueCodec = SetCastValueCodec<T>();
     final keyCodec = resolveKeyCodec<K>(codec);
     final elementIdOf = resolveIdOf<T>(idOf);
 
@@ -203,11 +205,7 @@ interface class SetBox<T extends Object, K extends Object>._({
 
         // Explicit type arguments on purpose, see CODESTYLE #type-safety.
         return SetBox<T, K>._(
-          engine: EagerCrudEngine<Set<T>>(
-            box: box,
-            valueCodec: SetCastValueCodec<T>(),
-            observer: observer,
-          ),
+          engine: EagerCrudEngine<Set<T>>(box: box, valueCodec: valueCodec, observer: observer),
           codec: keyCodec,
           idOf: elementIdOf,
         );

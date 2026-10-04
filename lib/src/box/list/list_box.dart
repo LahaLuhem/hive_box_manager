@@ -29,9 +29,10 @@ import 'list_edits.dart';
 /// back as one. The cast costs the same either way, so this surface doesn't branch on it (`benchmark/list_box_bench.dart`).
 /// The view allocates nothing, so what you pay per element is the type check, not a copy.
 ///
-/// Lists only, so order is kept and duplicates are fine. For no duplicates, use [SetBox]. Nested
-/// collections of custom types are out, since the cast only reaches the outer list. Model those as
-/// their own adapter-registered types.
+/// Lists only, so order is kept and duplicates are fine. For no duplicates, use [SetBox]. A nested
+/// collection only works where hive keeps it typed (a list of strings, say), since the cast only reaches
+/// the outer list. Anything else trips a development assert while wiring, so model those as their own
+/// adapter-registered types.
 ///
 /// The aliasing contract, both directions:
 ///
@@ -224,6 +225,8 @@ interface class ListBox<T extends Object, K extends Object>._({
     CompactionStrategy? compactionStrategy,
     bool crashRecovery = true,
   }) {
+    // Built before the Task, so its wiring assert fires at the call like the key codec's.
+    final valueCodec = CollectionCastValueCodec<T>();
     final keyCodec = resolveKeyCodec<K>(codec);
 
     return Task(() async {
@@ -239,11 +242,7 @@ interface class ListBox<T extends Object, K extends Object>._({
 
         // Explicit type arguments on purpose, see CODESTYLE #type-safety.
         return ListBox<T, K>._(
-          engine: EagerCrudEngine<List<T>>(
-            box: box,
-            valueCodec: CollectionCastValueCodec<T>(),
-            observer: observer,
-          ),
+          engine: EagerCrudEngine<List<T>>(box: box, valueCodec: valueCodec, observer: observer),
           codec: keyCodec,
         );
       } on Object catch (error, stackTrace) {

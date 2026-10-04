@@ -27,7 +27,8 @@ import 'list_edits.dart';
 /// lists are small and read often.
 ///
 /// List semantics only: order-preserving, duplicates allowed. For no duplicates, use [LazySetBox].
-/// Nested collections of custom types are out, since the cast only reaches the outer list.
+/// A nested collection only works where hive keeps it typed (a list of strings, say), since the cast only
+/// reaches the outer list. Anything else trips a development assert while wiring.
 ///
 /// The aliasing contract, both directions:
 ///

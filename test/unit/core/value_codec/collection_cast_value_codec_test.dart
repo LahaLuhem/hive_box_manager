@@ -15,7 +15,7 @@ import '../../../support/support.dart';
 void main() {
   feature('CollectionCastValueCodec', () {
     scenario('restores element typing from a List<dynamic> disk shape', () {
-      const codec = CollectionCastValueCodec<String>();
+      final codec = CollectionCastValueCodec<String>();
       final stored = <dynamic>['a', 'b'];
 
       final view = codec.fromStored(stored);
@@ -26,7 +26,7 @@ void main() {
     });
 
     scenario('elements of another type fail at the decode, not when touched', () async {
-      const codec = CollectionCastValueCodec<int>();
+      final codec = CollectionCastValueCodec<int>();
 
       check(await thrownBy(() => codec.fromStored(<dynamic>[1, 'two']))).isA<TypeError>();
     });
@@ -38,7 +38,7 @@ void main() {
         'already typed': <String>['a'],
       },
       outline: (stored) {
-        const codec = CollectionCastValueCodec<String>();
+        final codec = CollectionCastValueCodec<String>();
         final view = codec.fromStored(stored);
 
         // `[0] =` because the box stores fixed-length copies, which refuse `add` even without the view.
@@ -54,7 +54,7 @@ void main() {
         'already typed': <String>['a'],
       },
       outline: (backing) {
-        const codec = CollectionCastValueCodec<String>();
+        final codec = CollectionCastValueCodec<String>();
         final view = codec.fromStored(backing);
 
         backing.add('b');
@@ -65,7 +65,7 @@ void main() {
     );
 
     scenario("writes pass through untouched (materialisation is the façade's job)", () {
-      const codec = CollectionCastValueCodec<String>();
+      final codec = CollectionCastValueCodec<String>();
       final value = ['a', 'b'];
 
       check(identical(codec.toStorable(value), value)).isTrue();
