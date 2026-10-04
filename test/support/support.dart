@@ -9,6 +9,7 @@ export 'doubles/counting_opener.dart';
 export 'doubles/fake_boxes.dart';
 export 'doubles/flaky_thing_adapter.dart';
 export 'doubles/recording_box_observer.dart';
+export 'fixtures/colour.dart';
 export 'fixtures/member.dart';
 export 'fixtures/person.dart';
 export 'fixtures/test_cipher.dart';

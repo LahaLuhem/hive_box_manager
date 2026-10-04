@@ -6,8 +6,8 @@ import 'constants/hive_key_limits.dart';
 /// round without a word, and an oversized String key leaves the box file unreadable next time you open
 /// it.
 ///
-/// Runs in release on purpose, the one carve-out from the assert-first rule, because hive's own guard
-/// is assert-stripped there. Why that is worth it: APPENDIX #key-strategy.
+/// Runs in release on purpose, a carve-out from the assert-first rule (the exact-int key gate is the
+/// other), because hive's own guard is assert-stripped there. Why that is worth it: APPENDIX #key-strategy.
 ///
 /// Reads and deletes skip it. Reads cannot corrupt anything, and hive no-ops a delete of a key that
 /// isn't there before it writes a frame.

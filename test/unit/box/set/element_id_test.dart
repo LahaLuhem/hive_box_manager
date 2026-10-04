@@ -8,12 +8,6 @@ import 'package:test/test.dart';
 
 import '../../../support/support.dart';
 
-// A test fixture, not this file's subject.
-// ignore: prefer-match-file-name
-enum _Colour() {
-  red,
-}
-
 /// Compares by identity, Dart's default.
 final class _Thing(final String id);
 
@@ -41,7 +35,7 @@ void main() {
         'double': () => _identifiedByItself(1.5),
         'num': () => _identifiedByItself<num>(1),
         'bool': () => _identifiedByItself(true),
-        'enum': () => _identifiedByItself(_Colour.red),
+        'enum': () => _identifiedByItself(Colour.red),
       },
       outline: (resolve) {
         final (sample, id) = resolve();
@@ -67,7 +61,7 @@ void main() {
         'String': (thing) => thing.id,
         'int': (thing) => thing.id.length,
         'bool': (thing) => thing.id.isEmpty,
-        'enum': (thing) => _Colour.red,
+        'enum': (thing) => Colour.red,
       },
       outline: (idOf) {
         final thing = _Thing('a');
