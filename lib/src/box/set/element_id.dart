@@ -1,10 +1,12 @@
 import 'package:collection/collection.dart';
 
+import '/src/core/restart_safe.dart';
+
 /// What a set box tells [T] elements apart by: [idOf], or the element itself for value types.
 Object Function(T element) resolveIdOf<T extends Object>(Object Function(T element)? idOf) {
   if (idOf == null) {
     assert(
-      _isValueType<T>(),
+      isRestartSafeType<T>(),
       'No idOf for a set of $T. A restart hands back fresh objects, so only String, num, bool and '
       'enum elements can be told apart without one. Pass idOf:.',
     );
@@ -15,7 +17,7 @@ Object Function(T element) resolveIdOf<T extends Object>(Object Function(T eleme
   return (element) {
     final id = idOf(element);
     assert(
-      id is String || id is num || id is bool || id is Enum,
+      isRestartSafeValue(id),
       'idOf returned a ${id.runtimeType}. Return a String, num, bool or enum.',
     );
 
@@ -56,10 +58,3 @@ Map<Object, T> _firstPerId<T extends Object>(
   Iterable<T> elements,
   Object Function(T element) idOf,
 ) => elements.groupFoldBy(idOf, (first, element) => first ?? element);
-
-// A type can't be tested directly, but an empty list of it can.
-bool _isValueType<T>() {
-  final probe = <T>[];
-
-  return probe is List<String> || probe is List<num> || probe is List<bool> || probe is List<Enum>;
-}
