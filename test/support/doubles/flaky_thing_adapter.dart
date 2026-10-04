@@ -3,13 +3,10 @@ import 'package:hive_ce/hive.dart';
 /// The record id whose read always fails, standing in for corrupt bytes or a newer build's format.
 const undecodableId = 'bad';
 
-/// hive's adapter registry is global and outlives `Hive.close()`, so suites register once, guarded.
-const thingTypeId = 99;
-
 /// Writes anything, refuses to read one record: a decode fault scoped to a single key.
 final class const FlakyThingAdapter() extends TypeAdapter<Thing> {
   @override
-  int get typeId => thingTypeId;
+  int get typeId => 99;
 
   @override
   Thing read(BinaryReader reader) {

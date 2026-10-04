@@ -1,28 +1,22 @@
 // The dual-key demo through its view-model: grid seeding and the reverse queries. Both axes and the
 // no-match case are rows of one scenario.
-import 'dart:io';
 
 import 'package:bdd_framework/bdd_framework.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hbm_example/features/dual_query/dual_query_view_model.dart';
-import 'package:hive_ce/hive.dart';
+
+import '../../support/temp_hive.dart';
 
 void main() {
-  late Directory tempDir;
+  useTempHive('hbm_example_dual_');
   late DualQueryViewModel sut;
 
   setUp(() {
-    tempDir = Directory.systemTemp.createTempSync('hbm_example_dual_');
-    Hive.init(tempDir.path);
     sut = DualQueryViewModel()..init();
   });
 
-  tearDown(() async {
-    sut.onUnmount();
-    await Hive.close();
-    tempDir.deleteSync(recursive: true);
-  });
+  tearDown(() => sut.onUnmount());
 
   final feature = BddFeature('Dual-key query demo');
 

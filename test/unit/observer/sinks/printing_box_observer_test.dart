@@ -7,7 +7,7 @@ import 'package:checks/checks.dart';
 import 'package:hive_box_manager/src/observer/sinks/printing_box_observer.dart';
 import 'package:test/test.dart';
 
-import '../../../support/bdd.dart';
+import '../../../support/support.dart';
 
 void main() {
   feature('PrintingBoxObserver', () {

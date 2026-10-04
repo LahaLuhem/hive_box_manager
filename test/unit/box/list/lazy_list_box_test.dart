@@ -4,39 +4,32 @@ library;
 
 import 'package:checks/checks.dart';
 import 'package:hive_box_manager/src/box/list/lazy_list_box.dart';
-import 'package:hive_box_manager/src/event/lazy_typed_box_event.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
-import '../../../support/bdd.dart';
-import '../../../support/doubles/fake_boxes.dart';
-import '../../../support/doubles/recording_box_observer.dart';
+import '../../../support/support.dart';
 
 void main() {
   late FakeLazyBox box;
   late RecordingBoxObserver observer;
-  late int openCalls;
+  late CountingOpener opener;
   late LazyListBox<String, int> facade;
 
   setUp(() {
     box = FakeLazyBox(name: 'tags');
     observer = RecordingBoxObserver();
-    openCalls = 0;
-    facade = lazyListBoxAround('tags', () async {
-      openCalls++;
-
-      return box;
-    }, observer: observer);
+    opener = CountingOpener(box);
+    facade = lazyListBoxAround('tags', opener.open, observer: observer);
   });
 
   feature('LazyListBox wiring and auto-open', () {
     scenario('construction opens nothing; the first effect opens exactly once', () async {
-      check(openCalls).equals(0);
+      check(opener.count).equals(0);
 
       await facade.put(1, ['a']).run();
       await facade.put(2, ['b']).run();
 
-      check(openCalls).equals(1);
+      check(opener.count).equals(1);
       check(observer.calls.first).equals('opened:tags');
     });
 
@@ -62,7 +55,7 @@ void main() {
     scenario('the corruption gate throws at the call site, before the box even opens', () {
       check(() => facade.put(-1, ['a'])).throws<ArgumentError>();
 
-      check(openCalls).equals(0);
+      check(opener.count).equals(0);
     });
   });
 
@@ -175,14 +168,10 @@ void main() {
 
   feature('LazyListBox watch', () {
     scenario('writes carry Some of the view, deletes carry None', () async {
-      final events = <LazyTypedBoxEvent<List<String>, int>>[];
-      final subscription = facade.watch().listen(events.add);
-      await pumpEventQueue();
-
-      await facade.put(1, ['a']).run();
-      await facade.delete(1).run();
-      await pumpEventQueue();
-      await subscription.cancel();
+      final events = await recordEvents(facade.watch(), () async {
+        await facade.put(1, ['a']).run();
+        await facade.delete(1).run();
+      });
 
       check(events).length.equals(2);
       check(events.first.value.toNullable()).isNotNull().deepEquals(['a']);
@@ -196,7 +185,7 @@ void main() {
     scenario('close before first use never opens, yet turns the handle terminal', () async {
       await facade.close().run();
 
-      check(openCalls).equals(0);
+      check(opener.count).equals(0);
       check(observer.calls).deepEquals(['closed:tags']);
       await check(facade.put(1, ['a']).run()).throws<HiveError>();
     });

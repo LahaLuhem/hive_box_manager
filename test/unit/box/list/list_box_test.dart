@@ -4,14 +4,10 @@ library;
 
 import 'package:checks/checks.dart';
 import 'package:hive_box_manager/src/box/list/list_box.dart';
-import 'package:hive_box_manager/src/event/typed_box_event.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
-import '../../../support/bdd.dart';
-import '../../../support/codecs/date_key_codec.dart';
-import '../../../support/doubles/fake_boxes.dart';
-import '../../../support/doubles/recording_box_observer.dart';
+import '../../../support/support.dart';
 
 void main() {
   late FakeEagerBox box;
@@ -79,13 +75,7 @@ void main() {
     });
 
     scenario('watch payloads carry the same unmodifiable views', () async {
-      final events = <TypedBoxEvent<List<String>, int>>[];
-      final subscription = facade.watch().listen(events.add);
-      await pumpEventQueue();
-
-      await facade.put(1, ['a']).run();
-      await pumpEventQueue();
-      await subscription.cancel();
+      final events = await recordEvents(facade.watch(), () => facade.put(1, ['a']).run());
 
       check(events).length.equals(1);
       check(events.first.value).deepEquals(['a']);

@@ -7,7 +7,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hive_box_manager/src/event/lazy_typed_box_event.dart';
 import 'package:test/test.dart';
 
-import '../../support/bdd.dart';
+import '../../support/support.dart';
 
 void main() {
   feature('LazyTypedBoxEvent', () {

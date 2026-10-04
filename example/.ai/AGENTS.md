@@ -44,7 +44,7 @@ codegen. The package README points real apps at `hive_ce_generator`.
 
 **Adding a demo:** create `lib/features/<name>/<name>_view.dart` + `_view_model.dart`, add a tile to
 the home hub, and a BDD suite under `test/features/<name>/`. Reuse `DemoScaffold` and the `core`
-helpers.
+helpers, and `test/support/` for the temp-dir hive setup and typing helpers.
 
 ## Mobile-targeted
 

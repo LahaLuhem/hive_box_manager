@@ -3,48 +3,15 @@
 @Tags(['integration'])
 library;
 
-import 'dart:io';
-
 import 'package:checks/checks.dart';
 import 'package:hive_box_manager/hive_box_manager.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
-import '../../../support/bdd.dart';
-import '../../../support/codecs/date_key_codec.dart';
-import '../../../support/doubles/recording_box_observer.dart';
-import '../../../support/pins/probe_key_limits.dart';
-
-/// AES-256 wants exactly this many key bytes.
-const aesKeyBytes = 32;
-
-/// Collects what [stream] emits while [act] runs, draining the queue first so nothing in flight gets
-/// missed.
-Future<List<TypedBoxEvent<String, int>>> record(
-  Stream<TypedBoxEvent<String, int>> stream,
-  Future<void> Function() act,
-) async {
-  final events = <TypedBoxEvent<String, int>>[];
-  final subscription = stream.listen(events.add);
-  await act();
-  await pumpEventQueue();
-  await subscription.cancel();
-
-  return events;
-}
+import '../../../support/support.dart';
 
 void main() {
-  late Directory tempDir;
-
-  setUp(() {
-    tempDir = Directory.systemTemp.createTempSync('hbm_keyed_');
-    Hive.init(tempDir.path);
-  });
-
-  tearDown(() async {
-    await Hive.close();
-    tempDir.deleteSync(recursive: true);
-  });
+  final tempHive = useTempHive('hbm_keyed_');
 
   feature('KeyedBox acquisition against real hive', () {
     scenario('open is a lazy Task and dispatches onOpened when run', () async {
@@ -117,7 +84,7 @@ void main() {
     });
 
     scenario('an encrypted box reads back with the same cipher', () async {
-      final cipher = HiveAesCipher(List.filled(aesKeyBytes, 7));
+      final cipher = testCipher();
       var box = await KeyedBox.open<String, int>('secret', cipher: cipher).run();
       await box.put(1, 'ciphered').run();
       await box.close().run();
@@ -141,7 +108,7 @@ void main() {
     scenario('events arrive typed and deletes carry the just-deleted value', () async {
       final box = await KeyedBox.open<String, int>('users').run();
 
-      final events = await record(box.watch(), () async {
+      final events = await recordEvents(box.watch(), () async {
         await box.put(7, 'v').run();
         await box.delete(7).run();
       });
@@ -155,7 +122,7 @@ void main() {
     scenario('a key filter narrows the stream to that key', () async {
       final box = await KeyedBox.open<String, int>('users').run();
 
-      final events = await record(box.watch(key: 2), () async {
+      final events = await recordEvents(box.watch(key: 2), () async {
         await box.putAll({1: 'a', 2: 'b'}).run();
       });
 
@@ -171,7 +138,7 @@ void main() {
 
       await box.flush().run();
 
-      check(File('${tempDir.path}/users.hive').existsSync()).isTrue();
+      check(tempHive.boxFile('users').existsSync()).isTrue();
     });
 
     scenario('compact completes and the box stays readable', () async {
@@ -198,7 +165,7 @@ void main() {
       final box = await KeyedBox.open<String, int>('doomed').run();
       await box.put(1, 'a').run();
       await box.flush().run();
-      final boxFile = File('${tempDir.path}/doomed.hive');
+      final boxFile = tempHive.boxFile('doomed');
       check(boxFile.existsSync()).isTrue();
 
       await box.deleteFromDisk().run();

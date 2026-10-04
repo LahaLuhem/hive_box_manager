@@ -8,9 +8,7 @@ import 'package:hive_box_manager/src/box/single_value/single_value_box.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
-import '../../../support/bdd.dart';
-import '../../../support/doubles/fake_boxes.dart';
-import '../../../support/doubles/recording_box_observer.dart';
+import '../../../support/support.dart';
 
 void main() {
   late FakeEagerBox box;
@@ -84,14 +82,10 @@ void main() {
 
   feature('SingleValueBox watch', () {
     scenario('sets stream Some, clears stream None', () async {
-      final events = <Option<String>>[];
-      final subscription = facade.watch().listen(events.add);
-      await pumpEventQueue();
-
-      await facade.set('v').run();
-      await facade.clear().run();
-      await pumpEventQueue();
-      await subscription.cancel();
+      final events = await recordEvents(facade.watch(), () async {
+        await facade.set('v').run();
+        await facade.clear().run();
+      });
 
       check(events).deepEquals(const [Some('v'), None()]);
     });

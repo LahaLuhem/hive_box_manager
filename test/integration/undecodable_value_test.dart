@@ -4,17 +4,12 @@
 @Tags(['integration'])
 library;
 
-import 'dart:io';
-
 import 'package:checks/checks.dart';
 import 'package:hive_box_manager/hive_box_manager.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
-import '../support/bdd.dart';
-import '../support/codecs/date_key_codec.dart';
-import '../support/doubles/flaky_thing_adapter.dart';
-import '../support/doubles/recording_box_observer.dart';
+import '../support/support.dart';
 
 /// Returns the [UndecodableValueException] [act] must raise, so scenarios assert key and cause.
 Future<UndecodableValueException> captureUndecodable(Future<Object?> Function() act) async {
@@ -28,18 +23,9 @@ Future<UndecodableValueException> captureUndecodable(Future<Object?> Function() 
 }
 
 void main() {
-  late Directory tempDir;
+  useTempHive('hbm_undecodable_');
 
-  setUp(() {
-    tempDir = Directory.systemTemp.createTempSync('hbm_undecodable_');
-    Hive.init(tempDir.path);
-    if (!Hive.isAdapterRegistered(thingTypeId)) Hive.registerAdapter(const FlakyThingAdapter());
-  });
-
-  tearDown(() async {
-    await Hive.close();
-    tempDir.deleteSync(recursive: true);
-  });
+  setUpAll(() => Hive.registerAdapter(const FlakyThingAdapter()));
 
   /// Lays down a good, a bad and a good record, then closes so the next read comes off disk.
   Future<void> seedKeyed() async {

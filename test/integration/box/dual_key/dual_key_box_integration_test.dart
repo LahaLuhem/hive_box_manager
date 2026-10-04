@@ -5,30 +5,18 @@
 @Tags(['integration'])
 library;
 
-import 'dart:io';
-
 import 'package:checks/checks.dart';
 import 'package:hive_box_manager/hive_box_manager.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
-import '../../../support/bdd.dart';
+import '../../../support/support.dart';
 
 /// The 10K scan-sanity grid: primaries × secondaries entries, one query per axis.
 const scanGridSide = 100;
 
 void main() {
-  late Directory tempDir;
-
-  setUp(() {
-    tempDir = Directory.systemTemp.createTempSync('hbm_dual_');
-    Hive.init(tempDir.path);
-  });
-
-  tearDown(() async {
-    await Hive.close();
-    tempDir.deleteSync(recursive: true);
-  });
+  final tempHive = useTempHive('hbm_dual_');
 
   feature('DualKeyBox codecs against real hive', () {
     scenario('the composite default round-trips and persists across reopen', () async {
@@ -122,7 +110,7 @@ void main() {
       final facade = await DualKeyBox.open<String, int, int>('doomed').run();
       await facade.put(1, 1, 'v').run();
       await facade.flush().run();
-      final boxFile = File('${tempDir.path}/doomed.hive');
+      final boxFile = tempHive.boxFile('doomed');
       check(boxFile.existsSync()).isTrue();
 
       await facade.deleteFromDisk().run();

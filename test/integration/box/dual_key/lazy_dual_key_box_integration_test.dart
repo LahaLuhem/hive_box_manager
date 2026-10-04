@@ -3,28 +3,16 @@
 @Tags(['integration'])
 library;
 
-import 'dart:io';
-
 import 'package:checks/checks.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hive_box_manager/hive_box_manager.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
-import '../../../support/bdd.dart';
+import '../../../support/support.dart';
 
 void main() {
-  late Directory tempDir;
-
-  setUp(() {
-    tempDir = Directory.systemTemp.createTempSync('hbm_lazy_dual_');
-    Hive.init(tempDir.path);
-  });
-
-  tearDown(() async {
-    await Hive.close();
-    tempDir.deleteSync(recursive: true);
-  });
+  final tempHive = useTempHive('hbm_lazy_dual_');
 
   feature('LazyDualKeyBox against real hive', () {
     scenario('construction touches nothing; queries auto-open the real box', () async {
@@ -75,14 +63,10 @@ void main() {
     scenario('writes carry Some with record keys, deletes carry None', () async {
       final facade = LazyDualKeyBox<String, int, int>('grid');
       await facade.ensureInitialised().run();
-      final events = <LazyTypedBoxEvent<String, (int, int)>>[];
-      final subscription = facade.watch().listen(events.add);
-      await pumpEventQueue();
-
-      await facade.put(1, 2, 'v').run();
-      await facade.delete(1, 2).run();
-      await pumpEventQueue();
-      await subscription.cancel();
+      final events = await recordEvents(facade.watch(), () async {
+        await facade.put(1, 2, 'v').run();
+        await facade.delete(1, 2).run();
+      });
 
       check(events).deepEquals(const [
         LazyTypedBoxEvent<String, (int, int)>(key: (1, 2), value: Some('v')),
@@ -96,7 +80,7 @@ void main() {
       await untouched.close().run();
 
       check(Hive.isBoxOpen('never_used')).isFalse();
-      check(File('${tempDir.path}/never_used.hive').existsSync()).isFalse();
+      check(tempHive.boxFile('never_used').existsSync()).isFalse();
       await check(untouched.put(1, 2, 'v').run()).throws<HiveError>();
     });
   });

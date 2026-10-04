@@ -9,7 +9,7 @@ import 'package:hive_box_manager/hive_box_manager.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
-import '../../../support/bdd.dart';
+import '../../../support/support.dart';
 
 void main() {
   // hive_ce's web backend ignores the path, since storage is IndexedDB. The argument is only there to
@@ -18,8 +18,7 @@ void main() {
 
   feature('KeyedBox family on the browser (IndexedDB truth)', () {
     scenario('eager put / get / delete round-trips across close + reopen', () async {
-      // Unique per run: IndexedDB persists across tests within one browser session.
-      final boxName = 'smoke_eager_${DateTime.now().millisecondsSinceEpoch}';
+      final boxName = uniqueBoxName('smoke_eager');
 
       var box = await KeyedBox.open<String, int>(boxName).run();
       await box.putAll({1: 'a', 2: 'b'}).run();
@@ -36,7 +35,7 @@ void main() {
     });
 
     scenario('lazy auto-open and TaskOption reads across close + a new instance', () async {
-      final boxName = 'smoke_lazy_${DateTime.now().millisecondsSinceEpoch}';
+      final boxName = uniqueBoxName('smoke_lazy');
 
       final first = LazyKeyedBox<String, String>(boxName);
       await first.put('k', 'v').run();

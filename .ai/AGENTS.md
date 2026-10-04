@@ -62,7 +62,7 @@ hive_box_manager/
 │       ├── observer/               BoxObserver + sinks/
 │       └── query/                  Internal query-index strategy + the scan implementation
 ├── test/                           unit/ + integration/ mirror lib/src/ (box/ by family; hive_ce_pins/);
-│                                   support/ (bdd + mocks at root; doubles/, codecs/, fixtures/, pins/)
+│                                   support/ (bdd + mocks at root; doubles/, codecs/, fixtures/, harness/, pins/)
 ├── benchmark/                      Maintainer tooling: key-codec matrix + wrapper-overhead lane
 ├── example/                        Flutter demo app, with its own pubspec
 ├── analysis_options.yaml           Strict-mode + opinionated lints

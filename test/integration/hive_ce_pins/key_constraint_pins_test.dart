@@ -6,28 +6,14 @@
 @Tags(['integration'])
 library;
 
-import 'dart:io';
-
 import 'package:checks/checks.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
-import '../../support/bdd.dart';
-import '../../support/pins/probe_key_limits.dart';
-import '../../support/pins/release_probe_runner.dart';
+import '../../support/support.dart';
 
 void main() {
-  late Directory tempDir;
-
-  setUp(() {
-    tempDir = Directory.systemTemp.createTempSync('hbm_pins_');
-    Hive.init(tempDir.path);
-  });
-
-  tearDown(() async {
-    await Hive.close();
-    tempDir.deleteSync(recursive: true);
-  });
+  useTempHive('hbm_pins_');
 
   feature('hive_ce key constraints on the write path', () {
     scenarioOutline<Object>(
@@ -86,15 +72,9 @@ void main() {
   });
 
   feature('hive_ce key handling with asserts stripped (release truth, via subprocess)', () {
-    late Directory probeDir;
     late Map<String, Object?> verdicts;
 
-    setUpAll(() async {
-      probeDir = Directory.systemTemp.createTempSync('hbm_release_probe_');
-      verdicts = await runReleaseModeProbe(probeDir);
-    });
-
-    tearDownAll(() => probeDir.deleteSync(recursive: true));
+    setUpAll(() async => verdicts = await runReleaseModeProbe());
 
     scenarioOutline<({String label, int storedKey})>(
       'out-of-range int keys wrap silently into u32 and become unreachable',

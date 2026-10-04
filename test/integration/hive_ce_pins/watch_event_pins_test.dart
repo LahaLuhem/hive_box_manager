@@ -7,43 +7,19 @@
 @Tags(['integration'])
 library;
 
-import 'dart:io';
-
 import 'package:checks/checks.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
-import '../../support/bdd.dart';
-
-/// Collects what [stream] emits while [act] runs, draining the queue first so nothing in flight gets
-/// missed.
-Future<List<BoxEvent>> record(Stream<BoxEvent> stream, Future<void> Function() act) async {
-  final events = <BoxEvent>[];
-  final subscription = stream.listen(events.add);
-  await act();
-  await pumpEventQueue();
-  await subscription.cancel();
-
-  return events;
-}
+import '../../support/support.dart';
 
 void main() {
-  late Directory tempDir;
-
-  setUp(() {
-    tempDir = Directory.systemTemp.createTempSync('hbm_pins_');
-    Hive.init(tempDir.path);
-  });
-
-  tearDown(() async {
-    await Hive.close();
-    tempDir.deleteSync(recursive: true);
-  });
+  useTempHive('hbm_pins_');
 
   feature('hive_ce watch-event payloads, eager axis', () {
     scenario('a delete event carries the latest stored value, not null', () async {
       final box = await Hive.openBox<String>('watched');
-      final events = await record(box.watch(), () async {
+      final events = await recordEvents(box.watch(), () async {
         await box.put('k', 'v1');
         await box.put('k', 'v2');
         await box.delete('k');
@@ -59,7 +35,7 @@ void main() {
       final box = await Hive.openBox<String>('watched');
       await box.put('a', '1');
       await box.put('b', '2');
-      final events = await record(box.watch(), box.clear);
+      final events = await recordEvents(box.watch(), box.clear);
 
       check(events).length.equals(2);
       check(events.map((event) => event.deleted).toSet()).deepEquals({true});
@@ -70,7 +46,7 @@ void main() {
   feature('hive_ce watch-event payloads, lazy axis', () {
     scenario('put events carry the value; the delete event carries null', () async {
       final box = await Hive.openLazyBox<String>('lazy_watched');
-      final events = await record(box.watch(), () async {
+      final events = await recordEvents(box.watch(), () async {
         await box.put('k', 'stored-value');
         await box.delete('k');
       });
@@ -88,7 +64,7 @@ void main() {
       await box.close();
 
       box = await Hive.openLazyBox<String>('lazy_watched');
-      final events = await record(box.watch(), () => box.delete('k'));
+      final events = await recordEvents(box.watch(), () => box.delete('k'));
 
       check(events).length.equals(1);
       check(events.single.deleted).isTrue();
@@ -99,7 +75,7 @@ void main() {
       final box = await Hive.openLazyBox<String>('lazy_watched');
       await box.put('a', '1');
       await box.put('b', '2');
-      final events = await record(box.watch(), box.clear);
+      final events = await recordEvents(box.watch(), box.clear);
 
       check(events).length.equals(2);
       check(events.map((event) => event.deleted).toSet()).deepEquals({true});

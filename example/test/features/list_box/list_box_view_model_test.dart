@@ -1,35 +1,23 @@
 // The list-box demo through its view-model: add and remove per selected key, against real hive on a
 // temp dir.
-import 'dart:io';
 
 import 'package:bdd_framework/bdd_framework.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hbm_example/features/list_box/list_box_view_model.dart';
-import 'package:hive_ce/hive.dart';
+
+import '../../support/enter_each.dart';
+import '../../support/temp_hive.dart';
 
 void main() {
-  late Directory tempDir;
+  useTempHive('hbm_example_list_box_');
   late ListBoxViewModel sut;
 
   setUp(() {
-    tempDir = Directory.systemTemp.createTempSync('hbm_example_list_box_');
-    Hive.init(tempDir.path);
     sut = ListBoxViewModel();
   });
 
-  tearDown(() async {
-    sut.onUnmount();
-    await Hive.close();
-    tempDir.deleteSync(recursive: true);
-  });
-
-  Future<void> addAll(List<String> tags) async {
-    for (final tag in tags) {
-      sut.tagController.text = tag;
-      await sut.onAddPressed();
-    }
-  }
+  tearDown(() => sut.onUnmount());
 
   final feature = BddFeature('ListBox demo');
 
@@ -44,7 +32,7 @@ void main() {
         sut.init();
         await sut.ready;
 
-        await addAll(added);
+        await enterEach(sut.tagController, sut.onAddPressed, added);
 
         check(sut.tags.value).deepEquals(added);
       });
@@ -65,7 +53,7 @@ void main() {
         final remaining = ctx.example.val('remaining') as List<String>;
         sut.init();
         await sut.ready;
-        await addAll(seeded);
+        await enterEach(sut.tagController, sut.onAddPressed, seeded);
 
         await sut.onRemovePressed(removed);
 
@@ -84,7 +72,7 @@ void main() {
         final homeList = ctx.example.val('home list') as int;
         sut.init();
         await sut.ready;
-        await addAll([tag]);
+        await enterEach(sut.tagController, sut.onAddPressed, [tag]);
 
         sut.onKeySelected(otherList);
         check(sut.tags.value).isEmpty();

@@ -13,9 +13,7 @@ import 'package:checks/checks.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
-import '../../support/bdd.dart';
-import '../../support/codecs/probe_codecs.dart';
-import '../../support/fixtures/person.dart';
+import '../../support/support.dart';
 
 /// Part values at the edges of the 16-bit domain, where JS semantics would break first.
 const boundaryParts = [0, 1, 42, partMask - 1, partMask];
@@ -57,11 +55,10 @@ void main() {
       // to satisfy the shared VM and web signature.
       Hive
         ..init('hive_web_pins')
-        ..registerAdapter(const PersonAdapter(), override: true);
+        ..registerAdapter(const PersonAdapter());
 
-      // Unique per run: IndexedDB persists across tests within one browser session, and these pins must
-      // start from an empty box.
-      final boxName = 'pins_${DateTime.now().millisecondsSinceEpoch}';
+      // These pins must start from an empty box.
+      final boxName = uniqueBoxName('pins');
       var box = await Hive.openBox<Object>(boxName);
       await box.put(7, 'int-key');
       await box.put(arithPack(partMask, partMask), 'packed-key');

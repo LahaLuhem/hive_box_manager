@@ -13,10 +13,7 @@ import 'package:hive_ce/hive.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
-import '../../../support/bdd.dart';
-import '../../../support/doubles/fake_boxes.dart';
-import '../../../support/doubles/recording_box_observer.dart';
-import '../../../support/mocks.dart';
+import '../../../support/support.dart';
 
 /// One batch entry, in the shape the engine takes.
 MapEntry<RawKey, String> entry(int key, String value) => MapEntry(RawKey(key), value);
@@ -191,24 +188,19 @@ void main() {
 
   feature('eager engine watch', () {
     scenario('writes and deletes surface as raw events; eager deletes carry the value', () async {
-      final events = <BoxEvent>[];
-      final subscription = engine.watchRaw().listen(events.add);
-
-      await engine.put(const RawKey(7), 7, 'v').run();
-      await engine.delete(const RawKey(7), 7).run();
-      await pumpEventQueue();
-      await subscription.cancel();
+      final events = await recordEvents(engine.watchRaw(), () async {
+        await engine.put(const RawKey(7), 7, 'v').run();
+        await engine.delete(const RawKey(7), 7).run();
+      });
 
       check(events.map(shapeOf)).deepEquals([(7, 'v', false), (7, 'v', true)]);
     });
 
     scenario('a key filter narrows the stream to that key', () async {
-      final events = <BoxEvent>[];
-      final subscription = engine.watchRaw(key: const RawKey(2)).listen(events.add);
-
-      await engine.putAll([entry(1, 'a'), entry(2, 'b')]).run();
-      await pumpEventQueue();
-      await subscription.cancel();
+      final events = await recordEvents(
+        engine.watchRaw(key: const RawKey(2)),
+        () => engine.putAll([entry(1, 'a'), entry(2, 'b')]).run(),
+      );
 
       check(events.map(shapeOf)).deepEquals([(2, 'b', false)]);
     });

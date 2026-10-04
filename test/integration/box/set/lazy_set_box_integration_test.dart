@@ -2,38 +2,20 @@
 @Tags(['integration'])
 library;
 
-import 'dart:io';
-
 import 'package:checks/checks.dart';
 import 'package:hive_box_manager/hive_box_manager.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
-import '../../../support/bdd.dart';
-import '../../../support/fixtures/member.dart';
+import '../../../support/support.dart';
 
 void main() {
-  late Directory tempDir;
+  useTempHive('hbm_lazy_set_box_');
 
-  setUp(() {
-    tempDir = Directory.systemTemp.createTempSync('hbm_lazy_set_box_');
-    Hive.init(tempDir.path);
-    // Adapters outlive Hive.close(), and registering one twice prints a warning.
-    if (!Hive.isAdapterRegistered(const MemberAdapter().typeId)) {
-      Hive.registerAdapter(const MemberAdapter());
-    }
-  });
-
-  tearDown(() async {
-    await Hive.close();
-    tempDir.deleteSync(recursive: true);
-  });
+  setUpAll(() => Hive.registerAdapter(const MemberAdapter()));
 
   LazySetBox<Member, int> members() =>
       LazySetBox<Member, int>('members', idOf: (member) => member.id);
-
-  Future<Iterable<String>> namesUnder(LazySetBox<Member, int> box, int key) async =>
-      (await box.getOr(key).run()).map((member) => member.name);
 
   feature('LazySetBox against real hive', () {
     scenario('a set of a custom type reads back typed in a new instance', () async {
@@ -44,7 +26,7 @@ void main() {
       final read = await members().getOr(1).run();
 
       check(read).isA<Set<Member>>();
-      check(read.map((member) => member.name)).deepEquals(['a', 'b']);
+      check(read.names).deepEquals(['a', 'b']);
       check(() => read.add(Member(3, 'rogue'))).throws<UnsupportedError>();
     });
 
@@ -66,7 +48,7 @@ void main() {
 
       await box.add(1, Member(1, 'again')).run();
 
-      check(await namesUnder(box, 1)).deepEquals(['stored']);
+      check(await box.namesUnder(1)).deepEquals(['stored']);
     });
 
     scenario('upsert in a new instance replaces the element where it sits', () async {
@@ -77,7 +59,7 @@ void main() {
       final second = members();
       await second.upsert(1, Member(2, 'new')).run();
 
-      check(await namesUnder(second, 1)).deepEquals(['a', 'new', 'c']);
+      check(await second.namesUnder(1)).deepEquals(['a', 'new', 'c']);
     });
 
     scenario('remove matches a fresh copy by id', () async {
@@ -86,7 +68,7 @@ void main() {
 
       await box.remove(1, Member(1, 'fresh copy')).run();
 
-      check(await namesUnder(box, 1)).deepEquals(['b']);
+      check(await box.namesUnder(1)).deepEquals(['b']);
     });
 
     scenario('insertion order survives, and absent stays apart from stored-empty', () async {
@@ -99,7 +81,7 @@ void main() {
 
       final second = members();
 
-      check(await namesUnder(second, 1)).deepEquals(['c', 'a', 'b']);
+      check(await second.namesUnder(1)).deepEquals(['c', 'a', 'b']);
       check((await second.get(2).run()).toNullable()).isNotNull().isEmpty();
       check((await second.get(9).run()).isNone()).isTrue();
     });

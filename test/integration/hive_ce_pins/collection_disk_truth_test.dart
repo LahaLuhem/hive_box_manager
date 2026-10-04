@@ -13,35 +13,18 @@
 @Tags(['integration'])
 library;
 
-import 'dart:io';
-
 import 'package:checks/checks.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
-import '../../support/bdd.dart';
-import '../../support/fixtures/person.dart';
-import '../../support/pins/release_probe_runner.dart';
+import '../../support/support.dart';
 
 void main() {
   const alice = Person('alice', 30);
   const bob = Person('bob', 40);
-  late Directory tempDir;
+  useTempHive('hbm_pins_');
 
-  setUp(() {
-    tempDir = Directory.systemTemp.createTempSync('hbm_pins_');
-    Hive.init(tempDir.path);
-    // Guarded rather than `override: true`, because adapters outlive Hive.close() and re-overriding
-    // prints an engine warning into every test's output.
-    if (!Hive.isAdapterRegistered(const PersonAdapter().typeId)) {
-      Hive.registerAdapter(const PersonAdapter());
-    }
-  });
-
-  tearDown(() async {
-    await Hive.close();
-    tempDir.deleteSync(recursive: true);
-  });
+  setUpAll(() => Hive.registerAdapter(const PersonAdapter()));
 
   Future<Box<Object>> reopen(Box<Object> box) async {
     final boxName = box.name;
@@ -119,15 +102,9 @@ void main() {
   });
 
   feature('the #150 trap with asserts stripped (release truth, via subprocess)', () {
-    late Directory probeDir;
     late Map<String, Object?> verdicts;
 
-    setUpAll(() async {
-      probeDir = Directory.systemTemp.createTempSync('hbm_release_probe_');
-      verdicts = await runReleaseModeProbe(probeDir);
-    });
-
-    tearDownAll(() => probeDir.deleteSync(recursive: true));
+    setUpAll(() async => verdicts = await runReleaseModeProbe());
 
     scenario('the typed box opens fine and throws TypeError only at the first get', () {
       check(verdicts['typedBoxOpenedFine']).equals(true);

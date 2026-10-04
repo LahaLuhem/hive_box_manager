@@ -6,7 +6,7 @@ import 'package:checks/checks.dart';
 import 'package:hive_box_manager/src/event/typed_box_event.dart';
 import 'package:test/test.dart';
 
-import '../../support/bdd.dart';
+import '../../support/support.dart';
 
 void main() {
   feature('TypedBoxEvent', () {

@@ -3,15 +3,10 @@ library;
 
 import 'package:checks/checks.dart';
 import 'package:hive_box_manager/src/box/set/set_box.dart';
-import 'package:hive_box_manager/src/event/typed_box_event.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
-import '../../../support/bdd.dart';
-import '../../../support/codecs/date_key_codec.dart';
-import '../../../support/doubles/fake_boxes.dart';
-import '../../../support/doubles/recording_box_observer.dart';
-import '../../../support/fixtures/member.dart';
+import '../../../support/support.dart';
 
 void main() {
   late FakeEagerBox box;
@@ -27,8 +22,6 @@ void main() {
     memberBox = FakeEagerBox(name: 'members');
     members = setBoxAround(memberBox, idOf: (member) => member.id);
   });
-
-  Iterable<String> namesIn(Set<Member> set) => set.map((member) => member.name);
 
   feature('SetBox wiring', () {
     scenario('a custom codec owns the raw encoding and the decode round-trip', () async {
@@ -89,13 +82,7 @@ void main() {
     });
 
     scenario('watch payloads carry the same unmodifiable views', () async {
-      final events = <TypedBoxEvent<Set<String>, int>>[];
-      final subscription = facade.watch().listen(events.add);
-      await pumpEventQueue();
-
-      await facade.put(1, ['a']).run();
-      await pumpEventQueue();
-      await subscription.cancel();
+      final events = await recordEvents(facade.watch(), () => facade.put(1, ['a']).run());
 
       check(events).length.equals(1);
       check(events.first.value).deepEquals({'a'});
@@ -125,7 +112,7 @@ void main() {
     scenario('put keeps the first element per id', () async {
       await members.put(1, [Member(1, 'first'), Member(1, 'second')]).run();
 
-      check(namesIn(members.getOr(1))).deepEquals(['first']);
+      check(members.getOr(1).names).deepEquals(['first']);
     });
 
     scenario('add keeps the stored element with the same id, and creates on absence', () async {
@@ -133,7 +120,7 @@ void main() {
       await members.add(1, Member(1, 'incoming')).run();
       await members.add(1, Member(2, 'new')).run();
 
-      check(namesIn(members.getOr(1))).deepEquals(['stored', 'new']);
+      check(members.getOr(1).names).deepEquals(['stored', 'new']);
     });
 
     scenario('addAll keeps stored elements and appends new ids in order', () async {
@@ -141,7 +128,7 @@ void main() {
 
       await members.addAll(1, [Member(3, 'c'), Member(1, 'incoming'), Member(2, 'b')]).run();
 
-      check(namesIn(members.getOr(1))).deepEquals(['stored', 'c', 'b']);
+      check(members.getOr(1).names).deepEquals(['stored', 'c', 'b']);
     });
 
     scenario('upsert replaces the stored element with the same id where it sits', () async {
@@ -149,7 +136,7 @@ void main() {
 
       await members.upsert(1, Member(2, 'new')).run();
 
-      check(namesIn(members.getOr(1))).deepEquals(['a', 'new', 'c']);
+      check(members.getOr(1).names).deepEquals(['a', 'new', 'c']);
     });
 
     scenario('upsertAll replaces in place, appends new ids, and creates on absence', () async {
@@ -158,8 +145,8 @@ void main() {
 
       await members.upsertAll(1, [Member(2, 'b'), Member(1, 'new')]).run();
 
-      check(namesIn(members.getOr(9))).deepEquals(['only']);
-      check(namesIn(members.getOr(1))).deepEquals(['new', 'b']);
+      check(members.getOr(9).names).deepEquals(['only']);
+      check(members.getOr(1).names).deepEquals(['new', 'b']);
     });
 
     scenario("update's result is deduped by id", () async {
@@ -167,7 +154,7 @@ void main() {
 
       await members.update(1, (stored) => {...stored, Member(1, 'copy')}).run();
 
-      check(namesIn(members.getOr(1))).deepEquals(['a']);
+      check(members.getOr(1).names).deepEquals(['a']);
     });
 
     scenarioOutline<Future<Object> Function()>(
@@ -184,8 +171,7 @@ void main() {
 
         await write();
 
-        check(members.getOr(1).where((member) => member.id == 1).map((member) => member.name))
-            .deepEquals(['first']);
+        check(members.getOr(1).where((member) => member.id == 1).names).deepEquals(['first']);
       },
     );
   });
@@ -196,7 +182,7 @@ void main() {
 
       await members.remove(1, Member(1, 'fresh copy')).run();
 
-      check(namesIn(members.getOr(1))).deepEquals(['b']);
+      check(members.getOr(1).names).deepEquals(['b']);
     });
 
     scenario('removing the last element leaves Some(empty), never a deleted key', () async {
@@ -249,8 +235,8 @@ void main() {
         Member(20, 'cc'),
       ], keyOf: (member) => member.name.length).run();
 
-      check(namesIn(members.getOr(1))).deepEquals(['a']);
-      check(namesIn(members.getOr(2))).deepEquals(['bb', 'cc']);
+      check(members.getOr(1).names).deepEquals(['a']);
+      check(members.getOr(2).names).deepEquals(['bb', 'cc']);
     });
 
     scenario('the corruption gate throws at the call site and nothing is written', () {

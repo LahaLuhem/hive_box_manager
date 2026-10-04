@@ -3,19 +3,15 @@ library;
 
 import 'package:checks/checks.dart';
 import 'package:hive_box_manager/src/box/set/lazy_set_box.dart';
-import 'package:hive_box_manager/src/event/lazy_typed_box_event.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
-import '../../../support/bdd.dart';
-import '../../../support/doubles/fake_boxes.dart';
-import '../../../support/doubles/recording_box_observer.dart';
-import '../../../support/fixtures/member.dart';
+import '../../../support/support.dart';
 
 void main() {
   late FakeLazyBox box;
   late RecordingBoxObserver observer;
-  late int openCalls;
+  late CountingOpener opener;
   late LazySetBox<String, int> facade;
   late LazySetBox<Member, int> members;
   late FakeLazyBox memberBox;
@@ -23,27 +19,20 @@ void main() {
   setUp(() {
     box = FakeLazyBox(name: 'tags');
     observer = RecordingBoxObserver();
-    openCalls = 0;
-    facade = lazySetBoxAround('tags', () async {
-      openCalls++;
-
-      return box;
-    }, observer: observer);
+    opener = CountingOpener(box);
+    facade = lazySetBoxAround('tags', opener.open, observer: observer);
     memberBox = FakeLazyBox(name: 'members');
     members = lazySetBoxAround('members', () async => memberBox, idOf: (member) => member.id);
   });
 
-  Future<Iterable<String>> namesUnder(int key) async =>
-      (await members.getOr(key).run()).map((member) => member.name);
-
   feature('LazySetBox wiring and auto-open', () {
     scenario('construction opens nothing, and the first effect opens exactly once', () async {
-      check(openCalls).equals(0);
+      check(opener.count).equals(0);
 
       await facade.put(1, ['a']).run();
       await facade.put(2, ['b']).run();
 
-      check(openCalls).equals(1);
+      check(opener.count).equals(1);
       check(observer.calls.first).equals('opened:tags');
     });
 
@@ -71,7 +60,7 @@ void main() {
     scenario('the corruption gate throws at the call site, before the box even opens', () {
       check(() => facade.put(-1, ['a'])).throws<ArgumentError>();
 
-      check(openCalls).equals(0);
+      check(opener.count).equals(0);
     });
   });
 
@@ -141,14 +130,14 @@ void main() {
     scenario('put keeps the first element per id', () async {
       await members.put(1, [Member(1, 'first'), Member(1, 'second')]).run();
 
-      check(await namesUnder(1)).deepEquals(['first']);
+      check(await members.namesUnder(1)).deepEquals(['first']);
     });
 
     scenario('add keeps the stored element with the same id, and creates on absence', () async {
       await members.add(1, Member(1, 'stored')).run();
       await members.addAll(1, [Member(1, 'incoming'), Member(2, 'new')]).run();
 
-      check(await namesUnder(1)).deepEquals(['stored', 'new']);
+      check(await members.namesUnder(1)).deepEquals(['stored', 'new']);
     });
 
     scenario(
@@ -157,7 +146,7 @@ void main() {
         await members.upsert(1, Member(1, 'old')).run();
         await members.upsertAll(1, [Member(2, 'b'), Member(1, 'new')]).run();
 
-        check(await namesUnder(1)).deepEquals(['new', 'b']);
+        check(await members.namesUnder(1)).deepEquals(['new', 'b']);
       },
     );
 
@@ -166,7 +155,7 @@ void main() {
 
       await members.update(1, (stored) => {...stored, Member(1, 'copy')}).run();
 
-      check(await namesUnder(1)).deepEquals(['a']);
+      check(await members.namesUnder(1)).deepEquals(['a']);
     });
 
     scenarioOutline<Future<Object> Function()>(
@@ -184,8 +173,7 @@ void main() {
         await write();
         final readSet = await members.getOr(1).run();
 
-        check(readSet.where((member) => member.id == 1).map((member) => member.name))
-            .deepEquals(['first']);
+        check(readSet.where((member) => member.id == 1).names).deepEquals(['first']);
       },
     );
 
@@ -199,8 +187,8 @@ void main() {
         Member(20, 'cc'),
       ], keyOf: (member) => member.name.length).run();
 
-      check(await namesUnder(1)).deepEquals(['a']);
-      check(await namesUnder(2)).deepEquals(['bb', 'cc']);
+      check(await members.namesUnder(1)).deepEquals(['a']);
+      check(await members.namesUnder(2)).deepEquals(['bb', 'cc']);
     });
   });
 
@@ -211,7 +199,7 @@ void main() {
         await members.put(1, [Member(1, 'a'), Member(2, 'b')]).run();
 
         await members.remove(1, Member(1, 'fresh copy')).run();
-        check(await namesUnder(1)).deepEquals(['b']);
+        check(await members.namesUnder(1)).deepEquals(['b']);
 
         await members.remove(1, Member(2, 'fresh copy')).run();
         check((await members.get(1).run()).toNullable()).isNotNull().isEmpty();
@@ -232,14 +220,10 @@ void main() {
 
   feature('LazySetBox watch', () {
     scenario('writes carry Some of the view, deletes carry None', () async {
-      final events = <LazyTypedBoxEvent<Set<String>, int>>[];
-      final subscription = facade.watch().listen(events.add);
-      await pumpEventQueue();
-
-      await facade.put(1, ['a']).run();
-      await facade.delete(1).run();
-      await pumpEventQueue();
-      await subscription.cancel();
+      final events = await recordEvents(facade.watch(), () async {
+        await facade.put(1, ['a']).run();
+        await facade.delete(1).run();
+      });
 
       check(events).length.equals(2);
       check(events.first.value.toNullable()).isNotNull().deepEquals({'a'});
@@ -252,7 +236,7 @@ void main() {
     scenario('close before first use never opens, yet turns the handle terminal', () async {
       await facade.close().run();
 
-      check(openCalls).equals(0);
+      check(opener.count).equals(0);
       check(observer.calls).deepEquals(['closed:tags']);
       await check(facade.put(1, ['a']).run()).throws<HiveError>();
     });

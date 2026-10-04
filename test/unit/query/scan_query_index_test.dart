@@ -7,7 +7,7 @@ import 'package:hive_box_manager/src/codec/dual/string_composite_dual_codec.dart
 import 'package:hive_box_manager/src/query/scan_query_index.dart';
 import 'package:test/test.dart';
 
-import '../../support/bdd.dart';
+import '../../support/support.dart';
 
 void main() {
   const codec = StringCompositeDualCodec();

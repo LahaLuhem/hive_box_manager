@@ -1,35 +1,23 @@
 // The set-box demo through its view-model: tags that ignore case, written by add or upsert, against
 // real hive on a temp dir.
-import 'dart:io';
 
 import 'package:bdd_framework/bdd_framework.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hbm_example/features/set_box/set_box_view_model.dart';
-import 'package:hive_ce/hive.dart';
+
+import '../../support/enter_each.dart';
+import '../../support/temp_hive.dart';
 
 void main() {
-  late Directory tempDir;
+  useTempHive('hbm_example_set_box_');
   late SetBoxViewModel sut;
 
   setUp(() {
-    tempDir = Directory.systemTemp.createTempSync('hbm_example_set_box_');
-    Hive.init(tempDir.path);
     sut = SetBoxViewModel()..init();
   });
 
-  tearDown(() async {
-    sut.onUnmount();
-    await Hive.close();
-    tempDir.deleteSync(recursive: true);
-  });
-
-  Future<void> addAll(List<String> tags) async {
-    for (final tag in tags) {
-      sut.tagController.text = tag;
-      await sut.onAddPressed();
-    }
-  }
+  tearDown(() => sut.onUnmount());
 
   final feature = BddFeature('SetBox demo');
 
@@ -56,7 +44,7 @@ void main() {
         final typed = ctx.example.val('typed') as String;
         final listed = ctx.example.val('listed') as List<String>;
         await sut.ready;
-        await addAll(seeded);
+        await enterEach(sut.tagController, sut.onAddPressed, seeded);
 
         sut.tagController.text = typed;
         await (write == 'add' ? sut.onAddPressed() : sut.onUpsertPressed());
@@ -75,7 +63,7 @@ void main() {
         final removed = ctx.example.val('removed') as String;
         final left = ctx.example.val('left') as List<String>;
         await sut.ready;
-        await addAll(seeded);
+        await enterEach(sut.tagController, sut.onAddPressed, seeded);
 
         await sut.onRemovePressed(removed);
 

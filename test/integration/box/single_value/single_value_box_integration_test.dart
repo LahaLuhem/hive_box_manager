@@ -4,31 +4,16 @@
 @Tags(['integration'])
 library;
 
-import 'dart:io';
-
 import 'package:checks/checks.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hive_box_manager/hive_box_manager.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
-import '../../../support/bdd.dart';
-
-/// AES-256 wants exactly this many key bytes.
-const aesKeyBytes = 32;
+import '../../../support/support.dart';
 
 void main() {
-  late Directory tempDir;
-
-  setUp(() {
-    tempDir = Directory.systemTemp.createTempSync('hbm_single_');
-    Hive.init(tempDir.path);
-  });
-
-  tearDown(() async {
-    await Hive.close();
-    tempDir.deleteSync(recursive: true);
-  });
+  final tempHive = useTempHive('hbm_single_');
 
   feature('SingleValueBox slot compatibility against real hive', () {
     scenario('the value lands under raw key 0, where 0.0.x single boxes kept it', () async {
@@ -86,7 +71,7 @@ void main() {
     });
 
     scenario('an encrypted box reads back with the same cipher', () async {
-      final cipher = HiveAesCipher(List.filled(aesKeyBytes, 7));
+      final cipher = testCipher();
       var facade = await SingleValueBox.open<String>('secret', cipher: cipher).run();
       await facade.set('ciphered').run();
       await facade.close().run();
@@ -100,14 +85,10 @@ void main() {
   feature('SingleValueBox watch against real hive', () {
     scenario('sets stream Some, clears stream None', () async {
       final facade = await SingleValueBox.open<String>('config').run();
-      final events = <Option<String>>[];
-      final subscription = facade.watch().listen(events.add);
-      await pumpEventQueue();
-
-      await facade.set('v').run();
-      await facade.clear().run();
-      await pumpEventQueue();
-      await subscription.cancel();
+      final events = await recordEvents(facade.watch(), () async {
+        await facade.set('v').run();
+        await facade.clear().run();
+      });
 
       check(events).deepEquals(const [Some('v'), None()]);
     });
@@ -118,7 +99,7 @@ void main() {
       final facade = await SingleValueBox.open<String>('doomed').run();
       await facade.set('v').run();
       await facade.flush().run();
-      final boxFile = File('${tempDir.path}/doomed.hive');
+      final boxFile = tempHive.boxFile('doomed');
       check(boxFile.existsSync()).isTrue();
 
       await facade.deleteFromDisk().run();

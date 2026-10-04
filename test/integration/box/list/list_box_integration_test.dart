@@ -4,30 +4,17 @@
 @Tags(['integration'])
 library;
 
-import 'dart:io';
-
 import 'package:checks/checks.dart';
 import 'package:hive_box_manager/hive_box_manager.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
-import '../../../support/bdd.dart';
-import '../../../support/fixtures/person.dart';
+import '../../../support/support.dart';
 
 void main() {
-  late Directory tempDir;
+  final tempHive = useTempHive('hbm_list_box_');
 
-  setUp(() {
-    tempDir = Directory.systemTemp.createTempSync('hbm_list_box_');
-    Hive
-      ..init(tempDir.path)
-      ..registerAdapter(const PersonAdapter(), override: true);
-  });
-
-  tearDown(() async {
-    await Hive.close();
-    tempDir.deleteSync(recursive: true);
-  });
+  setUpAll(() => Hive.registerAdapter(const PersonAdapter()));
 
   feature('ListBox disk truth against real hive (the issue-#150 path)', () {
     scenario('custom-type lists reify typed across close + reopen', () async {
@@ -143,7 +130,7 @@ void main() {
       final facade = await ListBox.open<String, int>('doomed').run();
       await facade.put(1, ['a']).run();
       await facade.flush().run();
-      final boxFile = File('${tempDir.path}/doomed.hive');
+      final boxFile = tempHive.boxFile('doomed');
       check(boxFile.existsSync()).isTrue();
 
       await facade.deleteFromDisk().run();

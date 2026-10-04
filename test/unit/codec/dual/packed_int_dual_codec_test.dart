@@ -6,7 +6,7 @@ import 'package:checks/checks.dart';
 import 'package:hive_box_manager/src/codec/dual/packed_int_dual_codec.dart';
 import 'package:test/test.dart';
 
-import '../../../support/bdd.dart';
+import '../../../support/support.dart';
 
 /// Part values at the edges of the 16-bit domain.
 const boundaryParts = [0, 1, 42, PackedIntDualCodec.maxPart - 1, PackedIntDualCodec.maxPart];
