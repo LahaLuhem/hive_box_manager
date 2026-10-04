@@ -2,32 +2,17 @@
 @Tags(['integration'])
 library;
 
-import 'dart:io';
-
 import 'package:checks/checks.dart';
 import 'package:hive_box_manager/hive_box_manager.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
-import '../../../support/bdd.dart';
-import '../../../support/fixtures/member.dart';
+import '../../../support/support.dart';
 
 void main() {
-  late Directory tempDir;
+  useTempHive('hbm_set_box_');
 
-  setUp(() {
-    tempDir = Directory.systemTemp.createTempSync('hbm_set_box_');
-    Hive.init(tempDir.path);
-    // Adapters outlive Hive.close(), and registering one twice prints a warning.
-    if (!Hive.isAdapterRegistered(const MemberAdapter().typeId)) {
-      Hive.registerAdapter(const MemberAdapter());
-    }
-  });
-
-  tearDown(() async {
-    await Hive.close();
-    tempDir.deleteSync(recursive: true);
-  });
+  setUpAll(() => Hive.registerAdapter(const MemberAdapter()));
 
   Future<SetBox<Member, int>> openMembers() =>
       SetBox.open<Member, int>('members', idOf: (member) => member.id).run();
@@ -39,8 +24,6 @@ void main() {
     return openMembers();
   }
 
-  Iterable<String> namesIn(Set<Member> set) => set.map((member) => member.name);
-
   feature('SetBox against real hive', () {
     scenario('a set of a custom type reads back typed after a reopen', () async {
       final box = await openMembers();
@@ -49,7 +32,7 @@ void main() {
       final reopened = await reopen(box);
 
       check(reopened.getOr(1)).isA<Set<Member>>();
-      check(namesIn(reopened.getOr(1))).deepEquals(['a', 'b']);
+      check(reopened.getOr(1).names).deepEquals(['a', 'b']);
     });
 
     scenario('value-type elements need no idOf and come back typed, in order', () async {
@@ -70,7 +53,7 @@ void main() {
 
       await reopened.add(1, Member(1, 'again')).run();
 
-      check(namesIn(reopened.getOr(1))).deepEquals(['stored']);
+      check(reopened.getOr(1).names).deepEquals(['stored']);
     });
 
     scenario('upsert after a reopen replaces the element where it sits', () async {
@@ -80,7 +63,7 @@ void main() {
 
       await reopened.upsert(1, Member(2, 'new')).run();
 
-      check(namesIn(reopened.getOr(1))).deepEquals(['a', 'new', 'c']);
+      check(reopened.getOr(1).names).deepEquals(['a', 'new', 'c']);
     });
 
     scenario('remove after a reopen matches a fresh copy by id', () async {
@@ -90,7 +73,7 @@ void main() {
 
       await reopened.remove(1, Member(1, 'fresh copy')).run();
 
-      check(namesIn(reopened.getOr(1))).deepEquals(['b']);
+      check(reopened.getOr(1).names).deepEquals(['b']);
     });
 
     scenario('a read answers the same in the session and after a reopen', () async {
@@ -109,7 +92,7 @@ void main() {
 
       final reopened = await reopen(box);
 
-      check(namesIn(reopened.getOr(1))).deepEquals(['c', 'a', 'b']);
+      check(reopened.getOr(1).names).deepEquals(['c', 'a', 'b']);
     });
 
     scenario('absent stays None and stored-empty stays Some(empty) across a reopen', () async {
@@ -128,7 +111,7 @@ void main() {
       await box.put(1, source).run();
       source.add(Member(2, 'rogue'));
 
-      check(namesIn(box.getOr(1))).deepEquals(['a']);
+      check(box.getOr(1).names).deepEquals(['a']);
       check(() => box.getOr(1).add(Member(3, 'rogue'))).throws<UnsupportedError>();
 
       final reopened = await reopen(box);

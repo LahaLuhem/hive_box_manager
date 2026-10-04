@@ -7,15 +7,21 @@ import 'dart:io';
 
 import 'package:checks/checks.dart';
 
-/// Launches the probe via `dart run` and returns its flat verdict map.
+/// Launches the probe via `dart run` in a temp dir of its own and returns its flat verdict map.
 ///
 /// Relies on the test runner's working directory being the package root, which `dart test` guarantees.
-Future<Map<String, Object?>> runReleaseModeProbe(Directory workDir) async {
-  final result = await Process.run(Platform.resolvedExecutable, [
-    'run',
-    'test/support/pins/release_mode_probe.dart',
-    workDir.path,
-  ]);
+Future<Map<String, Object?>> runReleaseModeProbe() async {
+  final workDir = Directory.systemTemp.createTempSync('hbm_release_probe_');
+  final ProcessResult result;
+  try {
+    result = await Process.run(Platform.resolvedExecutable, [
+      'run',
+      'test/support/pins/release_mode_probe.dart',
+      workDir.path,
+    ]);
+  } finally {
+    workDir.deleteSync(recursive: true);
+  }
   check(result.exitCode, because: 'probe stderr: ${result.stderr}').equals(0);
 
   // The verdict map is the last stdout line, tolerating any tool preamble.

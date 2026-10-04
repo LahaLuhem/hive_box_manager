@@ -7,8 +7,7 @@ import 'package:checks/checks.dart';
 import 'package:hive_box_manager/src/observer/box_observer.dart';
 import 'package:test/test.dart';
 
-import '../../support/bdd.dart';
-import '../../support/doubles/recording_box_observer.dart';
+import '../../support/support.dart';
 
 /// Overrides nothing: every dispatch must fall through to the no-op defaults.
 // A test-helper double, not this file's subject (which is the suite itself).

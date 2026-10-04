@@ -14,9 +14,7 @@ import 'package:hive_box_manager/src/core/value_codec/identity_value_codec.dart'
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
-import '../../../support/bdd.dart';
-import '../../../support/doubles/fake_boxes.dart';
-import '../../../support/doubles/recording_box_observer.dart';
+import '../../../support/support.dart';
 
 /// One batch entry, in the shape the engine takes.
 MapEntry<RawKey, String> entry(int key, String value) => MapEntry(RawKey(key), value);
@@ -30,18 +28,12 @@ Object identityKey(Object rawKey) => rawKey;
 void main() {
   late FakeLazyBox box;
   late RecordingBoxObserver observer;
-  late int openCalls;
+  late CountingOpener opener;
 
   LazyCrudEngine<String> makeEngine({Future<LazyBox<Object?>> Function()? openBox}) =>
       LazyCrudEngine(
         boxName: 'logs',
-        openBox:
-            openBox ??
-            () async {
-              openCalls++;
-
-              return box;
-            },
+        openBox: openBox ?? opener.open,
         valueCodec: const IdentityValueCodec(),
         observer: observer,
       );
@@ -49,7 +41,7 @@ void main() {
   setUp(() {
     box = FakeLazyBox(name: 'logs');
     observer = RecordingBoxObserver();
-    openCalls = 0;
+    opener = CountingOpener(box);
   });
 
   feature('lazy engine auto-open', () {
@@ -59,20 +51,14 @@ void main() {
       await engine.put(const RawKey(7), 7, 'v').run();
       await engine.put(const RawKey(8), 8, 'w').run();
 
-      check(openCalls).equals(1);
+      check(opener.count).equals(1);
       check(observer.calls).deepEquals(['opened:logs', 'written:logs:7:v', 'written:logs:8:w']);
     });
 
     scenario('N concurrent first operations share one single-flight open', () async {
       final gate = Completer<void>();
-      final engine = makeEngine(
-        openBox: () async {
-          openCalls++;
-          await gate.future;
-
-          return box;
-        },
-      );
+      final gatedOpener = CountingOpener(box, until: gate.future);
+      final engine = makeEngine(openBox: gatedOpener.open);
 
       // Concurrency is the point here: every op fires before the open completes.
       final racing = [
@@ -82,12 +68,12 @@ void main() {
         engine.values(identityKey).run(),
         engine.ensureInitialised().run(),
       ];
-      check(openCalls).equals(1);
+      check(gatedOpener.count).equals(1);
 
       gate.complete();
       await racing.wait;
 
-      check(openCalls).equals(1);
+      check(gatedOpener.count).equals(1);
     });
 
     scenario('a failed open resets the memo so the next operation retries', () async {
@@ -178,7 +164,7 @@ void main() {
       final engine = makeEngine();
       final write = engine.put(const RawKey(7), 7, 'v');
 
-      check(openCalls).equals(0);
+      check(opener.count).equals(0);
       check(box.store).isEmpty();
 
       await write.run();
@@ -191,7 +177,7 @@ void main() {
 
       check(() => engine.put(const RawKey(-1), -1, 'v')).throws<ArgumentError>();
       check(() => engine.putAll([entry(1, 'a'), entry(-1, 'b')])).throws<ArgumentError>();
-      check(openCalls).equals(0);
+      check(opener.count).equals(0);
     });
 
     scenario('two entries encoding to one raw key trip the duplicate assert', () {
@@ -199,7 +185,7 @@ void main() {
 
       check(() => engine.putAll([entry(1, 'a'), entry(1, 'b')])).throws<AssertionError>();
 
-      check(openCalls).equals(0);
+      check(opener.count).equals(0);
       check(box.store).isEmpty();
     });
 
@@ -230,27 +216,20 @@ void main() {
   feature('lazy engine watch', () {
     scenario('raw events pass through; a lazy delete carries no value', () async {
       final engine = makeEngine();
-      final events = <BoxEvent>[];
-      final subscription = engine.watchRaw().listen(events.add);
-      await pumpEventQueue();
-
-      await engine.put(const RawKey(7), 7, 'v').run();
-      await engine.delete(const RawKey(7), 7).run();
-      await pumpEventQueue();
-      await subscription.cancel();
+      final events = await recordEvents(engine.watchRaw(), () async {
+        await engine.put(const RawKey(7), 7, 'v').run();
+        await engine.delete(const RawKey(7), 7).run();
+      });
 
       check(events.map(shapeOf)).deepEquals([(7, 'v', false), (7, null, true)]);
     });
 
     scenario('a key filter narrows the stream to that key', () async {
       final engine = makeEngine();
-      final events = <BoxEvent>[];
-      final subscription = engine.watchRaw(key: const RawKey(2)).listen(events.add);
-      await pumpEventQueue();
-
-      await engine.putAll([entry(1, 'a'), entry(2, 'b')]).run();
-      await pumpEventQueue();
-      await subscription.cancel();
+      final events = await recordEvents(
+        engine.watchRaw(key: const RawKey(2)),
+        () => engine.putAll([entry(1, 'a'), entry(2, 'b')]).run(),
+      );
 
       check(events.map(shapeOf)).deepEquals([(2, 'b', false)]);
     });
@@ -272,7 +251,7 @@ void main() {
 
       await engine.close().run();
 
-      check(openCalls).equals(0);
+      check(opener.count).equals(0);
       check(observer.calls).deepEquals(['closed:logs']);
 
       await check(engine.put(const RawKey(7), 7, 'v').run()).throws<HiveError>();
@@ -286,7 +265,7 @@ void main() {
       await engine.close().run();
       await engine.close().run();
 
-      check(openCalls).equals(0);
+      check(opener.count).equals(0);
       check(observer.calls).deepEquals(['closed:logs', 'closed:logs']);
     });
 

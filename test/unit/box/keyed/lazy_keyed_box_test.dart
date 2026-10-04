@@ -11,26 +11,19 @@ import 'package:hive_box_manager/src/event/lazy_typed_box_event.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
-import '../../../support/bdd.dart';
-import '../../../support/codecs/date_key_codec.dart';
-import '../../../support/doubles/fake_boxes.dart';
-import '../../../support/doubles/recording_box_observer.dart';
+import '../../../support/support.dart';
 
 void main() {
   late FakeLazyBox box;
   late RecordingBoxObserver observer;
-  late int openCalls;
+  late CountingOpener opener;
   late LazyKeyedBox<String, int> facade;
 
   setUp(() {
     box = FakeLazyBox(name: 'logs');
     observer = RecordingBoxObserver();
-    openCalls = 0;
-    facade = lazyKeyedBoxAround('logs', () async {
-      openCalls++;
-
-      return box;
-    }, observer: observer);
+    opener = CountingOpener(box);
+    facade = lazyKeyedBoxAround('logs', opener.open, observer: observer);
   });
 
   feature('LazyKeyedBox wiring and codec defaulting', () {
@@ -63,32 +56,27 @@ void main() {
 
   feature('LazyKeyedBox auto-open', () {
     scenario('construction opens nothing; the first effect opens exactly once', () async {
-      check(openCalls).equals(0);
+      check(opener.count).equals(0);
 
       await facade.put(7, 'v').run();
       await facade.put(8, 'w').run();
 
-      check(openCalls).equals(1);
+      check(opener.count).equals(1);
       check(observer.calls.first).equals('opened:logs');
     });
 
     scenario('concurrent first effects share one single-flight open', () async {
       final gate = Completer<void>();
-      final gatedBox = FakeLazyBox(name: 'logs');
-      final gated = lazyKeyedBoxAround<String, int>('logs', () async {
-        openCalls++;
-        await gate.future;
-
-        return gatedBox;
-      });
+      final gatedOpener = CountingOpener(FakeLazyBox(name: 'logs'), until: gate.future);
+      final gated = lazyKeyedBoxAround<String, int>('logs', gatedOpener.open);
 
       final racing = [gated.put(1, 'a').run(), gated.get(1).run(), gated.values.run()];
-      check(openCalls).equals(1);
+      check(gatedOpener.count).equals(1);
 
       gate.complete();
       await racing.wait;
 
-      check(openCalls).equals(1);
+      check(gatedOpener.count).equals(1);
     });
 
     scenario('the sync inspectors throw StateError before the first open, then work', () async {
@@ -156,7 +144,7 @@ void main() {
       check(() => facade.put(-1, 'v')).throws<ArgumentError>();
       check(() => facade.putAll({1: 'a', -1: 'b'})).throws<ArgumentError>();
 
-      check(openCalls).equals(0);
+      check(opener.count).equals(0);
       check(box.store).isEmpty();
     });
 
@@ -171,7 +159,7 @@ void main() {
       check(() => facade.putAllBy(['ant', 'bee'], keyOf: (value) => value.length))
           .throws<AssertionError>();
 
-      check(openCalls).equals(0);
+      check(opener.count).equals(0);
       check(box.store).isEmpty();
     });
 
@@ -205,14 +193,10 @@ void main() {
 
   feature('LazyKeyedBox watch', () {
     scenario('writes carry Some, deletes carry None, and deleted derives from it', () async {
-      final events = <LazyTypedBoxEvent<String, int>>[];
-      final subscription = facade.watch().listen(events.add);
-      await pumpEventQueue();
-
-      await facade.put(7, 'v').run();
-      await facade.delete(7).run();
-      await pumpEventQueue();
-      await subscription.cancel();
+      final events = await recordEvents(facade.watch(), () async {
+        await facade.put(7, 'v').run();
+        await facade.delete(7).run();
+      });
 
       check(events).deepEquals(const [
         LazyTypedBoxEvent<String, int>(key: 7, value: Some('v')),
@@ -222,13 +206,10 @@ void main() {
     });
 
     scenario('a key filter narrows the stream to that key', () async {
-      final events = <LazyTypedBoxEvent<String, int>>[];
-      final subscription = facade.watch(key: 2).listen(events.add);
-      await pumpEventQueue();
-
-      await facade.putAll({1: 'a', 2: 'b'}).run();
-      await pumpEventQueue();
-      await subscription.cancel();
+      final events = await recordEvents(
+        facade.watch(key: 2),
+        () => facade.putAll({1: 'a', 2: 'b'}).run(),
+      );
 
       check(events).deepEquals(const [LazyTypedBoxEvent<String, int>(key: 2, value: Some('b'))]);
     });
@@ -238,7 +219,7 @@ void main() {
     scenario('close before first use never opens, yet turns the handle terminal', () async {
       await facade.close().run();
 
-      check(openCalls).equals(0);
+      check(opener.count).equals(0);
       check(observer.calls).deepEquals(['closed:logs']);
 
       await check(facade.put(7, 'v').run()).throws<HiveError>();

@@ -7,8 +7,7 @@ import 'package:checks/checks.dart';
 import 'package:hive_box_manager/src/core/raw_key_gate.dart';
 import 'package:test/test.dart';
 
-import '../../support/bdd.dart';
-import '../../support/pins/probe_key_limits.dart';
+import '../../support/support.dart';
 
 /// A 3-UTF-8-byte character (hiragana "a"): stresses the byte-vs-character distinction.
 const threeByteChar = 'あ';

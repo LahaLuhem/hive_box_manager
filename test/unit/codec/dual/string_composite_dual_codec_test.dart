@@ -6,7 +6,7 @@ import 'package:checks/checks.dart';
 import 'package:hive_box_manager/src/codec/dual/string_composite_dual_codec.dart';
 import 'package:test/test.dart';
 
-import '../../../support/bdd.dart';
+import '../../../support/support.dart';
 
 // The i64 extremes as expressions, since literals this large trip avoid_js_rounded_ints. These rows
 // only run on the VM.

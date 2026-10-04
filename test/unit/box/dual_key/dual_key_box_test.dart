@@ -9,10 +9,7 @@ import 'package:hive_box_manager/src/event/typed_box_event.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
-import '../../../support/bdd.dart';
-import '../../../support/codecs/date_int_dual_codec.dart';
-import '../../../support/doubles/fake_boxes.dart';
-import '../../../support/doubles/recording_box_observer.dart';
+import '../../../support/support.dart';
 
 void main() {
   late FakeEagerBox box;
@@ -182,14 +179,10 @@ void main() {
 
   feature('DualKeyBox watch', () {
     scenario('events carry record keys and deletes still carry the value', () async {
-      final events = <TypedBoxEvent<String, (int, int)>>[];
-      final subscription = facade.watch().listen(events.add);
-      await pumpEventQueue();
-
-      await facade.put(1, 2, 'v').run();
-      await facade.delete(1, 2).run();
-      await pumpEventQueue();
-      await subscription.cancel();
+      final events = await recordEvents(facade.watch(), () async {
+        await facade.put(1, 2, 'v').run();
+        await facade.delete(1, 2).run();
+      });
 
       check(events).deepEquals(const [
         TypedBoxEvent<String, (int, int)>(key: (1, 2), value: 'v', deleted: false),
@@ -198,13 +191,10 @@ void main() {
     });
 
     scenario('a record filter narrows the stream to that composite key', () async {
-      final events = <TypedBoxEvent<String, (int, int)>>[];
-      final subscription = facade.watch(key: (2, 2)).listen(events.add);
-      await pumpEventQueue();
-
-      await facade.putAll({(1, 1): 'a', (2, 2): 'b'}).run();
-      await pumpEventQueue();
-      await subscription.cancel();
+      final events = await recordEvents(
+        facade.watch(key: (2, 2)),
+        () => facade.putAll({(1, 1): 'a', (2, 2): 'b'}).run(),
+      );
 
       check(events).deepEquals(const [
         TypedBoxEvent<String, (int, int)>(key: (2, 2), value: 'b', deleted: false),

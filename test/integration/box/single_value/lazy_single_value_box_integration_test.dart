@@ -4,28 +4,16 @@
 @Tags(['integration'])
 library;
 
-import 'dart:io';
-
 import 'package:checks/checks.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hive_box_manager/hive_box_manager.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
-import '../../../support/bdd.dart';
+import '../../../support/support.dart';
 
 void main() {
-  late Directory tempDir;
-
-  setUp(() {
-    tempDir = Directory.systemTemp.createTempSync('hbm_lazy_single_');
-    Hive.init(tempDir.path);
-  });
-
-  tearDown(() async {
-    await Hive.close();
-    tempDir.deleteSync(recursive: true);
-  });
+  final tempHive = useTempHive('hbm_lazy_single_');
 
   feature('LazySingleValueBox against real hive', () {
     scenario('construction touches nothing; the first effect opens and hits slot 0', () async {
@@ -79,14 +67,10 @@ void main() {
     scenario('sets stream Some, clears stream None', () async {
       final facade = LazySingleValueBox<String>('config');
       await facade.ensureInitialised().run();
-      final events = <Option<String>>[];
-      final subscription = facade.watch().listen(events.add);
-      await pumpEventQueue();
-
-      await facade.set('v').run();
-      await facade.clear().run();
-      await pumpEventQueue();
-      await subscription.cancel();
+      final events = await recordEvents(facade.watch(), () async {
+        await facade.set('v').run();
+        await facade.clear().run();
+      });
 
       check(events).deepEquals(const [Some('v'), None()]);
     });
@@ -97,7 +81,7 @@ void main() {
       await untouched.close().run();
 
       check(Hive.isBoxOpen('never_used')).isFalse();
-      check(File('${tempDir.path}/never_used.hive').existsSync()).isFalse();
+      check(tempHive.boxFile('never_used').existsSync()).isFalse();
       await check(untouched.set('v').run()).throws<HiveError>();
     });
   });

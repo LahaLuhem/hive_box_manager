@@ -423,6 +423,8 @@ at the **filesystem** root (verified `uri_does_not_exist`), not the package root
 dir nests). There is no root-relative form for them, and the fixtures can't move under `lib/` for a
 `package:` import because they depend on dev-only packages (`test`, `mockito`, `checks`).
 
+A suite imports the `support/support.dart` barrel, never a single support file.
+
 ---
 
 <a id="prose"></a>

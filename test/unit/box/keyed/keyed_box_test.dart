@@ -8,10 +8,7 @@ import 'package:hive_box_manager/src/event/typed_box_event.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
-import '../../../support/bdd.dart';
-import '../../../support/codecs/date_key_codec.dart';
-import '../../../support/doubles/fake_boxes.dart';
-import '../../../support/doubles/recording_box_observer.dart';
+import '../../../support/support.dart';
 
 void main() {
   late FakeEagerBox box;
@@ -141,14 +138,10 @@ void main() {
 
   feature('KeyedBox watch', () {
     scenario('events are typed and deletes still carry the value (eager promise)', () async {
-      final events = <TypedBoxEvent<String, int>>[];
-      final subscription = facade.watch().listen(events.add);
-      await pumpEventQueue();
-
-      await facade.put(7, 'v').run();
-      await facade.delete(7).run();
-      await pumpEventQueue();
-      await subscription.cancel();
+      final events = await recordEvents(facade.watch(), () async {
+        await facade.put(7, 'v').run();
+        await facade.delete(7).run();
+      });
 
       check(events).deepEquals(const [
         TypedBoxEvent<String, int>(key: 7, value: 'v', deleted: false),
@@ -157,13 +150,10 @@ void main() {
     });
 
     scenario('a key filter narrows the stream to that key', () async {
-      final events = <TypedBoxEvent<String, int>>[];
-      final subscription = facade.watch(key: 2).listen(events.add);
-      await pumpEventQueue();
-
-      await facade.putAll({1: 'a', 2: 'b'}).run();
-      await pumpEventQueue();
-      await subscription.cancel();
+      final events = await recordEvents(
+        facade.watch(key: 2),
+        () => facade.putAll({1: 'a', 2: 'b'}).run(),
+      );
 
       check(events)
           .deepEquals(const [TypedBoxEvent<String, int>(key: 2, value: 'b', deleted: false)]);

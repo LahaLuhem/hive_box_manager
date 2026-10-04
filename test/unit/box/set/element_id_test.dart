@@ -6,7 +6,7 @@ import 'package:hive_box_manager/src/box/set/element_id.dart';
 import 'package:meta/meta.dart';
 import 'package:test/test.dart';
 
-import '../../../support/bdd.dart';
+import '../../../support/support.dart';
 
 // A test fixture, not this file's subject.
 // ignore: prefer-match-file-name

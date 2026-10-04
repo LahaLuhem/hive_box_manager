@@ -3,47 +3,16 @@
 @Tags(['integration'])
 library;
 
-import 'dart:io';
-
 import 'package:checks/checks.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hive_box_manager/hive_box_manager.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
-import '../../../support/bdd.dart';
-import '../../../support/doubles/recording_box_observer.dart';
-
-/// AES-256 wants exactly this many key bytes.
-const aesKeyBytes = 32;
-
-/// Collects what [stream] emits while [act] runs, draining the queue first so nothing in flight gets
-/// missed.
-Future<List<LazyTypedBoxEvent<String, int>>> record(
-  Stream<LazyTypedBoxEvent<String, int>> stream,
-  Future<void> Function() act,
-) async {
-  final events = <LazyTypedBoxEvent<String, int>>[];
-  final subscription = stream.listen(events.add);
-  await act();
-  await pumpEventQueue();
-  await subscription.cancel();
-
-  return events;
-}
+import '../../../support/support.dart';
 
 void main() {
-  late Directory tempDir;
-
-  setUp(() {
-    tempDir = Directory.systemTemp.createTempSync('hbm_lazy_keyed_');
-    Hive.init(tempDir.path);
-  });
-
-  tearDown(() async {
-    await Hive.close();
-    tempDir.deleteSync(recursive: true);
-  });
+  final tempHive = useTempHive('hbm_lazy_keyed_');
 
   feature('LazyKeyedBox auto-open against real hive', () {
     scenario('construction touches nothing; the first effect opens the real box', () async {
@@ -117,7 +86,7 @@ void main() {
     });
 
     scenario('an encrypted box reads back with the same cipher', () async {
-      final cipher = HiveAesCipher(List.filled(aesKeyBytes, 7));
+      final cipher = testCipher();
       final first = LazyKeyedBox<String, int>('secret', cipher: cipher);
       await first.put(1, 'ciphered').run();
       await first.close().run();
@@ -141,7 +110,7 @@ void main() {
       final box = LazyKeyedBox<String, int>('logs');
       await box.ensureInitialised().run();
 
-      final events = await record(box.watch(), () async {
+      final events = await recordEvents(box.watch(), () async {
         await box.put(7, 'v').run();
         await box.delete(7).run();
       });
@@ -161,7 +130,7 @@ void main() {
       await untouched.close().run();
 
       check(Hive.isBoxOpen('never_used')).isFalse();
-      check(File('${tempDir.path}/never_used.hive').existsSync()).isFalse();
+      check(tempHive.boxFile('never_used').existsSync()).isFalse();
       await check(untouched.put(1, 'a').run()).throws<HiveError>();
     });
 
@@ -180,7 +149,7 @@ void main() {
       await box.put(1, 'a').run();
       await box.flush().run();
       await box.compact().run();
-      final boxFile = File('${tempDir.path}/doomed.hive');
+      final boxFile = tempHive.boxFile('doomed');
       check(boxFile.existsSync()).isTrue();
 
       await box.deleteFromDisk().run();

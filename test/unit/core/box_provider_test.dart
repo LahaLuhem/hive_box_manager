@@ -5,15 +5,10 @@ library;
 
 import 'package:checks/checks.dart';
 import 'package:hive_box_manager/src/core/box_provider.dart';
-import 'package:hive_ce/hive.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
-import '../../support/bdd.dart';
-import '../../support/mocks.dart';
-
-/// AES-256 wants exactly this many key bytes.
-const aesKeyBytes = 32;
+import '../../support/support.dart';
 
 int _reverseComparator(Object? a, Object? b) => 0;
 
@@ -58,7 +53,7 @@ void main() {
 
     scenario('passes every pluggable through to the eager open untouched', () async {
       final box = MockBox();
-      final cipher = HiveAesCipher(List.filled(aesKeyBytes, 7));
+      final cipher = testCipher();
       when(
         hive.openBox<Object?>(
           any,

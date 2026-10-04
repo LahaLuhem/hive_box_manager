@@ -1,28 +1,22 @@
 // The encrypted single-value demo through its view-model. The watch stream feeds the current value,
 // so every assertion drains the event queue first.
-import 'dart:io';
 
 import 'package:bdd_framework/bdd_framework.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hbm_example/features/single_value/single_value_view_model.dart';
-import 'package:hive_ce/hive.dart';
+
+import '../../support/temp_hive.dart';
 
 void main() {
-  late Directory tempDir;
+  useTempHive('hbm_example_single_');
   late SingleValueViewModel sut;
 
   setUp(() {
-    tempDir = Directory.systemTemp.createTempSync('hbm_example_single_');
-    Hive.init(tempDir.path);
     sut = SingleValueViewModel();
   });
 
-  tearDown(() async {
-    sut.onUnmount();
-    await Hive.close();
-    tempDir.deleteSync(recursive: true);
-  });
+  tearDown(() => sut.onUnmount());
 
   final feature = BddFeature('Encrypted single-value demo');
 

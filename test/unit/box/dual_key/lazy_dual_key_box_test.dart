@@ -9,43 +9,37 @@ import 'package:hive_box_manager/src/event/lazy_typed_box_event.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
-import '../../../support/bdd.dart';
-import '../../../support/doubles/fake_boxes.dart';
-import '../../../support/doubles/recording_box_observer.dart';
+import '../../../support/support.dart';
 
 void main() {
   late FakeLazyBox box;
   late RecordingBoxObserver observer;
-  late int openCalls;
+  late CountingOpener opener;
   late LazyDualKeyBox<String, int, int> facade;
 
   setUp(() {
     box = FakeLazyBox(name: 'grid');
     observer = RecordingBoxObserver();
-    openCalls = 0;
-    facade = lazyDualKeyBoxAround('grid', () async {
-      openCalls++;
-
-      return box;
-    }, observer: observer);
+    opener = CountingOpener(box);
+    facade = lazyDualKeyBoxAround('grid', opener.open, observer: observer);
   });
 
   feature('LazyDualKeyBox wiring and auto-open', () {
     scenario('construction opens nothing; the first effect opens and stores composite', () async {
-      check(openCalls).equals(0);
+      check(opener.count).equals(0);
 
       await facade.put(7, 9, 'v').run();
 
-      check(openCalls).equals(1);
+      check(opener.count).equals(1);
       check(box.store).deepEquals({'7:9': 'v'});
     });
 
     scenario('a query auto-opens like any other effect', () async {
-      check(openCalls).equals(0);
+      check(opener.count).equals(0);
 
       final matches = await facade.queryByPrimary(1).run();
 
-      check(openCalls).equals(1);
+      check(opener.count).equals(1);
       check(matches).isEmpty();
     });
 
@@ -155,14 +149,10 @@ void main() {
 
   feature('LazyDualKeyBox watch', () {
     scenario('writes carry Some with record keys, deletes carry None', () async {
-      final events = <LazyTypedBoxEvent<String, (int, int)>>[];
-      final subscription = facade.watch().listen(events.add);
-      await pumpEventQueue();
-
-      await facade.put(1, 2, 'v').run();
-      await facade.delete(1, 2).run();
-      await pumpEventQueue();
-      await subscription.cancel();
+      final events = await recordEvents(facade.watch(), () async {
+        await facade.put(1, 2, 'v').run();
+        await facade.delete(1, 2).run();
+      });
 
       check(events).deepEquals(const [
         LazyTypedBoxEvent<String, (int, int)>(key: (1, 2), value: Some('v')),
@@ -176,7 +166,7 @@ void main() {
     scenario('close before first use never opens, yet turns the handle terminal', () async {
       await facade.close().run();
 
-      check(openCalls).equals(0);
+      check(opener.count).equals(0);
       check(observer.calls).deepEquals(['closed:grid']);
       await check(facade.put(1, 2, 'v').run()).throws<HiveError>();
       await check(facade.queryByPrimary(1).run()).throws<HiveError>();

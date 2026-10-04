@@ -9,8 +9,7 @@ import 'package:hive_box_manager/src/codec/key/key_codec_resolution.dart';
 import 'package:hive_box_manager/src/codec/key/string_key_codec.dart';
 import 'package:test/test.dart';
 
-import '../../../support/bdd.dart';
-import '../../../support/codecs/date_key_codec.dart';
+import '../../../support/support.dart';
 
 void main() {
   feature('key-codec resolution at wiring time', () {

@@ -1,28 +1,22 @@
 // The keyed demo through its view-model, against real hive on a temp dir. Inputs live in the example
 // rows and come back through the context.
-import 'dart:io';
 
 import 'package:bdd_framework/bdd_framework.dart';
 import 'package:checks/checks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hbm_example/features/keyed/keyed_view_model.dart';
-import 'package:hive_ce/hive.dart';
+
+import '../../support/temp_hive.dart';
 
 void main() {
-  late Directory tempDir;
+  useTempHive('hbm_example_keyed_');
   late KeyedViewModel sut;
 
   setUp(() {
-    tempDir = Directory.systemTemp.createTempSync('hbm_example_keyed_');
-    Hive.init(tempDir.path);
     sut = KeyedViewModel();
   });
 
-  tearDown(() async {
-    sut.onUnmount();
-    await Hive.close();
-    tempDir.deleteSync(recursive: true);
-  });
+  tearDown(() => sut.onUnmount());
 
   final feature = BddFeature('Keyed demo');
 

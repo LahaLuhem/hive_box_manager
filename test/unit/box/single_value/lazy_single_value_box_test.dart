@@ -8,34 +8,28 @@ import 'package:hive_box_manager/src/box/single_value/lazy_single_value_box.dart
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
-import '../../../support/bdd.dart';
-import '../../../support/doubles/fake_boxes.dart';
-import '../../../support/doubles/recording_box_observer.dart';
+import '../../../support/support.dart';
 
 void main() {
   late FakeLazyBox box;
   late RecordingBoxObserver observer;
-  late int openCalls;
+  late CountingOpener opener;
   late LazySingleValueBox<String> facade;
 
   setUp(() {
     box = FakeLazyBox(name: 'config');
     observer = RecordingBoxObserver();
-    openCalls = 0;
-    facade = lazySingleValueBoxAround('config', () async {
-      openCalls++;
-
-      return box;
-    }, observer: observer);
+    opener = CountingOpener(box);
+    facade = lazySingleValueBoxAround('config', opener.open, observer: observer);
   });
 
   feature('LazySingleValueBox auto-open and slot compatibility', () {
     scenario('construction opens nothing; the first effect opens once and hits slot 0', () async {
-      check(openCalls).equals(0);
+      check(opener.count).equals(0);
 
       await facade.set('v').run();
 
-      check(openCalls).equals(1);
+      check(opener.count).equals(1);
       check(box.store).deepEquals({0: 'v'});
       check(observer.calls.first).equals('opened:config');
     });
@@ -89,14 +83,10 @@ void main() {
 
   feature('LazySingleValueBox watch', () {
     scenario('sets stream Some, clears stream None (lazy deletes carry no value)', () async {
-      final events = <Option<String>>[];
-      final subscription = facade.watch().listen(events.add);
-      await pumpEventQueue();
-
-      await facade.set('v').run();
-      await facade.clear().run();
-      await pumpEventQueue();
-      await subscription.cancel();
+      final events = await recordEvents(facade.watch(), () async {
+        await facade.set('v').run();
+        await facade.clear().run();
+      });
 
       check(events).deepEquals(const [Some('v'), None()]);
     });
@@ -106,7 +96,7 @@ void main() {
     scenario('close before first use never opens, yet turns the handle terminal', () async {
       await facade.close().run();
 
-      check(openCalls).equals(0);
+      check(opener.count).equals(0);
       check(observer.calls).deepEquals(['closed:config']);
       await check(facade.set('v').run()).throws<HiveError>();
     });

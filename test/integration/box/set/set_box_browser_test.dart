@@ -7,22 +7,19 @@ import 'package:hive_box_manager/hive_box_manager.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
-import '../../../support/bdd.dart';
-import '../../../support/fixtures/member.dart';
+import '../../../support/support.dart';
 
 void main() {
   setUpAll(() {
     // hive_ce's web backend ignores the path, since storage is IndexedDB.
-    Hive.init('hive_web_sets');
-    if (!Hive.isAdapterRegistered(const MemberAdapter().typeId)) {
-      Hive.registerAdapter(const MemberAdapter());
-    }
+    Hive
+      ..init('hive_web_sets')
+      ..registerAdapter(const MemberAdapter());
   });
 
   feature('Set boxes on the browser (IndexedDB truth)', () {
     scenario('eager sets come back typed after a reopen, and add keeps the stored id', () async {
-      // Unique per run: IndexedDB persists across tests within one browser session.
-      final boxName = 'sets_eager_${DateTime.now().millisecondsSinceEpoch}';
+      final boxName = uniqueBoxName('sets_eager');
       Future<SetBox<Member, int>> open() =>
           SetBox.open<Member, int>(boxName, idOf: (member) => member.id).run();
 
@@ -34,13 +31,13 @@ void main() {
       await box.add(1, Member(1, 'again')).run();
 
       check(box.getOr(1)).isA<Set<Member>>();
-      check(box.getOr(1).map((member) => member.name)).deepEquals(['a', 'b']);
+      check(box.getOr(1).names).deepEquals(['a', 'b']);
 
       await box.deleteFromDisk().run();
     });
 
     scenario('lazy sets come back typed in a new instance', () async {
-      final boxName = 'sets_lazy_${DateTime.now().millisecondsSinceEpoch}';
+      final boxName = uniqueBoxName('sets_lazy');
 
       final first = LazySetBox<String, int>(boxName);
       await first.put(1, ['b', 'a', 'b']).run();
