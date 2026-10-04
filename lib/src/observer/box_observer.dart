@@ -8,9 +8,9 @@ import '/src/core/utils/no_op.dart';
 /// to your own async code.
 ///
 /// `boxName` comes first everywhere, so one observer can serve every box in an app.
-abstract base class BoxObserver {
+abstract base class const BoxObserver() {
   /// Const so subclasses can be const-constructed and shared freely.
-  const new();
+  this;
 
   /// The box finished opening (an eager open, or a lazy box's first-use auto-open).
   void onOpened(String boxName) => noop();

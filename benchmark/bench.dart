@@ -391,11 +391,8 @@ Future<void> runScanRead(String impl, String keyKind, int n, String boxKind, Str
 // This file is the worker entrypoint (`bench`, per driver.sh), and the class is an internal harness
 // detail, not the file's subject.
 // ignore: prefer-match-file-name
-class _PackUnpackBenchmark extends BenchmarkBase {
-  new(this.impl, this.keyKind) : super('micro-$impl-$keyKind');
-
-  final String impl;
-  final String keyKind;
+class _PackUnpackBenchmark(final String impl, final String keyKind) extends BenchmarkBase {
+  this : super('micro-$impl-$keyKind');
 
   /// Resolved once: the shipped codecs are const, so this is the dispatch the façade lane pays.
   late final DualKeyCodec<int, int>? codec = impl == 'facade' ? shippedCodecFor(keyKind) : null;

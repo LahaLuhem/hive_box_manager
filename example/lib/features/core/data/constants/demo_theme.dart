@@ -2,7 +2,7 @@ import 'package:cupertino_ui/cupertino_ui.dart' show CupertinoColors, CupertinoT
 import 'package:material_ui/material_ui.dart' show ColorScheme, Colors, ThemeData;
 
 /// One place for the demo look: Material gets a seeded scheme, Cupertino its tint.
-abstract final class DemoTheme {
+abstract final class DemoTheme() {
   static final material = ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.amber));
   static const cupertino = CupertinoThemeData(primaryColor: CupertinoColors.systemYellow);
 }

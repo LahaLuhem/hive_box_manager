@@ -11,7 +11,6 @@ import 'package:meta/meta.dart';
 /// (pinned behaviour). So [value] is `Some` on a write and `None` on a delete, and [deleted] reads off
 /// that rather than being stored twice.
 @immutable
-// ignore: public_member_api_docs -- a primary constructor has nowhere to hang a doc comment.
 final class const LazyTypedBoxEvent<T extends Object, K extends Object>({
   /// The consumer-facing key, decoded by the box's key codec.
   required final K key,
@@ -19,6 +18,9 @@ final class const LazyTypedBoxEvent<T extends Object, K extends Object>({
   /// The written value, or `None` on a delete, where there is nothing to hand over.
   required final Option<T> value,
 }) {
+  /// Faking `watch` in a test? A delete is `value: const None()`, and [deleted] follows from it.
+  this;
+
   /// Whether this change removed [key], which is the same as [value] being `None`.
   bool get deleted => value.isNone();
 

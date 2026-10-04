@@ -6,11 +6,8 @@ import '../observers/log_panel_observer.dart';
 
 /// The live box-event feed docked under every demo. One `ValueListenableBuilder` over the observer's
 /// notifier, so an event repaints only this panel.
-class LogPanel extends StatelessWidget {
-  final LogPanelObserver observer;
-
-  const new({required this.observer, super.key});
-
+class const LogPanel({required final LogPanelObserver observer, super.key})
+    extends StatelessWidget {
   static const _panelHeight = 180.0;
 
   @override

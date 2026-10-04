@@ -11,9 +11,7 @@ import '/features/set_box/set_box_view.dart';
 import '/features/single_value/single_value_view.dart';
 
 /// The demo hub: one tile per box family.
-class HomeHubView extends StatelessWidget {
-  const new({super.key});
-
+class const HomeHubView({super.key}) extends StatelessWidget {
   @override
   Widget build(BuildContext context) => PlatformScaffold(
     appBarData: const PlatformAppBar(title: Text('hive_box_manager demos')),
@@ -56,19 +54,12 @@ class HomeHubView extends StatelessWidget {
   );
 }
 
-class _DemoTile extends StatelessWidget {
-  final PlatformIcons icon;
-  final String title;
-  final String subtitle;
-  final WidgetBuilder builder;
-
-  const new({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.builder,
-  });
-
+class const _DemoTile({
+  required final PlatformIcons icon,
+  required final String title,
+  required final String subtitle,
+  required final WidgetBuilder builder,
+}) extends StatelessWidget {
   @override
   Widget build(BuildContext context) => PlatformListTile(
     leading: PlatformIcon(icon),

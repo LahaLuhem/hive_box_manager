@@ -3,7 +3,7 @@ import 'package:listenable_collections/listenable_collections.dart';
 
 /// Streams every box event into a list the log panel renders, newest first. The observer seam pointed
 /// at the UI instead of a logger.
-final class LogPanelObserver extends BoxObserver {
+final class LogPanelObserver() extends BoxObserver {
   final entries = ListNotifier<String>();
 
   void clearEntries() => entries.clear();

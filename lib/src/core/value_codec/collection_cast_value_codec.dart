@@ -7,9 +7,9 @@ import 'value_codec.dart';
 ///
 /// The result is wrapped unmodifiable on top, which costs nothing: an eager get aliases hive's own cache,
 /// so a view keeps consumers out of it without copying on every read.
-final class CollectionCastValueCodec<E extends Object> implements ValueCodec<List<E>> {
+final class const CollectionCastValueCodec<E extends Object>() implements ValueCodec<List<E>> {
   /// Const so engines can default to it without an allocation per box.
-  const new();
+  this;
 
   @override
   Object toStorable(List<E> value) => value;

@@ -12,9 +12,7 @@ Future<void> main() async {
   runApp(const HbmExampleApp());
 }
 
-class HbmExampleApp extends StatelessWidget {
-  const new({super.key});
-
+class const HbmExampleApp({super.key}) extends StatelessWidget {
   @override
   Widget build(BuildContext context) => PlatformApp(
     title: 'hive_box_manager demos',

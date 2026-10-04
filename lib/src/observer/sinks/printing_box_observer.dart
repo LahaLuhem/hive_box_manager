@@ -9,11 +9,13 @@ import '../box_observer.dart';
 ///
 /// Pure Dart, no dependencies, and no `print`. Errors log at level 900, which is what `package:logging`
 /// calls SEVERE, and everything else goes out at the default level.
-// ignore: public_member_api_docs -- a primary constructor has nowhere to hang a doc comment.
 final class const PrintingBoxObserver({
   /// The DevTools-filterable logger name.
   final String name = 'hive_box_manager',
 }) extends BoxObserver {
+  /// Pass another [name] to give some boxes their own DevTools channel.
+  this;
+
   /// SEVERE on `package:logging`'s level scale, minus the dependency.
   static const _errorLevel = 900;
 

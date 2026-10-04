@@ -7,9 +7,7 @@ import '/features/core/widgets/demo_intro.dart';
 import '/features/core/widgets/demo_scaffold.dart';
 import 'dual_query_view_model.dart';
 
-class DualQueryView extends StatelessWidget {
-  const new({super.key});
-
+class const DualQueryView({super.key}) extends StatelessWidget {
   @override
   Widget build(BuildContext context) => MVVM.builder(
     viewModel: DualQueryViewModel(),

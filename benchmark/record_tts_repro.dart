@@ -13,32 +13,31 @@ import 'dart:io';
 
 // Named constructors, not 3.13's `const new()`, because this file has to compile on 3.12.2 too.
 // Comparing the 2 SDKs is the whole point of it.
-// ignore_for_file: unnecessary_type_name_in_constructor
 
 /// One-argument codec interface. 3 copies, so each lane has one implementation behind its call.
 // The lanes are the point here, not any one class
 // ignore: prefer-match-file-name
-abstract interface class Codec1<K extends Object> {
+abstract interface class Codec1<K extends Object>() {
   /// Encodes [key].
   Object encode(K key);
 }
 
 /// As [Codec1], for the three-field lane.
-abstract interface class Codec2<K extends Object> {
+abstract interface class Codec2<K extends Object>() {
   /// Encodes [key].
   Object encode(K key);
 }
 
 /// As [Codec1], for the four-field lane.
-abstract interface class Codec3<K extends Object> {
+abstract interface class Codec3<K extends Object>() {
   /// Encodes [key].
   Object encode(K key);
 }
 
 /// Control: the parameter type is concrete, so the check is elided at compile time.
-final class ConcretePair implements Codec1<(int, int)> {
+final class const ConcretePair() implements Codec1<(int, int)> {
   /// Const, matching the shape the real codecs present at the call site.
-  const ConcretePair();
+  this;
 
   @override
   Object encode((int, int) key) => key.$1;
@@ -46,9 +45,9 @@ final class ConcretePair implements Codec1<(int, int)> {
 
 /// Control: the parameter type is the class's own type parameter and not a record. Emits `AssertAssignable`
 /// against a `TypeParameter`, which the subtype test cache handles.
-final class GenericScalar<A extends Object> implements Codec1<A> {
+final class const GenericScalar<A extends Object>() implements Codec1<A> {
   /// Const, as above.
-  const GenericScalar();
+  this;
 
   @override
   Object encode(A key) => key;
@@ -56,29 +55,33 @@ final class GenericScalar<A extends Object> implements Codec1<A> {
 
 /// Subject: the parameter type is a record built from the class's type parameters. Emits `AssertAssignable`
 /// against an uninstantiated `_RecordType`.
-final class GenericPair<A extends Object, B extends Object> implements Codec1<(A, B)> {
+final class const GenericPair<A extends Object, B extends Object>() implements Codec1<(A, B)> {
   /// Const, as above.
-  const GenericPair();
+  this;
 
   @override
   Object encode((A, B) key) => key.$1;
 }
 
 /// As [GenericPair] with 3 fields, to show the cost scales per field.
-final class GenericTriple<A extends Object, B extends Object, C extends Object>
+final class const GenericTriple<A extends Object, B extends Object, C extends Object>()
     implements Codec2<(A, B, C)> {
   /// Const, as above.
-  const GenericTriple();
+  this;
 
   @override
   Object encode((A, B, C) key) => key.$1;
 }
 
 /// As [GenericPair] with 4 fields.
-final class GenericQuad<A extends Object, B extends Object, C extends Object, D extends Object>
-    implements Codec3<(A, B, C, D)> {
+final class const GenericQuad<
+  A extends Object,
+  B extends Object,
+  C extends Object,
+  D extends Object
+>() implements Codec3<(A, B, C, D)> {
   /// Const, as above.
-  const GenericQuad();
+  this;
 
   @override
   Object encode((A, B, C, D) key) => key.$1;

@@ -14,11 +14,11 @@ import 'package:hive_ce/src/box/default_key_comparator.dart';
 ///
 /// Cipher, key comparator, compaction strategy and crash recovery all go straight through, and so does
 /// whatever `openBox` throws.
-final class BoxProvider {
-  final HiveInterface _hive;
-
+final class BoxProvider({HiveInterface? hive}) {
   /// Wires the provider to [hive], defaulting to the global instance.
-  new({HiveInterface? hive}) : _hive = hive ?? Hive;
+  this;
+
+  final HiveInterface _hive = hive ?? Hive;
 
   /// Opens (or returns the already-open instance of) the eager box named [name].
   Future<Box<Object?>> openEagerBox(

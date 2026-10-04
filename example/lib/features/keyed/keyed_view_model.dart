@@ -9,7 +9,7 @@ import '/features/core/observers/log_panel_observer.dart';
 
 /// Drives the eager keyed demo: an int-keyed `KeyedBox` of strings, read synchronously and written through
 /// tasks run at the handler edge.
-final class KeyedViewModel extends ViewModel {
+final class KeyedViewModel() extends ViewModel {
   final observer = LogPanelObserver();
   final valueController = TextEditingController();
   final entries = ListNotifier<(int, String)>();

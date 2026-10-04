@@ -17,12 +17,14 @@ import '../value_codec/value_codec.dart';
 /// Sync reads are safe by construction, since an eager engine only exists around an open box. `close()`
 /// and `deleteFromDisk()` are terminal, and anything after one gets hive's own already-closed error.
 /// A codec producing an unstorable raw key throws at the call site, before any [Task] exists.
-// ignore: public_member_api_docs -- a primary constructor has nowhere to hang a doc comment.
 final class EagerCrudEngine<T extends Object>({
   required final Box<Object?> _box,
   required final ValueCodec<T> _valueCodec,
   final BoxObserver? _observer,
 }) {
+  /// Takes a box that's already open. Leave out `observer` and each event costs one null check.
+  this;
+
   /// The underlying box name: the observer correlation handle.
   String get name => _box.name;
 
@@ -226,28 +228,24 @@ final class EagerCrudEngine<T extends Object>({
 ///
 /// Hand-rolled rather than `values.indexed.map`, whose per-element record cost 4 ns on the wrapper-overhead
 /// lane.
-final class _AttributedValues<T extends Object> extends Iterable<T> {
-  const new(this._box, this._valueCodec, this._boxName, this._semanticKeyOf);
-
-  final Box<Object?> _box;
-  final ValueCodec<T> _valueCodec;
-  final String _boxName;
-  final Object Function(Object rawKey) _semanticKeyOf;
-
+final class const _AttributedValues<T extends Object>(
+  final Box<Object?> _box,
+  final ValueCodec<T> _valueCodec,
+  final String _boxName,
+  final Object Function(Object rawKey) _semanticKeyOf,
+) extends Iterable<T> {
   @override
   Iterator<T> get iterator =>
       _AttributedValuesIterator(_box, _valueCodec, _boxName, _semanticKeyOf);
 }
 
-final class _AttributedValuesIterator<T extends Object> implements Iterator<T> {
-  new(this._box, this._valueCodec, this._boxName, this._semanticKeyOf)
-    : _storedValues = _box.values.iterator;
-
-  final Box<Object?> _box;
-  final ValueCodec<T> _valueCodec;
-  final String _boxName;
-  final Object Function(Object rawKey) _semanticKeyOf;
-  final Iterator<Object?> _storedValues;
+final class _AttributedValuesIterator<T extends Object>(
+  final Box<Object?> _box,
+  final ValueCodec<T> _valueCodec,
+  final String _boxName,
+  final Object Function(Object rawKey) _semanticKeyOf,
+) implements Iterator<T> {
+  final Iterator<Object?> _storedValues = _box.values.iterator;
 
   var _index = -1;
   late T _current;

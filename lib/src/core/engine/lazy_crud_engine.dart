@@ -22,13 +22,15 @@ import '../value_codec/value_codec.dart';
 /// so later operations get hive's own already-closed error. Closing before first use opens nothing,
 /// still fires `onClosed`, and the wrapper makes up the same already-closed error afterwards. Deleting
 /// from disk before first use does open first, since it has to reach storage.
-// ignore: public_member_api_docs -- a primary constructor has nowhere to hang a doc comment.
 final class LazyCrudEngine<T extends Object>({
   required final String _boxName,
   required final Future<LazyBox<Object?>> Function() _openBox,
   required final ValueCodec<T> _valueCodec,
   final BoxObserver? _observer,
 }) {
+  /// `boxName` comes up front so [name] and observer events work before the box opens.
+  this;
+
   Future<LazyBox<Object?>>? _boxFuture;
   LazyBox<Object?>? _box;
   var _wasClosedBeforeFirstUse = false;

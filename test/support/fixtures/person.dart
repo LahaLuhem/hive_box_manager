@@ -7,12 +7,7 @@ import 'package:meta/meta.dart';
 
 /// A tiny value type with structural equality, so pins can assert round-trips.
 @immutable
-class Person {
-  final String name;
-  final int age;
-
-  const new(this.name, this.age);
-
+class const Person(final String name, final int age) {
   @override
   bool operator ==(Object other) => other is Person && other.name == name && other.age == age;
 
@@ -24,9 +19,9 @@ class Person {
 }
 
 /// Hand-written adapter: the pin suite pins engine truth, not generator output, so no codegen is involved.
-class PersonAdapter extends TypeAdapter<Person> {
+class const PersonAdapter() extends TypeAdapter<Person> {
   @override
-  final typeId = 1;
+  int get typeId => 1;
 
   @override
   Person read(BinaryReader reader) => Person(reader.readString(), reader.readInt());

@@ -10,7 +10,7 @@ import '/features/core/observers/log_panel_observer.dart';
 
 /// Drives the eager set-box demo: one set of tags that ignores case, so add and upsert differ only in
 /// which spelling stays.
-final class SetBoxViewModel extends ViewModel {
+final class SetBoxViewModel() extends ViewModel {
   final observer = LogPanelObserver();
   final tagController = TextEditingController();
   final tags = ListNotifier<String>();

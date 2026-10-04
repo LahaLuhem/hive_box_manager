@@ -33,7 +33,7 @@ void main() {
   setUp(() {
     tempDir = Directory.systemTemp.createTempSync('hbm_undecodable_');
     Hive.init(tempDir.path);
-    if (!Hive.isAdapterRegistered(thingTypeId)) Hive.registerAdapter(FlakyThingAdapter());
+    if (!Hive.isAdapterRegistered(thingTypeId)) Hive.registerAdapter(const FlakyThingAdapter());
   });
 
   tearDown(() async {

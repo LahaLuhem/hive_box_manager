@@ -5,9 +5,9 @@ import 'key_codec.dart';
 ///
 /// Purely pass-through: length enforcement lives in the write-path gate, which fails loudly at the call
 /// site where release-mode hive_ce would accept the key and corrupt the whole box file.
-final class StringKeyCodec implements KeyCodec<String> {
+final class const StringKeyCodec() implements KeyCodec<String> {
   /// Const so façades can default to it without an allocation per box.
-  const new();
+  this;
 
   @override
   Object encode(String key) => key;

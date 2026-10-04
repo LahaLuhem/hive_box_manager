@@ -6,13 +6,12 @@ import 'log_panel.dart';
 
 /// The shared demo frame: scaffold, title, the demo body, and the event log docked underneath when the
 /// demo wires an observer.
-class DemoScaffold extends StatelessWidget {
-  final String title;
-  final Widget body;
-  final LogPanelObserver? observer;
-
-  const new({required this.title, required this.body, this.observer, super.key});
-
+class const DemoScaffold({
+  required final String title,
+  required final Widget body,
+  final LogPanelObserver? observer,
+  super.key,
+}) extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final observer = this.observer;

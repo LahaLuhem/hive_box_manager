@@ -96,7 +96,7 @@ Future<Map<String, Object?>> probeTypedBox(String workDir) async {
   final dir = Directory('$workDir/typed')..createSync(recursive: true);
   Hive
     ..init(dir.path)
-    ..registerAdapter(PersonAdapter(), override: true);
+    ..registerAdapter(const PersonAdapter(), override: true);
 
   var openSucceeded = false;
   Object? eagerOutcome;

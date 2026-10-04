@@ -4,9 +4,9 @@ import 'package:hive_ce/hive.dart';
 final class Member(final int id, final String name);
 
 /// Lets the integration suites put a [Member] on disk.
-final class MemberAdapter extends TypeAdapter<Member> {
+final class const MemberAdapter() extends TypeAdapter<Member> {
   @override
-  final typeId = 2;
+  int get typeId => 2;
 
   @override
   Member read(BinaryReader reader) => Member(reader.readInt(), reader.readString());

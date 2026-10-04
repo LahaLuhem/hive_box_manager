@@ -8,9 +8,7 @@ import '/features/core/widgets/demo_intro.dart';
 import '/features/core/widgets/demo_scaffold.dart';
 import 'keyed_view_model.dart';
 
-class KeyedView extends StatelessWidget {
-  const new({super.key});
-
+class const KeyedView({super.key}) extends StatelessWidget {
   @override
   Widget build(BuildContext context) => MVVM.builder(
     viewModel: KeyedViewModel(),

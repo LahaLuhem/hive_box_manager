@@ -33,12 +33,7 @@ const boxName = 'ibench';
 // A harness fixture, not this file's subject: the file is a worker entrypoint (`list_box_bench`, per
 // list_box_driver.sh).
 // ignore: prefer-match-file-name
-class Person {
-  final String name;
-  final int age;
-
-  const new(this.name, this.age);
-
+class const Person(final String name, final int age) {
   @override
   bool operator ==(Object other) => other is Person && other.name == name && other.age == age;
 
@@ -46,9 +41,9 @@ class Person {
   int get hashCode => Object.hash(name, age);
 }
 
-class PersonAdapter extends TypeAdapter<Person> {
+class const PersonAdapter() extends TypeAdapter<Person> {
   @override
-  final typeId = 1;
+  int get typeId => 1;
 
   @override
   Person read(BinaryReader reader) => Person(reader.readString(), reader.readInt());
@@ -73,12 +68,10 @@ int weighPerson(Person element) => element.name.length;
 /// [weigh] exists to force iteration: without touching each element the read lanes would measure obtaining
 /// the cast view (O(1)) instead of walking it (O(n)), which is the cost under test.
 @immutable
-class ElementSpec<T extends Object> {
-  final T Function(int index) at;
-  final int Function(T element) weigh;
-
-  const new({required this.at, required this.weigh});
-
+class const ElementSpec<T extends Object>({
+  required final T Function(int index) at,
+  required final int Function(T element) weigh,
+}) {
   List<T> list(int listLen) => List<T>.generate(listLen, at, growable: false);
 
   /// Mid-list, so the remove lane's `indexOf` walks half of it on average.
@@ -94,8 +87,8 @@ typedef LaneResult = ({int micros, int checksum, int rssDelta, int? fileBytes, S
 
 void initHive(String path, String elem) {
   Hive.init(path);
-  if (elem == 'obj' && !Hive.isAdapterRegistered(PersonAdapter().typeId)) {
-    Hive.registerAdapter(PersonAdapter());
+  if (elem == 'obj' && !Hive.isAdapterRegistered(const PersonAdapter().typeId)) {
+    Hive.registerAdapter(const PersonAdapter());
   }
 }
 

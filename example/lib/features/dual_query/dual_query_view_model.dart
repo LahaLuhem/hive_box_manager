@@ -9,7 +9,7 @@ import '/features/core/observers/log_panel_observer.dart';
 
 /// Drives the dual-key demo: a lazy (user, day)-addressed box, seeded as a grid and queried back by
 /// either part.
-final class DualQueryViewModel extends ViewModel {
+final class DualQueryViewModel() extends ViewModel {
   final observer = LogPanelObserver();
   final partController = TextEditingController(text: '1');
   final results = ListNotifier<String>();
