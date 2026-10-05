@@ -19,9 +19,9 @@ import 'map_edits.dart';
 
 /// An **eager** box holding a `Map` of [MK] to [MV] per [K] key.
 ///
-/// A restart hands back fresh objects, so the inner keys have to be a `String`, `num`, `bool` or enum
-/// to still match afterwards. Key by an id otherwise. A write with an int key hive can't store exactly
-/// (some past 2^53) fails at the call, or for [update] when it runs.
+/// The inner keys have to be a `String`, `num`, `bool` or enum, the types sure to still match after
+/// a restart hands back fresh objects. Key by an id otherwise. A write with an int key hive can't store
+/// exactly (some past 2^53) fails at the call, or for [update] when it runs.
 ///
 /// Writes are copied and reads can't be changed. Everything else works like [ListBox].
 ///
@@ -152,8 +152,8 @@ interface class MapBox<MK extends Object, MV extends Object, K extends Object>._
   /// Opens the box named [name] when run. Any adapter you register is for [MK] or [MV], the map itself
   /// needs none.
   ///
-  /// Leaving out [codec] where [K] needs one trips an assert, and so does an [MK] or [MV] a restart
-  /// would break. The hive options go straight through, and [observer] hears everything from the open on.
+  /// Leaving out [codec] where [K] needs one trips an assert, as does an [MK] or [MV] a restart would
+  /// break. The hive options go straight through, and [observer] hears everything from the open on.
   static Task<MapBox<MK, MV, K>> open<MK extends Object, MV extends Object, K extends Object>(
     String name, {
     KeyCodec<K>? codec,

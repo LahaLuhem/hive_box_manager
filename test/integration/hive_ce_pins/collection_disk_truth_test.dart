@@ -1,5 +1,5 @@
-// Pins what hive_ce actually reads back for a collection of a custom type after a restart, which is
-// what the value-codec design rests on. Same-session cache reads flatter the engine, so every scenario
+// Pins what hive_ce actually reads back for a collection after a restart, which is what the
+// value-codec design rests on. Same-session cache reads flatter the engine, so every scenario
 // here closes and reopens before asserting.
 //
 // The typed collection box guard is assert-gated. With asserts on it refuses the open outright, and
@@ -114,6 +114,18 @@ void main() {
         ).equals(verdicts.readsBackTyped);
       },
     );
+  });
+
+  feature('int keys inside a map after a reopen', () {
+    scenario("2 keys a 64-bit float can't tell apart come back as one entry", () async {
+      const imprecise = ProbeKeyLimits.firstWebImpreciseInt;
+      final neighbour = imprecise.toDouble().toInt();
+      var box = await Hive.openBox<Object>('collections');
+      await box.put('map', {neighbour: 'first', imprecise: 'second'});
+      box = await reopen(box);
+
+      check((box.get('map')! as Map<Object?, Object?>).keys).deepEquals([neighbour]);
+    });
   });
 
   feature('the #150 trap with asserts stripped (release truth, via subprocess)', () {

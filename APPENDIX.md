@@ -237,8 +237,8 @@ adapter parses once at open.
 <a id="variant-taxonomy"></a>
 ## Variant taxonomy & naming
 
-5 shapes × 2 synchronicities = 10 `interface class` façades: `KeyedBox`, `SingleValueBox`,
-`ListBox`, `SetBox`, `DualKeyBox`, each with a `Lazy` twin. The names say what you
+6 shapes × 2 synchronicities = 12 `interface class` façades: `KeyedBox`, `SingleValueBox`,
+`ListBox`, `SetBox`, `MapBox`, `DualKeyBox`, each with a `Lazy` twin. The names say what you
 hold and mirror hive's own `Box` / `LazyBox` split. The 0.0.x `Manager` suffix died because the
 1.0 types are a different contract, and same-name-changed-contract misleads migrators.
 (`ListBox` rather than `CollectionBox` because hive_ce already exports the latter.)
@@ -250,6 +250,11 @@ because the no-argument `get()` *is* the variant. The eager collection variant e
 lazy-only) because the memory folklore that forbade it was retired by measurement. Dual parts are
 generic with `(int, int)` codecs shipped. Internally a dual box encodes both parts at the façade
 and hands the shared engine a plain raw key, like every other family.
+
+`MapBox` and `DualKeyBox` both find a value by 2 parts, and both stay because each is cheap where
+the other pays. A map box keeps one record per key, read and written whole. A dual box keeps one
+per pair, which makes single-entry writes and lookups by the second part cheap.
+`MapBox<MK, MV, K>` puts the box key last, like every family.
 
 ---
 
@@ -267,13 +272,18 @@ encoder is the one that shipped the drift bug. Micro-benchmarks were treated as 
 The decision rule pinned end-to-end paths, which is why "bitwise beats math" folklore died.
 
 Validation is tiered, assert-first: construction wiring asserts (codec defaulting, part domains
-on the opt-in codec), preconditions hive itself throws for get **no wrapper check at all** (tier
-3), and exactly one **release-mode** gate exists: the raw-key corruption gate on the write path.
-That carve-out is earned by measurement, not caution: release-mode hive_ce silently corrupts on
-out-of-range int keys and structurally destroys the box file on oversized String keys (its only
-guard is assert-stripped), and the violating class of key (data-derived, e.g. 64-bit server ids)
-is exactly the class development runs never see. Cost: 2 comparisons and a byte-length check
-against a ~10 µs write.
+on the opt-in codec, the types inside a collection), preconditions hive itself throws for get **no
+wrapper check at all** (tier 3), and 2 **release-mode** gates, both on the write path:
+
+- **The raw-key gate.** Release-mode hive_ce silently corrupts on out-of-range int keys and
+  structurally destroys the box file on oversized String keys (its only guard is assert-stripped).
+  Cost: 2 comparisons and a byte-length check against a ~10 µs write.
+- **The exact-int gate on `MapBox`'s inner keys.** hive keeps ints as 64-bit floats, so 2 inner
+  keys past 2^53 that a float can't tell apart come back from a reopen as one entry, pinned on the
+  VM and dart2wasm. Cost: a pass over the inner keys, only when their type can hold an int.
+
+Both carve-outs are earned by measurement, not caution. The keys that trip them are data-derived
+(64-bit server ids, say), exactly the class development runs never see.
 
 ---
 
@@ -297,9 +307,10 @@ iterables at write anyway, so the copy is half-free), and everything outward is 
 zero-copy **view**: eager gets alias hive's own cache, so a per-read defensive copy would tax the
 hot path for a hole the view closes for free. This is the sanctioned scenario call under
 CODESTYLE's unmodifiable-collections idiom. Nested collections stay out, because the outer cast
-can't reach the inner ones, and a development assert refuses them while wiring. The exception is
-the few shapes hive keeps typed, pinned on the VM and both web compilers so the assert can't drift
-from what hive does.
+can't reach the inner ones, and one development assert refuses them while wiring, for list and set
+elements and map values alike. The exception is the few shapes hive keeps typed, pinned as list
+elements and as map values on the VM and both web compilers, so the assert can't drift from what
+hive does.
 
 Sets come back as `Set<dynamic>` and cast just as well. What they need on top is equality that
 survives a restart. A set dedups with the element's `==`, and a read from disk builds fresh
@@ -318,6 +329,18 @@ keeps reads a zero-copy cast view:
   call site and a 3rd policy would break a bool.
 - **The asserts are development-only.** Without `idOf` a set box falls back to `==` and still
   works, where a box with no key codec can't work at all.
+
+Maps come back as `Map<dynamic, dynamic>` whatever they hold, primitives included, and cast the
+same way, keys and values checked in one pass. Their inner keys have the set's problem with no
+`idOf` to lean on:
+
+- **Inner keys are strings, numbers, bools or enums**, the types sure to compare equal after a
+  restart. A map finds keys by `==`, and the type alone can't say whether a custom class compares
+  by value or by identity, so a development assert refuses it and the map gets keyed by an id. It
+  depends only on the type, so it fires on every development run, which is why an assert is enough.
+- **hive gets a plain `Map.of(...)`**, for the same reason sets get a plain `Set.of(...)`.
+- **Entry helpers follow `Map`**, since the names promise its behaviour: `addAll` lets the incoming
+  value win and `remove` takes one entry out. Like the siblings, an emptied map keeps its key.
 
 ---
 

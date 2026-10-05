@@ -19,8 +19,8 @@ import 'map_edits.dart';
 
 /// A **lazy** box holding a `Map` of [MK] to [MV] per [K] key, read off disk when asked.
 ///
-/// Same rules as [MapBox]: the inner keys are strings, numbers, bools or enums, and a write with an int
-/// key hive can't store exactly fails.
+/// Same rules as [MapBox]: the inner keys are strings, numbers, bools or enums, and a write with an
+/// int key hive can't store exactly fails.
 ///
 /// It opens on the first effect. Until then the sync inspectors ([length], [isEmpty], [isNotEmpty],
 /// [keys], [contains]) throw a [StateError].
