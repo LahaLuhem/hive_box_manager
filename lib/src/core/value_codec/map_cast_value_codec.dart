@@ -11,13 +11,13 @@ import 'value_codec.dart';
 /// hold.
 final class MapCastValueCodec<MK extends Object, MV extends Object>()
     implements ValueCodec<Map<MK, MV>> {
-  /// Trips development asserts for an [MK] that won't compare equal after a restart, or an [MV] that
-  /// won't read back typed.
+  /// Trips development asserts for an [MK] that might not compare equal after a restart, or an [MV]
+  /// that won't read back typed.
   this
     : assert(
         isRestartSafeType<MK>(),
-        'A map keyed by $MK finds nothing after a restart, which hands back fresh keys. Key it by a '
-        'String, num, bool or enum instead, like an id.',
+        'A map keyed by $MK may find nothing after a restart, which hands back fresh keys. Key '
+        'it by a String, num, bool or enum instead, like an id.',
       ) {
     assertRestorableElementType<MV>();
   }

@@ -22,11 +22,12 @@ that's the gap this fills:
   there" is a case the compiler makes you handle, never a crash waiting to happen.
 - 🧰 **CRUD is already written.** get, put, update, delete, clear and watch ship on every box, so
   you stop rewriting the same boilerplate for every type you store.
-- 🧩 **5 boxes for 5 real shapes of data**, each in an eager and a lazy flavour, so the box
+- 🧩 **6 boxes for 6 real shapes of data**, each in an eager and a lazy flavour, so the box
   fits the problem instead of the other way round.
 - 🛡️ **Safer than raw Hive.** The write path rejects keys release-mode `hive_ce` accepts and then
-  silently corrupts on, and `ListBox` closes the `List<dynamic>` trap that breaks a naive
-  `Box<List<T>>` on its first post-restart read. Both pinned by tests against upstream, not assumed.
+  silently corrupts on, and the collection boxes close the `dynamic` trap that breaks a naive
+  `Box<List<T>>` or `Box<Map<K, V>>` on its first post-restart read. Both pinned by tests against
+  upstream, not assumed.
 - 🚀 **At near-native Hive speed.\*** Reads cost 1 to 22 ns per op against raw `hive_ce`, and
   effects that reach disk stay within 2 to 4%.
   <br><sub>\* 2 surfaces cost more than that, and [what that costs](#-what-that-costs) prices
@@ -46,6 +47,7 @@ Pure Dart, so it runs anywhere Hive does: Flutter apps, Dart servers, CLIs, and 
     * [📍 SingleValueBox](#-singlevaluebox)
     * [🗂️ ListBox](#-listbox)
     * [🧺 SetBox](#-setbox)
+    * [📖 MapBox](#-mapbox)
     * [🔗 DualKeyBox](#-dualkeybox)
 - [🎛️ Make it yours](#-make-it-yours)
 - [📏 Eager or lazy? (measured)](#-eager-or-lazy-measured)
@@ -67,11 +69,16 @@ Start here. Match what you're storing to a family, then grab its eager or lazy v
 | Exactly one value             | `SingleValueBox<T>`     | a session token, the theme, one config blob |
 | A list of values per key      | `ListBox<T, K>`         | tags per post, history per day              |
 | A set of values per key       | `SetBox<T, K>`          | members per team, favourites per user       |
+| A map of values per key       | `MapBox<MK, MV, K>`     | prices per store, settings per user         |
 | Values addressed by 2 parts   | `DualKeyBox<T, K1, K2>` | (user, day) events, (row, column) grids     |
 
 Every family has an eager and a `Lazy...` twin. [Eager or lazy?](#-eager-or-lazy-measured) picks
 the axis with measured numbers. Reverse queries ("everything for this user") live on the
 dual-key family.
+
+`MapBox` and `DualKeyBox` both find a value by 2 parts. `MapBox` stores each key's map as one
+record, read and written whole, which suits small maps you use together. Reach for `DualKeyBox`
+when entries change one at a time, maps grow large, or you look things up by the second part.
 
 ## 🚀 Quickstart
 
@@ -317,6 +324,42 @@ Worth knowing:
 
 </details>
 
+### 📖 MapBox
+
+A map of values per key. Prices per store, settings per user.
+
+<details>
+<summary>Merging, removing, and the keys a map can hold</summary>
+
+Hive reads every map back as `Map<dynamic, dynamic>`, whatever it held, so a typed read after a
+restart throws. `MapBox` restores both types at the read boundary:
+
+```dart
+final prices = await MapBox.open<String, double, int>('prices_by_store').run();
+
+await prices.put(1, {'apple': 0.5, 'pear': 0.8}).run(); // stored as a private copy
+await prices.addAll(1, {'pear': 0.9, 'plum': 1.2}).run(); // merges, so 'pear' is now 0.9
+await prices.remove(1, 'apple').run(); // one entry out, the key stays
+
+final storePrices = prices.getOr(1); // Map<String, double>: unmodifiable view, empty when absent
+```
+
+Worth knowing:
+
+- The box key comes last, like every family: `MapBox<String, double, int>` holds a
+  `Map<String, double>` under each `int`.
+- Inner keys are strings, numbers, bools or enums, the types sure to compare equal after a
+  restart hands back fresh objects. Anything else trips an assert while wiring, so key by an id.
+- An int key hive can't store exactly (some past 2^53) fails with an `ArgumentError`,
+  [like a bad box key](#-safer-than-raw-hive-at-near-native-speed).
+- `addAll` and `remove` follow `Map`: the incoming value wins, and removing an absent key or entry
+  writes nothing. Each one rewrites the whole map, and an emptied map keeps its key.
+- Maps keep their insertion order across a restart. Writes are copied, reads are unmodifiable,
+  absent isn't empty, and nested values follow `ListBox`'s rule, all like the other collections.
+- `LazyMapBox` is the same surface on the lazy axis.
+
+</details>
+
 ### 🔗 DualKeyBox
 
 2 natural dimensions to your data (user + day, row + column). Address it by both parts, query by
@@ -452,6 +495,10 @@ complaint, then corrupts quietly: keys wrap into other slots, and an oversized S
 the whole box file unreadable on its next open. This package rejects exactly those keys with an
 `ArgumentError` at the call site, before anything reaches disk.
 
+Keys inside a map get the same care. hive keeps ints as 64-bit floats, so 2 int keys past 2^53
+can come back from a restart as one entry. `MapBox` rejects any int key a float can't hold
+exactly, before anything reaches disk.
+
 ### ⚡ What that costs
 
 There is no single number, and any package that gives you one is quoting the surface that flattered
@@ -562,7 +609,7 @@ Additive candidates for 1.x, in no committed order:
 - **IsolatedHive support** behind the box-acquisition seam (`hive_ce` itself recommends it for
   multi-isolate apps), plus `BoxCollection` wrapping if there's demand.
 - **A migration helper API** (1.0 documents recipes in [MIGRATION.md](MIGRATION.md) for now).
-- **Maps and nested collections** on the value-codec seam.
+- **Nested collections** beyond the shapes hive keeps typed, on the value-codec seam.
 - **A consumer fakes package** (in-memory façades for app tests) and Flutter companions (a
   `ValueListenable` adapter), as separate packages so the core stays pure Dart.
 
