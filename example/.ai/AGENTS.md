@@ -37,6 +37,7 @@ panel from `features/core/`:
 | `single_value` | lazy `LazySingleValueBox<String>` + `HiveAesCipher` | one encrypted token, state fed by `watch()` |
 | `list_box` | eager `ListBox<String, int>` | tag lists per key, `add` / `remove` sugar, unmodifiable views |
 | `set_box` | eager `SetBox<String, int>` + `idOf` | tags that ignore case, `add` vs `upsert` |
+| `map_box` | eager `MapBox<String, String, int>` | settings per user, `addAll` merging in place, `remove` |
 | `dual_query` | lazy `LazyDualKeyBox<String, int, int>` | (user, day) composite keys, reverse queries by either part |
 
 Demo values are primitives (`String`) on purpose, so the example needs no `TypeAdapter` and no

@@ -27,10 +27,11 @@ void checkEntryTypes<K extends Object, V extends Object>(Map<Object?, Object?> m
 bool isRestorableElementType<E extends Object>() {
   // A type can't be tested directly, but an empty list of it can.
   final probe = <E>[];
-  if (probe is! List<Iterable<Object?>> && probe is! List<Map<Object?, Object?>>) return true;
+  final isCollection = probe is List<Iterable<Object?>> || probe is List<Map<Object?, Object?>>;
 
   // Exact shapes only: hive hands an Int32List back as a plain List<int>, for one.
-  return _isExactly<E, List<int>>() ||
+  return !isCollection ||
+      _isExactly<E, List<int>>() ||
       _isExactly<E, List<double>>() ||
       _isExactly<E, List<bool>>() ||
       _isExactly<E, List<String>>() ||

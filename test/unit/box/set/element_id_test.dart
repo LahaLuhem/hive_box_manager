@@ -9,6 +9,8 @@ import 'package:test/test.dart';
 import '../../../support/support.dart';
 
 /// Compares by identity, Dart's default.
+// A test fixture, not this file's subject.
+// ignore: prefer-match-file-name
 final class _Thing(final String id);
 
 /// `==` by name only, so it's looser than an id.
