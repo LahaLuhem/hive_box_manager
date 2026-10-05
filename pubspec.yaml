@@ -1,9 +1,22 @@
 name: hive_box_manager
 description: >-
-  Type-safe, FP-style abstraction layers for Hive's boxes. Provides Managers for almost all
-  conceivable use-cases and scenarios.
+  Typed, fpdart-first boxes over hive_ce. Reads return an Option instead of null, writes are lazy
+  Tasks, CRUD comes ready-made, and each shape of data gets its own box.
 version: 1.1.1
 repository: https://github.com/LahaLuhem/hive_box_manager
+
+topics:
+  - hive
+  - database
+  - nosql
+  - functional-programming
+  - type-safety
+
+screenshots:
+  - description: >-
+      The example app's hub, with one demo per box family. Each demo docks a live log of the events
+      its box fires.
+    path: doc/screenshots/1-overview.png
 
 
 

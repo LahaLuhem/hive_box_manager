@@ -12,6 +12,10 @@
 Typed, fpdart-first façades over [hive_ce](https://pub.dev/packages/hive_ce) boxes. No `null`s,
 no bare `Future`s, no hand-written CRUD. Pick the box that fits your data and get on with it.
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/LahaLuhem/hive_box_manager/master/doc/screenshots/1-overview.png" width="260" alt="The example app's hub, with one demo per box family">
+</p>
+
 > ⬆️ **Upgrading from `0.0.x`?** 1.0 is a from-scratch rewrite with a new API, but your data
 > almost always reads in place. [MIGRATION.md](MIGRATION.md) walks you through it.
 
