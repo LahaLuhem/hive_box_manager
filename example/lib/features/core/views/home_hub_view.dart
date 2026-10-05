@@ -7,6 +7,7 @@ import 'package:platform_icons/platform_icons.dart';
 import '/features/dual_query/dual_query_view.dart';
 import '/features/keyed/keyed_view.dart';
 import '/features/list_box/list_box_view.dart';
+import '/features/map_box/map_box_view.dart';
 import '/features/set_box/set_box_view.dart';
 import '/features/single_value/single_value_view.dart';
 
@@ -41,6 +42,12 @@ class const HomeHubView({super.key}) extends StatelessWidget {
             title: 'SetBox',
             subtitle: 'Tags that ignore case via idOf: add keeps, upsert replaces',
             builder: (_) => const SetBoxView(),
+          ),
+          _DemoTile(
+            icon: PlatformIcons.gear,
+            title: 'MapBox',
+            subtitle: 'Settings per user: saving a known setting swaps its value in place',
+            builder: (_) => const MapBoxView(),
           ),
           _DemoTile(
             icon: PlatformIcons.search,
