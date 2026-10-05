@@ -233,7 +233,8 @@ void main() {
       examples: {
         'ListBox': (
           watch: () async => (await ListBox.open<int, int>('lists').run()).watch(),
-          write: () async => (await ListBox.open<String, int>('lists').run()).put(7, ['x']).run(),
+          write: () async =>
+              await (await ListBox.open<String, int>('lists').run()).put(7, ['x']).run(),
         ),
         'LazyListBox': (
           watch: () async {
@@ -246,7 +247,8 @@ void main() {
         ),
         'SetBox': (
           watch: () async => (await SetBox.open<int, int>('sets').run()).watch(),
-          write: () async => (await SetBox.open<String, int>('sets').run()).put(7, ['x']).run(),
+          write: () async =>
+              await (await SetBox.open<String, int>('sets').run()).put(7, ['x']).run(),
         ),
         'LazySetBox': (
           watch: () async {
@@ -260,7 +262,7 @@ void main() {
         'MapBox': (
           watch: () async => (await MapBox.open<int, String, int>('maps').run()).watch(),
           write: () async =>
-              (await MapBox.open<String, String, int>('maps').run()).put(7, {'x': 'y'}).run(),
+              await (await MapBox.open<String, String, int>('maps').run()).put(7, {'x': 'y'}).run(),
         ),
         'LazyMapBox': (
           watch: () async {

@@ -1,7 +1,9 @@
 Library-package code style. Project facts (goal, stack, repo layout, hard rules) live in
 [`.ai/AGENTS.md`](./.ai/AGENTS.md), and design rationale in [`APPENDIX.md`](./APPENDIX.md).
 
-The lint posture is deliberately strict (see [`analysis_options.yaml`](./analysis_options.yaml)).
+The lint posture is deliberately strict (see
+[dartender's shared lints](https://github.com/LahaLuhem/dartender/blob/main/lints/lib/analysis_options.yaml), which
+[`analysis_options.yaml`](./analysis_options.yaml) includes).
 The house style values explicit types, no ambient mutability, small focused types, no `null` on the
 public surface, and one consistent shape across every Manager in the package.
 
@@ -130,7 +132,7 @@ under [*Hard rules* in `.ai/AGENTS.md`](./.ai/AGENTS.md#hard-rules).
 
 - **Wrap text-file content at 100 columns.** [`.editorconfig`](./.editorconfig) is authoritative,
   and Markdown, Dart, and YAML share the cap. The formatter's `page_width: 100` in
-  `analysis_options.yaml` matches it, so keep them aligned if either moves.
+  the shared lints matches it, so keep them aligned if either moves.
 - **Comment lines overshoot 100 by their last word, they don't wrap before it.** The Dart formatter
   doesn't reflow `//` / `///` prose, so fill each line and let the word that crosses column 100 stay
   put, then break. Wrapping a word down to the next line while the current one still has room is the

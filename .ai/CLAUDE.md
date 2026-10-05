@@ -39,8 +39,9 @@ reserved for 7 days).
 - **Read / Edit / Grep / Glob** over `cat` / `sed` / `grep` / `find`. Always.
 - **Bash** only for things without a dedicated tool: `dart`, `git`. The user's shell aliases `dart`
   to the toolchain serving the `.fvmrc` pin, so invoke plain `dart`.
-- **Lint with `dart --no-version-check analyze .`** (pedantic mode is the contract). Don't
-  substitute plain `dart analyze` and ignore what it surfaces.
+- **Lint with `dart --no-version-check analyze --fatal-infos --fatal-warnings .`**, like CI
+  (pedantic mode is the contract). Don't substitute plain `dart analyze` and ignore what it
+  surfaces.
 - **Agent tool** for wide / open-ended searches or to keep large output out of context.
 
 ## Scope awareness
@@ -50,8 +51,8 @@ reserved for 7 days).
   The functional surface (Task / Option, no null) *is* the public contract, so don't erode it.
 - **`lib/src/` edits** are private. Refactor freely as long as the public re-exports stay stable.
 - **`test/` edits** are local, no publish impact.
-- **`analysis_options.yaml` edits** affect every file. Surface lint-posture changes loudly and add
-  a written reason in `APPENDIX.md`.
+- **`analysis_options.yaml` edits** override dartender's shared lints, which every repo gets.
+  Surface them loudly and add a written reason in `APPENDIX.md`.
 - **`pubspec.yaml` dependency edits** add to every downstream user's transitive closure. Treat as
   public-API-class, and remember opinionated deps belong in companion packages, not core.
 
@@ -72,8 +73,8 @@ reserved for 7 days).
 - The change touches the public API (anything re-exported from `lib/hive_box_manager.dart`). Even
   adding a new Manager or method affects semver and downstream users.
 - You're adding or removing a dependency in `pubspec.yaml`.
-- You're changing `analysis_options.yaml`. Lint posture is project-wide and any toggle deserves a
-  written reason in APPENDIX.
+- You're overriding a shared lint in `analysis_options.yaml`. Lint posture is project-wide and any
+  toggle deserves a written reason in APPENDIX.
 
 For a single-file, single-concern change inside `lib/src/`, just do it.
 
@@ -106,7 +107,7 @@ pipeline-owned (see *Forbidden* below). Don't plan or make a CHANGELOG edit or a
 
 ## Definition of done
 
-- `dart --no-version-check analyze .` clean (pedantic mode).
+- `dart --no-version-check analyze --fatal-infos --fatal-warnings .` clean (pedantic mode).
 - `dart format --output=none --set-exit-if-changed .` clean.
 - `dart test` green.
 - New / changed Managers honour the [Manager contract](./CODESTYLE.md#manager-contract): the
