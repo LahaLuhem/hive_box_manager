@@ -31,7 +31,7 @@ void main() {
     // Only a reopen reads from disk, which is where hive hands back an untyped map.
     await box.close().run();
 
-    return openPeople();
+    return await openPeople();
   }
 
   /// Stores one entry under [entryKey], reopens, and looks it up again the way an app would after a

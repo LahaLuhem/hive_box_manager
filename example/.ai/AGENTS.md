@@ -11,9 +11,8 @@ in the parent [`AGENTS.md`](../AGENTS.md), and example-specific code style in
 - Not published to pub.dev (`publish_to: 'none'` in `pubspec.yaml`). No semver discipline. It may
   freely depend on Flutter and ecosystem packages.
 - Local only, no publish impact. Keep it building and analysing clean on the strict lint set (the
-  example inherits the package's `analysis_options.yaml` via `include`, relaxing only
-  `public_member_api_docs`). Its CI (a `flutter analyze` + `dependency_validator` job) is a
-  tracked maintainer follow-up.
+  example includes the same shared lints as the package, relaxing only `public_member_api_docs`).
+  dartender's CI analyzes and validates it along with the package.
 
 ## Architecture
 

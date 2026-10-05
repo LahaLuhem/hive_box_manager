@@ -85,7 +85,7 @@ final class LazyCrudEngine<T extends Object>({
       final storedValue = await box.get(rawKey.value);
       _observer?.onRead(name, semanticKey, storedValue);
 
-      return storedValue == null ? const None() : Some(_valueCodec.fromStored(storedValue));
+      return Option.fromNullable(storedValue).map(_valueCodec.fromStored);
     }),
   );
 
@@ -107,7 +107,7 @@ final class LazyCrudEngine<T extends Object>({
       final box = await _obtainBox();
       _observer?.onReadAll(name, box.length);
 
-      return _readEach(
+      return await _readEach(
         box.keys.map((rawKey) => rawKey as Object).toList(growable: false),
         (rawKey) async => _valueCodec.fromStored((await box.get(rawKey))!),
         semanticKeyOf,

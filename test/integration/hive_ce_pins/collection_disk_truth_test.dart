@@ -30,7 +30,7 @@ void main() {
     final boxName = box.name;
     await box.close();
 
-    return Hive.openBox<Object>(boxName);
+    return await Hive.openBox<Object>(boxName);
   }
 
   feature('hive_ce disk truth for collections of a custom type', () {

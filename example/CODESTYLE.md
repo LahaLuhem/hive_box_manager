@@ -1,9 +1,9 @@
 Example-app code style. Package (library) style lives in [`../CODESTYLE.md`](../CODESTYLE.md),
 and example scope and facts in [`.ai/AGENTS.md`](.ai/AGENTS.md).
 
-The example inherits the package's strict lint set (via `include: ../analysis_options.yaml`),
-relaxing only `public_member_api_docs`. The package's generic style applies here: explicit types,
-`final` by default, the collection-`for` and functional-pipeline idioms, and static dot shorthands.
+The example includes the same strict shared lints as the package, relaxing only
+`public_member_api_docs`. The package's generic style applies here: explicit types, `final` by
+default, the collection-`for` and functional-pipeline idioms, and static dot shorthands.
 The package CODESTYLE is pure-Dart, so the Flutter-specific conventions it doesn't cover live below.
 
 ## Example-specific conventions

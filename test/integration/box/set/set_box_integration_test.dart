@@ -21,7 +21,7 @@ void main() {
     // Only a reopen reads from disk, which is where hive hands back fresh objects.
     await box.close().run();
 
-    return openMembers();
+    return await openMembers();
   }
 
   feature('SetBox against real hive', () {

@@ -66,7 +66,7 @@ hive_box_manager/
 │                                   support/ (bdd + mocks at root; doubles/, codecs/, fixtures/, harness/, pins/)
 ├── benchmark/                      Maintainer tooling: key-codec matrix + wrapper-overhead lane
 ├── example/                        Flutter demo app, with its own pubspec
-├── analysis_options.yaml           Strict-mode + opinionated lints
+├── analysis_options.yaml           Includes dartender's shared lints
 ├── dart_dependency_validator.yaml  Scopes dependency_validator (excludes example/)
 ├── pubspec.yaml                    Deps + cider config + topics
 ├── .pubignore                      Files excluded from `pub publish`
@@ -98,7 +98,7 @@ hold, and nothing internal can leak by accident.
    on. This one carries scar tissue: the pre-1.0 collection box leaked `dynamic` through the class
    hierarchy to dodge a Hive limitation, and removing exactly that is part of why the redo exists.
    Never launder a type through `dynamic` or `as`.
-5. **No `print()` in library code.** `avoid_print` is a warning in `analysis_options.yaml`.
+5. **No `print()` in library code.** `avoid_print` is a warning in the shared lints.
 6. **Public symbols carry `///` dartdoc** explaining the guarantee and the semantics (eager vs
    lazy, how keys are handled), not the mechanical *what*. `public_member_api_docs` is on.
 7. **Pure Dart, dependency-light core.** `hive_ce` (the storage engine) and `fpdart` (the surface
@@ -178,7 +178,7 @@ keep in working memory:
   headers, commit messages, PR bodies. Fetch the page, don't cite it from memory: it is the intent
   behind [Prose & voice](./CODESTYLE.md#prose), and skipping it is how the wall of text gets
   written.
-- **Read `analysis_options.yaml` before writing code.** The lint posture is far stricter than the
+- **Read the shared lints before writing code.** The lint posture is far stricter than the
   Dart default, and code that fails lint won't pass review.
 - **Surface semver implications loudly.** If a change touches anything re-exported from
   `lib/hive_box_manager.dart`, call out whether it's patch / minor / major before the diff lands.
