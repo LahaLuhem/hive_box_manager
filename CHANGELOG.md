@@ -1,6 +1,7 @@
 ## [Unreleased]
 ### Added
 - \[#43\] `SetBox` and `LazySetBox`: a set per key. Elements other than strings, numbers, bools and enums need an `idOf`.
+- Add MapBox and LazyMapBox
 
 ### Changed
 - **RENAMES**: `putAllBy` and `putAllGrouped` take `keyOf:`, `primaryOf:` and `secondaryOf:` instead of `key:`, `primary:` and `secondary:`.
