@@ -1,4 +1,4 @@
-## [Unreleased]
+## [1.2.0] - 2026-10-06
 ### Added
 - \[#8\] Add `SetBox` and `LazySetBox`
 - \[#9\] Add `MapBox` and `LazyMapBox`
@@ -104,7 +104,7 @@
 - Collection BoxManagers
 - (Lazy) Dual Int Index LazyBoxManager
 
-[Unreleased]: https://github.com/LahaLuhem/hive_box_manager/compare/1.1.1...HEAD
+[1.2.0]: https://github.com/LahaLuhem/hive_box_manager/compare/1.1.1...1.2.0
 [1.1.1]: https://github.com/LahaLuhem/hive_box_manager/compare/1.1.0...1.1.1
 [1.1.0]: https://github.com/LahaLuhem/hive_box_manager/compare/1.0.0...1.1.0
 [1.0.0]: https://github.com/LahaLuhem/hive_box_manager/compare/0.0.8...1.0.0

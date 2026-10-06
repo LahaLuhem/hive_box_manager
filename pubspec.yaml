@@ -2,7 +2,7 @@ name: hive_box_manager
 description: >-
   Typed, fpdart-first boxes over hive_ce. Reads return an Option instead of null, writes are lazy
   Tasks, CRUD comes ready-made, and each shape of data gets its own box.
-version: 1.1.1
+version: 1.2.0
 repository: https://github.com/LahaLuhem/hive_box_manager
 
 topics:
