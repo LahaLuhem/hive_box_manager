@@ -1,8 +1,6 @@
-import 'dart:async';
-import 'dart:collection';
-
 import 'package:fpdart/fpdart.dart';
 import 'package:hive_ce/hive.dart';
+import 'package:synchronized/synchronized.dart';
 
 import '/src/observer/box_observer.dart';
 import '../raw_key.dart';
@@ -26,8 +24,7 @@ import '../value_codec/value_codec.dart';
 /// still fires `onClosed`, and the wrapper makes up the same already-closed error afterwards. Deleting
 /// from disk before first use does open first, since it has to reach storage.
 ///
-/// Every effect except the reads queues on its hive box and runs after the ones started before it, so
-/// a read-modify-write can't lose a write that lands while it waits on disk.
+/// Writes to one hive box run one at a time, so a read-modify-write can't lose another write.
 final class LazyCrudEngine<T extends Object>({
   required final String _boxName,
   required final Future<LazyBox<Object?>> Function() _openBox,
@@ -45,9 +42,8 @@ final class LazyCrudEngine<T extends Object>({
   /// close surfaces indistinguishably from a real one.
   static const _alreadyClosedMessage = 'Box has already been closed.';
 
-  /// Keyed by hive's box, not by engine: every handle on a box name gets the same box from hive, so
-  /// they all share its queue.
-  static final _writeQueues = Expando<_WriteQueue>();
+  /// Keyed by hive's box, so every handle on a box name shares one lock.
+  static final _writeLocks = Expando<Lock>();
 
   /// The box name: the observer correlation handle (available before the box opens).
   String get name => _boxName;
@@ -420,49 +416,16 @@ final class LazyCrudEngine<T extends Object>({
     }
   }
 
-  /// Every effect except the reads runs through here: [write] waits for the writes queued on this box
-  /// before it, and failures reach the observer like [_guarded]'s.
+  /// [_guarded], plus the box's lock. Every effect except the reads goes through here.
   Future<R> _write<R>(String operation, Future<R> Function(LazyBox<Object?> box) write) async {
-    // Not built on _guarded: its extra async step measurably slowed every lazy write.
-    _WriteQueue? queue;
+    // Inlined, since calling _guarded measurably slowed every lazy write.
     try {
       final box = await _obtainBox();
-      queue = _writeQueues[box] ??= _WriteQueue();
-      if (queue.takeTurn() case final turn?) await turn;
 
-      return await write(box);
+      return await (_writeLocks[box] ??= Lock()).synchronized(() => write(box));
     } on Object catch (error, stackTrace) {
       _observer?.onOperationError(name, operation, error, stackTrace);
       rethrow;
-    } finally {
-      queue?.passTurn();
-    }
-  }
-}
-
-final class _WriteQueue() {
-  var _isBusy = false;
-  final _waiting = Queue<Completer<void>>();
-
-  /// `null` when nothing is running, so an uncontended write pays for no future.
-  Future<void>? takeTurn() {
-    if (!_isBusy) {
-      _isBusy = true;
-
-      return null;
-    }
-
-    final turn = Completer<void>();
-    _waiting.add(turn);
-
-    return turn.future;
-  }
-
-  void passTurn() {
-    if (_waiting.isEmpty) {
-      _isBusy = false;
-    } else {
-      _waiting.removeFirst().complete();
     }
   }
 }
