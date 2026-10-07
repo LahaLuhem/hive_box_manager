@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:collection';
+
 import 'package:fpdart/fpdart.dart';
 import 'package:hive_ce/hive.dart';
 
@@ -22,6 +25,9 @@ import '../value_codec/value_codec.dart';
 /// so later operations get hive's own already-closed error. Closing before first use opens nothing,
 /// still fires `onClosed`, and the wrapper makes up the same already-closed error afterwards. Deleting
 /// from disk before first use does open first, since it has to reach storage.
+///
+/// Every effect except the reads queues on its hive box and runs after the ones started before it, so
+/// a read-modify-write can't lose a write that lands while it waits on disk.
 final class LazyCrudEngine<T extends Object>({
   required final String _boxName,
   required final Future<LazyBox<Object?>> Function() _openBox,
@@ -38,6 +44,10 @@ final class LazyCrudEngine<T extends Object>({
   /// hive_ce's own post-close message (`BoxBaseImpl.checkOpen`), reused verbatim so a pre-first-use
   /// close surfaces indistinguishably from a real one.
   static const _alreadyClosedMessage = 'Box has already been closed.';
+
+  /// Keyed by hive's box, not by engine: every handle on a box name gets the same box from hive, so
+  /// they all share its queue.
+  static final _writeQueues = Expando<_WriteQueue>();
 
   /// The box name: the observer correlation handle (available before the box opens).
   String get name => _boxName;
@@ -164,8 +174,7 @@ final class LazyCrudEngine<T extends Object>({
     ensureStorableRawKey(rawKey.value);
 
     return Task(
-      () => _guarded('put', () async {
-        final box = await _obtainBox();
+      () => _write('put', (box) async {
         await box.put(rawKey.value, _valueCodec.toStorable(value));
         _observer?.onWritten(name, semanticKey, value);
 
@@ -196,8 +205,7 @@ final class LazyCrudEngine<T extends Object>({
     }
 
     return Task(
-      () => _guarded('putAll', () async {
-        final box = await _obtainBox();
+      () => _write('putAll', (box) async {
         await box.putAll(storableEntries);
         _observer?.onWrittenAll(name, storableEntries.length);
 
@@ -217,9 +225,9 @@ final class LazyCrudEngine<T extends Object>({
     ensureStorableRawKey(rawKey.value);
 
     return Task(
-      () => _guarded(
+      () => _write(
         'update',
-        () => _readModifyWrite(rawKey, semanticKey, (storedOrNone) {
+        (box) => _readModifyWrite(box, rawKey, semanticKey, (storedOrNone) {
           final updatedValue = storedOrNone.match(
             ifAbsent ??
                 () => throw ArgumentError.value(
@@ -246,9 +254,14 @@ final class LazyCrudEngine<T extends Object>({
     ensureStorableRawKey(rawKey.value);
 
     return Task(
-      () => _guarded(
+      () => _write(
         'edit',
-        () => _readModifyWrite(rawKey, semanticKey, (storedOrNone) => (edit(storedOrNone), unit)),
+        (box) => _readModifyWrite(
+          box,
+          rawKey,
+          semanticKey,
+          (storedOrNone) => (edit(storedOrNone), unit),
+        ),
       ),
     );
   }
@@ -256,11 +269,11 @@ final class LazyCrudEngine<T extends Object>({
   /// Shared by [update] and [edit], so whatever has to hold between the read and the write lives in one
   /// place.
   Future<R> _readModifyWrite<R>(
+    LazyBox<Object?> box,
     RawKey rawKey,
     Object semanticKey,
     (Option<T> nextValueOrNone, R result) Function(Option<T> storedOrNone) next,
   ) async {
-    final box = await _obtainBox();
     final (nextValueOrNone, result) = next(
       Option.fromNullable(await box.get(rawKey.value)).map(_valueCodec.fromStored),
     );
@@ -275,8 +288,7 @@ final class LazyCrudEngine<T extends Object>({
   /// Deletes [rawKey]. No gate: deletes cannot corrupt (hive no-ops absent keys before writing any frame,
   /// and a bad key was never admitted by the write gate).
   Task<Unit> delete(RawKey rawKey, Object semanticKey) => Task(
-    () => _guarded('delete', () async {
-      final box = await _obtainBox();
+    () => _write('delete', (box) async {
       await box.delete(rawKey.value);
       _observer?.onDeleted(name, semanticKey);
 
@@ -290,8 +302,7 @@ final class LazyCrudEngine<T extends Object>({
     final unwrappedKeys = [for (final rawKey in rawKeysToDelete) rawKey.value];
 
     return Task(
-      () => _guarded('deleteAll', () async {
-        final box = await _obtainBox();
+      () => _write('deleteAll', (box) async {
         await box.deleteAll(unwrappedKeys);
         for (final semanticKey in semanticKeys) {
           _observer?.onDeleted(name, semanticKey);
@@ -304,8 +315,7 @@ final class LazyCrudEngine<T extends Object>({
 
   /// Removes every entry.
   Task<Unit> clear() => Task(
-    () => _guarded('clear', () async {
-      final box = await _obtainBox();
+    () => _write('clear', (box) async {
       await box.clear();
       _observer?.onCleared(name);
 
@@ -323,8 +333,8 @@ final class LazyCrudEngine<T extends Object>({
 
   /// Flushes pending writes to disk.
   Task<Unit> flush() => Task(
-    () => _guarded('flush', () async {
-      await (await _obtainBox()).flush();
+    () => _write('flush', (box) async {
+      await box.flush();
 
       return unit;
     }),
@@ -332,8 +342,8 @@ final class LazyCrudEngine<T extends Object>({
 
   /// Compacts the box file.
   Task<Unit> compact() => Task(
-    () => _guarded('compact', () async {
-      await (await _obtainBox()).compact();
+    () => _write('compact', (box) async {
+      await box.compact();
 
       return unit;
     }),
@@ -341,26 +351,28 @@ final class LazyCrudEngine<T extends Object>({
 
   /// Closes the box, terminal for this handle. Before first use there is nothing to close, so no open
   /// is paid, though `onClosed` still fires and the handle is still spent.
-  Task<Unit> close() => Task(
-    () => _guarded('close', () async {
-      if (_boxFuture == null) {
-        _wasClosedBeforeFirstUse = true;
+  Task<Unit> close() => Task(() {
+    if (_boxFuture != null) {
+      return _write('close', (box) async {
+        await box.close();
         _observer?.onClosed(name);
 
         return unit;
-      }
+      });
+    }
 
-      await (await _obtainBox()).close();
+    return _guarded('close', () async {
+      _wasClosedBeforeFirstUse = true;
       _observer?.onClosed(name);
 
       return unit;
-    }),
-  );
+    });
+  });
 
   /// Deletes the box from disk. Terminal for this handle.
   Task<Unit> deleteFromDisk() => Task(
-    () => _guarded('deleteFromDisk', () async {
-      await (await _obtainBox()).deleteFromDisk();
+    () => _write('deleteFromDisk', (box) async {
+      await box.deleteFromDisk();
       _observer?.onDeletedFromDisk(name);
 
       return unit;
@@ -405,6 +417,52 @@ final class LazyCrudEngine<T extends Object>({
     } on Object catch (error, stackTrace) {
       _observer?.onOperationError(name, operation, error, stackTrace);
       rethrow;
+    }
+  }
+
+  /// Every effect except the reads runs through here: [write] waits for the writes queued on this box
+  /// before it, and failures reach the observer like [_guarded]'s.
+  Future<R> _write<R>(String operation, Future<R> Function(LazyBox<Object?> box) write) async {
+    // Not built on _guarded: its extra async step measurably slowed every lazy write.
+    _WriteQueue? queue;
+    try {
+      final box = await _obtainBox();
+      queue = _writeQueues[box] ??= _WriteQueue();
+      if (queue.takeTurn() case final turn?) await turn;
+
+      return await write(box);
+    } on Object catch (error, stackTrace) {
+      _observer?.onOperationError(name, operation, error, stackTrace);
+      rethrow;
+    } finally {
+      queue?.passTurn();
+    }
+  }
+}
+
+final class _WriteQueue() {
+  var _isBusy = false;
+  final _waiting = Queue<Completer<void>>();
+
+  /// `null` when nothing is running, so an uncontended write pays for no future.
+  Future<void>? takeTurn() {
+    if (!_isBusy) {
+      _isBusy = true;
+
+      return null;
+    }
+
+    final turn = Completer<void>();
+    _waiting.add(turn);
+
+    return turn.future;
+  }
+
+  void passTurn() {
+    if (_waiting.isEmpty) {
+      _isBusy = false;
+    } else {
+      _waiting.removeFirst().complete();
     }
   }
 }
