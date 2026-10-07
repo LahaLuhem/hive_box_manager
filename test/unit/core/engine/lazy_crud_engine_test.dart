@@ -254,6 +254,80 @@ void main() {
     });
   });
 
+  feature('lazy engine write order', () {
+    String appendMark(String value) => '$value+';
+
+    scenario('2 read-modify-writes started together both land', () async {
+      final engine = makeEngine();
+      await engine.put(const RawKey(7), 7, 'v').run();
+
+      await [
+        engine.update(const RawKey(7), 7, appendMark).run(),
+        engine.update(const RawKey(7), 7, appendMark).run(),
+      ].wait;
+
+      check(box.store[7]).equals('v++');
+    });
+
+    scenarioOutline<
+      ({Future<Object> Function(LazyCrudEngine<String> engine) write, Map<int, String> stored})
+    >(
+      'a write started after a read-modify-write wins over it',
+      examples: {
+        'put': (write: (engine) => engine.put(const RawKey(7), 7, 'put').run(), stored: {7: 'put'}),
+        'delete': (write: (engine) => engine.delete(const RawKey(7), 7).run(), stored: {}),
+        'clear': (write: (engine) => engine.clear().run(), stored: {}),
+      },
+      outline: (example) async {
+        final engine = makeEngine();
+        await engine.put(const RawKey(7), 7, 'v').run();
+
+        await [engine.update(const RawKey(7), 7, appendMark).run(), example.write(engine)].wait;
+
+        check(box.store).deepEquals(example.stored);
+      },
+    );
+
+    scenario('2 engines on one box share the order', () async {
+      final ui = makeEngine();
+      final sync = makeEngine();
+      await ui.put(const RawKey(7), 7, 'v').run();
+
+      await [
+        ui.update(const RawKey(7), 7, appendMark).run(),
+        sync.update(const RawKey(7), 7, appendMark).run(),
+      ].wait;
+
+      check(box.store[7]).equals('v++');
+    });
+
+    scenario('writes started before the box opens keep their order', () async {
+      final gate = Completer<void>();
+      final engine = makeEngine(openBox: CountingOpener(box, until: gate.future).open);
+      box.store[7] = 'v';
+
+      final racing = [
+        engine.update(const RawKey(7), 7, appendMark).run(),
+        engine.delete(const RawKey(7), 7).run(),
+      ];
+      gate.complete();
+      await racing.wait;
+
+      check(box.store).isEmpty();
+    });
+
+    scenario('a failing write does not hold up the one queued behind it', () async {
+      final engine = makeEngine();
+      await engine.put(const RawKey(7), 7, 'v').run();
+
+      final failing = engine.update(const RawKey(8), 8, appendMark).run();
+      final next = engine.update(const RawKey(7), 7, appendMark).run();
+
+      await check(failing).throws<ArgumentError>();
+      check(await next).equals('v+');
+    });
+  });
+
   feature('lazy engine watch', () {
     scenario('raw events pass through; a lazy delete carries no value', () async {
       final engine = makeEngine();
