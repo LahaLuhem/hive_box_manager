@@ -1,3 +1,7 @@
+## [Unreleased]
+### Fixed
+- Concurrent lazy writes to a box no longer lose each other
+
 ## [1.2.0] - 2026-10-06
 ### Added
 - \[#8\] Add `SetBox` and `LazySetBox`
@@ -104,6 +108,7 @@
 - Collection BoxManagers
 - (Lazy) Dual Int Index LazyBoxManager
 
+[Unreleased]: https://github.com/LahaLuhem/hive_box_manager/compare/1.2.0...HEAD
 [1.2.0]: https://github.com/LahaLuhem/hive_box_manager/compare/1.1.1...1.2.0
 [1.1.1]: https://github.com/LahaLuhem/hive_box_manager/compare/1.1.0...1.1.1
 [1.1.0]: https://github.com/LahaLuhem/hive_box_manager/compare/1.0.0...1.1.0
