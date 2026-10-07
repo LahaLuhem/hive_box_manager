@@ -1,5 +1,4 @@
-// A lazy read-modify-write waits on disk between its read and its write. Real hive here, since that
-// gap only exists on its async backend.
+// Real hive, since the race needs its async disk reads.
 @TestOn('vm')
 @Tags(['integration'])
 library;

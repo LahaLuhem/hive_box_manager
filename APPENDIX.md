@@ -118,8 +118,8 @@ decision turns on *what a dependency is for*.
 
 - **Engine and paradigm dependencies live in core.** `hive_ce` is the storage engine the whole
   package wraps, and `fpdart` is the surface paradigm every façade speaks. Both are load-bearing,
-  pure-Dart, and web-safe, so they belong in core. `meta` rides along for annotations, and
-  `collection` for collection helpers.
+  pure-Dart, and web-safe, so they belong in core. `meta` rides along for annotations, `collection`
+  for collection helpers, and `synchronized` for the lazy write lock.
 - **Adapter dependencies go in companions.** Anything that adapts the façades to another ecosystem
   is genuinely opt-in and must never burden core: a Flutter binding, a `riverpod` / `bloc` glue
   layer, a codec for a specific serialisation. Each becomes its own package depending on core plus
@@ -142,12 +142,12 @@ contributors alike, the test toolchain (`test`, `build_runner`) flooring below t
 the sanctioned breaking release, so the bump rode it, and since a floor can only be raised without a
 breaking change, any further bump is recorded here.
 
-The runtime dependencies are `hive_ce`, `fpdart`, `meta` and `collection`, and `pubspec.yaml` carries
-the constraints. `hive_ce` is floored at the version every behaviour pin was taken against, though
-≥2.12 is the *contractual* part, because that is where non-null delete-event values on the eager axis
-arrive. Flutter's SDK constrains `meta` and `collection` too, so neither floor goes above what
-Flutter stable accepts, or Flutter apps can't resolve. Discovered live with `meta`, back when Flutter
-pinned it exactly.
+The runtime dependencies are `hive_ce`, `fpdart`, `meta`, `collection` and `synchronized`, and
+`pubspec.yaml` carries the constraints. `hive_ce` is floored at the version every behaviour pin was
+taken against, though ≥2.12 is the *contractual* part, because that is where non-null delete-event
+values on the eager axis arrive. Flutter's SDK constrains `meta` and `collection` too, so neither
+floor goes above what Flutter stable accepts, or Flutter apps can't resolve. Discovered live with
+`meta`, back when Flutter pinned it exactly.
 
 ---
 
@@ -198,6 +198,10 @@ what happens between the two lands in one place. The rejected alternatives: a re
 family (the 0.0.x failure: the eager/lazy axis multiplies through every variant and template seams
 re-fork), extension types (stateless, so no memoised open, and not implementable for consumer
 fakes), and free functions (abandons CRUD-for-free).
+
+Lazy writes take a lock per hive box first, since a lazy read waits on disk and a write landing
+meanwhile would be lost. Per box because every handle on a box name gets the same hive box, and not
+per key because hive writes a box one write at a time anyway.
 
 Lifecycle is its own internal core. **Eager façades cannot exist unopened**: acquisition is a
 `Task`-returning static `open`, so sync reads are always legal by construction. **Lazy façades

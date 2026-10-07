@@ -35,6 +35,7 @@ dependencies:
   hive_ce: ^2.20.1
   # Blocked by hive_ce
   meta: ^1.14.0
+  synchronized: ^3.4.2
 
 
 
