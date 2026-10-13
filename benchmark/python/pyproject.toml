@@ -23,7 +23,7 @@ dependencies = [
     # seaborn for the whitegrid theme + multi-series styling. It pulls pandas transitively.
     "seaborn>=0.13,<1.0",
     # pyarrow backs the polars -> pandas interchange bridge seaborn uses internally.
-    "pyarrow>=25.0.1,<26.0",
+    "pyarrow>=25.0.1,<27.0",
 ]
 
 [dependency-groups]
