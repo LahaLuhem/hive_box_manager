@@ -2,6 +2,7 @@
 ### Fixed
 - \[#38\] Concurrent lazy writes to a box no longer lose each other
 - \[#44\] Collection values in KeyedBox, SingleValueBox and DualKeyBox throw once read from disk
+- \[#38\] Refuse ints hive would change
 
 ## [1.2.0] - 2026-10-06
 ### Added
