@@ -5,8 +5,9 @@ import 'package:hive_ce/hive.dart';
 import 'package:hive_ce/src/box/default_compaction_strategy.dart';
 // ignore: implementation_imports -- same oversight as above.
 import 'package:hive_ce/src/box/default_key_comparator.dart';
+import 'package:meta/meta.dart';
 
-/// Internal lifecycle core: the one place boxes are acquired.
+/// Lifecycle core: the one place boxes are acquired.
 ///
 /// Wraps the global [Hive] and takes an injected one for tests. Boxes open as `Object?`, since the engines'
 /// value codecs do the typing at the read and write boundary, and hive won't open a typed collection
@@ -14,6 +15,7 @@ import 'package:hive_ce/src/box/default_key_comparator.dart';
 ///
 /// Cipher, key comparator, compaction strategy and crash recovery all go straight through, and so does
 /// whatever `openBox` throws.
+@internal
 final class BoxProvider({HiveInterface? hive}) {
   /// Wires the provider to [hive], defaulting to the global instance.
   this;

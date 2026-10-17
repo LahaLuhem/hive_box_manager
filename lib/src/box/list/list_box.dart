@@ -255,8 +255,7 @@ interface class ListBox<T extends Object, K extends Object>._({
 
 /// Testing seam: wires an [ListBox] around an already-open (or fake) [box] instead of going through
 /// the real provider, so unit suites drive the façade against in-memory doubles.
-///
-/// Not exported, so only suites importing this file directly can see it.
+@internal
 @visibleForTesting
 ListBox<T, K> listBoxAround<T extends Object, K extends Object>(
   Box<Object?> box, {

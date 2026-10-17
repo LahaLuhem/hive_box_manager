@@ -1,3 +1,5 @@
+import 'package:meta/meta.dart';
+
 import 'dual_key_codec.dart';
 import 'string_composite_dual_codec.dart';
 
@@ -7,6 +9,7 @@ import 'string_composite_dual_codec.dart';
 /// Any other part pair without a codec trips an assert while wiring. Construction always runs in development
 /// and the check doesn't depend on data, so the assert is the real contract. The [ArgumentError] behind
 /// it is the release fallback, since a codec-less box can't work at all.
+@internal
 DualKeyCodec<K1, K2> resolveDualKeyCodec<K1 extends Object, K2 extends Object>(
   DualKeyCodec<K1, K2>? explicitCodec,
 ) {

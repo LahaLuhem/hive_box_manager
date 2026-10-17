@@ -1,9 +1,11 @@
 import 'dart:typed_data';
 
 import 'package:collection/collection.dart';
+import 'package:meta/meta.dart';
 
 /// Checked up front so a wrong element fails at the read, where the engine can name the key, and not
 /// later wherever the list ends up being used.
+@internal
 void checkElementTypes<E extends Object>(Iterable<Object?> elements) {
   if (elements.every((element) => element is E)) return;
 
@@ -12,6 +14,7 @@ void checkElementTypes<E extends Object>(Iterable<Object?> elements) {
 }
 
 /// [checkElementTypes] for a map, keys and values together in one pass over its entries.
+@internal
 void checkEntryTypes<K extends Object, V extends Object>(Map<Object?, Object?> map) {
   bool isTyped(MapEntry<Object?, Object?> entry) => entry.key is K && entry.value is V;
   if (map.entries.every(isTyped)) return;
@@ -23,6 +26,7 @@ void checkEntryTypes<K extends Object, V extends Object>(Map<Object?, Object?> m
 }
 
 /// Whether a stored [T] still reads back as one after a restart, on its own or inside a collection.
+@internal
 bool isRestorableType<T extends Object>() {
   // A type can't be tested directly, but an empty list of it can.
   final probe = <T>[];
@@ -45,6 +49,7 @@ bool isRestorableType<T extends Object>() {
 }
 
 /// Trips a development assert when [E] fails [isRestorableType].
+@internal
 void assertRestorableElementType<E extends Object>() {
   assert(
     isRestorableType<E>(),
@@ -55,6 +60,7 @@ void assertRestorableElementType<E extends Object>() {
 }
 
 /// [assertRestorableElementType] for a box's whole value.
+@internal
 void assertRestorableValueType<T extends Object>() {
   assert(
     isRestorableType<T>(),

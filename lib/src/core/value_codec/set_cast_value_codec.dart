@@ -3,12 +3,15 @@ library;
 
 import 'dart:collection';
 
+import 'package:meta/meta.dart';
+
 import 'element_type_check.dart';
 import 'int_check.dart';
 import 'value_codec.dart';
 
 /// [CollectionCastValueCodec] for sets, which hive reads back as `Set<dynamic>` unless they hold
 /// `int`, `double` or `String`.
+@internal
 final class SetCastValueCodec<E extends Object>() implements ValueCodec<Set<E>> {
   /// Trips a development assert for an [E] that can't read back typed after a restart.
   this {

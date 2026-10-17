@@ -245,8 +245,7 @@ interface class LazyListBox<T extends Object, K extends Object>._({
 
 /// Testing seam: wires a [LazyListBox] around [openBox] instead of the real provider, so unit suites
 /// drive the façade against in-memory doubles and scripted opens.
-///
-/// Not exported, so only suites importing this file directly can see it.
+@internal
 @visibleForTesting
 LazyListBox<T, K> lazyListBoxAround<T extends Object, K extends Object>(
   String name,

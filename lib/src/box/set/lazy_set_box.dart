@@ -208,7 +208,8 @@ interface class LazySetBox<T extends Object, K extends Object>._({
   Task<Unit> deleteFromDisk() => _engine.deleteFromDisk();
 }
 
-/// Testing seam: a [LazySetBox] around [openBox] instead of the real provider. Not exported.
+/// Testing seam: a [LazySetBox] around [openBox] instead of the real provider.
+@internal
 @visibleForTesting
 LazySetBox<T, K> lazySetBoxAround<T extends Object, K extends Object>(
   String name,

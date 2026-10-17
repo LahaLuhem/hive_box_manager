@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:meta/meta.dart';
+
 import 'constants/hive_key_limits.dart';
 
 /// Rejects the raw keys release-mode hive_ce would take and then corrupt on. Out-of-range ints wrap
@@ -11,6 +13,7 @@ import 'constants/hive_key_limits.dart';
 ///
 /// Reads and deletes skip it. Reads cannot corrupt anything, and hive no-ops a delete of a key that
 /// isn't there before it writes a frame.
+@internal
 void ensureStorableRawKey(Object rawKey) {
   switch (rawKey) {
     case final int key:

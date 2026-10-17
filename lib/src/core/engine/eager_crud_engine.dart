@@ -1,5 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:hive_ce/hive.dart';
+import 'package:meta/meta.dart';
 
 import '/src/observer/box_observer.dart';
 import '../raw_key.dart';
@@ -17,6 +18,7 @@ import '../value_codec/value_codec.dart';
 /// Sync reads are safe by construction, since an eager engine only exists around an open box. `close()`
 /// and `deleteFromDisk()` are terminal, and anything after one gets hive's own already-closed error.
 /// A codec producing an unstorable raw key throws at the call site, before any [Task] exists.
+@internal
 final class EagerCrudEngine<T extends Object>({
   required final Box<Object?> _box,
   required final ValueCodec<T> _valueCodec,
@@ -55,6 +57,8 @@ final class EagerCrudEngine<T extends Object>({
       return _valueCodec.fromStored(storedValue);
     } on Object catch (error, stackTrace) {
       Error.throwWithStackTrace(
+        // The engines are the one place outside tests that builds it.
+        // ignore: invalid_use_of_visible_for_testing_member
         UndecodableValueException(boxName: name, key: semanticKey, cause: error),
         stackTrace,
       );
@@ -308,6 +312,8 @@ final class _AttributedValuesIterator<T extends Object>(
     } on Object catch (error, stackTrace) {
       // Looked up only now, so the keystore search stays off the read path.
       Error.throwWithStackTrace(
+        // The engines are the one place outside tests that builds it.
+        // ignore: invalid_use_of_visible_for_testing_member
         UndecodableValueException(
           boxName: _boxName,
           key: _semanticKeyOf(_box.keys.elementAt(_index) as Object),

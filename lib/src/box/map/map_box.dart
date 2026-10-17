@@ -195,7 +195,8 @@ interface class MapBox<MK extends Object, MV extends Object, K extends Object>._
   }
 }
 
-/// Testing seam: a [MapBox] around an open or fake [box]. Not exported.
+/// Testing seam: a [MapBox] around an open or fake [box].
+@internal
 @visibleForTesting
 MapBox<MK, MV, K> mapBoxAround<MK extends Object, MV extends Object, K extends Object>(
   Box<Object?> box, {

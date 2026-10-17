@@ -181,8 +181,7 @@ interface class LazyKeyedBox<T extends Object, K extends Object>._({
 
 /// Testing seam: wraps a [LazyKeyedBox] around [openBox] rather than the real provider, so unit suites
 /// can use in-memory doubles and scripted opens.
-///
-/// Not exported, so only suites importing this file directly can see it.
+@internal
 @visibleForTesting
 LazyKeyedBox<T, K> lazyKeyedBoxAround<T extends Object, K extends Object>(
   String name,

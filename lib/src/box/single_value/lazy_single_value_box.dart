@@ -123,8 +123,7 @@ interface class LazySingleValueBox<T extends Object>._({required final LazyCrudE
 
 /// Testing seam: wires a [LazySingleValueBox] around [openBox] instead of the real provider, so unit
 /// suites drive the façade against in-memory doubles and scripted opens.
-///
-/// Not exported, so only suites importing this file directly can see it.
+@internal
 @visibleForTesting
 LazySingleValueBox<T> lazySingleValueBoxAround<T extends Object>(
   String name,
