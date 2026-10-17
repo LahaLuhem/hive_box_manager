@@ -8,30 +8,41 @@ import 'package:test/test.dart';
 import '../../support/support.dart';
 
 void main() {
-  feature('the exact-int key gate', () {
+  feature('whether hive keeps an int exactly', () {
     scenarioOutline<int>(
-      'an int hive stores exactly passes',
+      'an int a double holds is kept',
       examples: {
         'zero': 0,
         'a negative': -1,
         '2^53': 1 << 53,
         '-2^53': -(1 << 53),
-        '2^53 + 2, which a float holds exactly': (1 << 53) + 2,
+        '2^53 + 2, past the range every int fits': (1 << 53) + 2,
       },
-      outline: (key) => check(() => ensureExactIntKey(key)).returnsNormally(),
+      outline: (value) => check(hiveKeepsExactly(value)).isTrue(),
     );
 
     scenarioOutline<int>(
-      'an int hive would read back as a neighbour fails, naming the key',
+      "an int a double can't hold isn't",
       examples: {
         '2^53 + 1': ProbeKeyLimits.firstWebImpreciseInt,
         '-(2^53 + 1)': -ProbeKeyLimits.firstWebImpreciseInt,
       },
-      outline: (key) =>
-          check(() => ensureExactIntKey(key))
-              .throws<ArgumentError>()
-              .has((error) => error.invalidValue, 'invalidValue')
-              .equals(key),
+      outline: (value) => check(hiveKeepsExactly(value)).isFalse(),
     );
+  });
+
+  feature('the exact-int key gate', () {
+    scenario('an int key hive keeps passes', () {
+      check(() => ensureExactIntKey((1 << 53) + 2)).returnsNormally();
+    });
+
+    scenario('an int key hive would change fails, naming the key', () {
+      const key = ProbeKeyLimits.firstWebImpreciseInt;
+
+      check(() => ensureExactIntKey(key))
+          .throws<ArgumentError>()
+          .has((error) => error.invalidValue, 'invalidValue')
+          .equals(key);
+    });
   });
 }

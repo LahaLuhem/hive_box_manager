@@ -1,10 +1,17 @@
-/// Rejects an int key hive can't store exactly. hive keeps ints as 64-bit floats, so past 2^53 some come
-/// back as a neighbour, and 2 keys of one map would come back as a single entry.
+/// Whether hive gives [value] back unchanged. It keeps ints as 64-bit floats, so past 2^53 some come
+/// back as a neighbour.
+bool hiveKeepsExactly(int value) =>
+    // Every int within ±2^53 fits a float, so only bigger ones pay for the round trip.
+    (value >= -_twoTo53 && value <= _twoTo53) || value.toDouble().toInt() == value;
+
+const _twoTo53 = 9007199254740992;
+
+/// Rejects an int key hive would change, since 2 keys of one map could come back as one entry.
 ///
 /// Runs in release on purpose, like the raw-key gate: the ints that trip it are data-derived, like
 /// 64-bit server ids, the kind development runs rarely see.
 void ensureExactIntKey(int key) {
-  if (key.toDouble().toInt() == key) return;
+  if (hiveKeepsExactly(key)) return;
 
   throw ArgumentError.value(
     key,
