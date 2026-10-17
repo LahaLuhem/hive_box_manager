@@ -384,13 +384,12 @@ cost. Web performance is unmeasured (ordering assumed to follow the VM).
 hive_ce 2.20.1, after reads started checking elements, at load 3.7 rising to 10.9. A second pass at
 load 12 to 17 agreed on every claim above.
 
-`results_overhead.jsonl` carries a load stamp, but see the precision note above before quoting a
-single figure from it: a repeat pass moved `put` 2x and flipped `get (lazy)`'s sign. The 3.13.1
-pass reproduced that and worse. 2 passes 10 minutes apart, same binary, flipped the sign on 4
-lanes (`contains (eager)`, `get (lazy)`, `single get (lazy)`, `deleteAll`), moved `single set
-(eager)` 2x, and each printed CONTAMINATED on a different lazy lane. The file below is one of those
-passes, kept because its load stamp matches the 3.12.2 pass most closely. Treat it as unresolved,
-not as percentages. Re-run before anything from this lane lands in the top-level README:
+`results_overhead.jsonl` is the second of 2 passes taken on 2026-10-17 with macOS 15.7.9, Dart
+3.13.5 and hive_ce 2.22.0, after writes started checking ints, at load 3.9 falling to 3.3. Its typed
+put lanes store an int and a 20-record JSON response instead of the 1-byte value. The first pass, at
+load 2.6 rising to 6.4, read the same on those lanes but called `putallby` too noisy to quote.
+Neither printed CONTAMINATED. Still read single figures through the precision note above. Re-run
+with:
 
 ```sh
 dart compile exe benchmark/overhead_bench.dart -o /tmp/hbm_overhead

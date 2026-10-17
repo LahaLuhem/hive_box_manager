@@ -29,13 +29,13 @@ that's the gap this fills:
 - 🧩 **6 boxes for 6 real shapes of data**, each in an eager and a lazy flavour, so the box
   fits the problem instead of the other way round.
 - 🛡️ **Safer than raw Hive.** The write path rejects keys release-mode `hive_ce` accepts and then
-  silently corrupts on, and the collection boxes close the `dynamic` trap that breaks a naive
-  `Box<List<T>>` or `Box<Map<K, V>>` on its first post-restart read. Both pinned by tests against
-  upstream, not assumed.
-- 🚀 **At near-native Hive speed.\*** Reads cost 1 to 22 ns per op against raw `hive_ce`, and
-  effects that reach disk stay within 2 to 4%.
-  <br><sub>\* 2 surfaces cost more than that, and [what that costs](#-what-that-costs) prices
-  every surface rather than quoting one flattering average.</sub>
+  silently corrupts on, and ints it would hand back changed. The collection boxes close the
+  `dynamic` trap that breaks a naive `Box<List<T>>` or `Box<Map<K, V>>` on its first post-restart
+  read. All of it pinned by tests against upstream, not assumed.
+- 🚀 **At near-native Hive speed.\*** Reads add a few nanoseconds over raw `hive_ce`, and anything
+  that reaches disk a few percent.
+  <br><sub>\* A few surfaces cost more, and [what that costs](#-what-that-costs) prices every
+  surface rather than quoting one flattering average.</sub>
 
 Pure Dart, so it runs anywhere Hive does: Flutter apps, Dart servers, CLIs, and the web.
 
@@ -188,10 +188,10 @@ hand back.
 
 `putAllBy` is sugar for the common case where each value already carries its own key, so
 `Map.fromIterables(values.map((v) => v.id), values)` at the call site becomes
-`putAllBy(values, keyOf: (v) => v.id)`. It builds no intermediate map, which measures about
-**74 ns per entry** cheaper (0.94x) than writing the map yourself. `DualKeyBox` takes the same shape
-with 2 extractors (`primaryOf:` and `secondaryOf:`), and `ListBox` has `putAllGrouped`, which
-collects a flat iterable into one stored list per key.
+`putAllBy(values, keyOf: (v) => v.id)`. It builds no intermediate map, so it comes out a little
+cheaper than writing the map yourself (`benchmark/python/overhead.py` prints by how much).
+`DualKeyBox` takes the same shape with 2 extractors (`primaryOf:` and `secondaryOf:`), and `ListBox`
+has `putAllGrouped`, which collects a flat iterable into one stored list per key.
 
 Keep `putAll` for everything else, and that is most cases: the key often isn't derivable from the
 value at all (primitives, values with no id, keys that come from a grid or a legacy key set), and on
@@ -355,8 +355,8 @@ Worth knowing:
   `Map<String, double>` under each `int`.
 - Inner keys are strings, numbers, bools or enums, the types sure to compare equal after a
   restart hands back fresh objects. Anything else trips an assert while wiring, so key by an id.
-- An int key hive can't store exactly (some past 2^53) fails with an `ArgumentError`,
-  [like a bad box key](#-safer-than-raw-hive-at-near-native-speed).
+- An int hive can't store exactly (some past 2^53), as a key or a value, fails with an
+  `ArgumentError`, [as in every box](#-safer-than-raw-hive-at-near-native-speed).
 - `addAll` and `remove` follow `Map`: the incoming value wins, and removing an absent key or entry
   writes nothing. Each one rewrites the whole map, and an emptied map keeps its key.
 - Maps keep their insertion order across a restart. Writes are copied, reads are unmodifiable,
@@ -500,9 +500,14 @@ complaint, then corrupts quietly: keys wrap into other slots, and an oversized S
 the whole box file unreadable on its next open. This package rejects exactly those keys with an
 `ArgumentError` at the call site, before anything reaches disk.
 
-Keys inside a map get the same care. hive keeps ints as 64-bit floats, so 2 int keys past 2^53
-can come back from a restart as one entry. `MapBox` rejects any int key a float can't hold
-exactly, before anything reaches disk.
+Ints get the same care. hive keeps them as 64-bit floats, so past 2^53 some come back from a
+restart as their neighbour, and 2 map keys as one entry. Every box rejects a write holding an int a
+float can't hold exactly, wherever it sits: a value, a list or set element, a map key or value, or
+deep inside decoded JSON. Most writes fail at the call, and `update` and the helpers built on it
+fail when they run. Nothing reaches disk either way.
+
+> A 64-bit id inside your own type goes through your adapter, which this package can't see. Store
+> it as a `String` or a `BigInt` there. To cache a JSON response holding one, store its text.
 
 ### ⚡ What that costs
 
@@ -512,9 +517,10 @@ it. Wrapper cost depends on how expensive the thing being wrapped is, so it spli
 | Surface                                                             | Wrapper cost                                                        | Read as                                                                  |
 |---------------------------------------------------------------------|---------------------------------------------------------------------|--------------------------------------------------------------------------|
 | `KeyedBox` / `SingleValueBox`, memory reads (get, contains, values) | 1 to 22 ns per op                                                   | free                                                                     |
-| Any effect that reaches disk (put, delete, lazy get)                | 300 to 700 ns per op, 2 to 4%                                       | free, disk dominates                                                     |
+| Any effect that reaches disk (put, delete, lazy get)                | 300 to 760 ns per op, 2 to 7%                                       | free, disk dominates                                                     |
 | `ListBox` reads                                                     | ~290 ns per `get`, plus ~8 to 13 ns per element of a custom type    | 2.6x to 3.1x on one-element lists, 0.9x to 1.8x on thousand-element ones |
-| Batch writes (`putAll`, `deleteAll`)                                | 1 to 21 ns per entry                                                | free                                                                     |
+| Batch writes (`putAll`, `deleteAll`)                                | 1 to 35 ns per entry                                                | free                                                                     |
+| Writes that hold ints                                               | nothing measurable for an int, ~5% for a 20-record JSON response    | free, except walking JSON. Types without ints skip it                    |
 | Open time, keystore RAM, file size                                  | no measurable difference                                            | identical                                                                |
 | `DualKeyBox` eager get                                              | 1.02x (+3 to +21 ns per op)                                         | free                                                                     |
 | `DualKeyBox` `putAll`                                               | +45 to +85 ns per entry (int parts), +230 to +310 ns (String parts) | 1.09x to 1.36x by batch size, see below                                  |
@@ -522,10 +528,9 @@ it. Wrapper cost depends on how expensive the thing being wrapped is, so it spli
 <details>
 <summary>Why percentages are the wrong unit for most of this</summary>
 
-Some operations are cheap enough that one extra call frame doubles them while costing nothing that
-matters. A same-slot `SingleValueBox.get` is ~13 ns of raw hive, so the `Option` allocation and codec
-dispatch take it to ~24 ns: that is **+89%**, and it is also **+11 ns**. Walking an eager `values`
-iterable is +32% and +3 ns.
+Some operations are cheap enough that one extra call frame is a big percentage while costing
+nothing that matters. A same-slot `SingleValueBox.get` and a walk over eager `values` each pay tens
+of percent for a few nanoseconds (`benchmark/python/overhead.py` prints both).
 
 Quoting those percentages would be a lie by arithmetic, so the table gives nanoseconds wherever the
 underlying op is that cheap, and percentages only where the denominator is a real disk round-trip.

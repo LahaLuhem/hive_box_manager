@@ -282,12 +282,15 @@ wrapper check at all** (tier 3), and 2 **release-mode** gates, both on the write
 - **The raw-key gate.** Release-mode hive_ce silently corrupts on out-of-range int keys and
   structurally destroys the box file on oversized String keys (its only guard is assert-stripped).
   Cost: 2 comparisons and a byte-length check against a ~10 µs write.
-- **The exact-int gate on `MapBox`'s inner keys.** hive keeps ints as 64-bit floats, so 2 inner
-  keys past 2^53 that a float can't tell apart come back from a reopen as one entry, pinned on the
-  VM and dart2wasm. Cost: a pass over the inner keys, only when their type can hold an int.
+- **The exact-int gate.** hive keeps ints as 64-bit floats, so past 2^53 some come back from a
+  reopen as a neighbour, and 2 map keys a float can't tell apart as one entry, pinned on the VM and
+  dart2wasm. Every write checks the ints it carries, as values, elements, map keys and values, and
+  inside dynamic values like decoded JSON. Cost: nothing for a type that can't hold an int, and
+  only the walk over a JSON value shows (the overhead lane's `put int` and `put json`).
 
-Both carve-outs are earned by measurement, not caution. The keys that trip them are data-derived
-(64-bit server ids, say), exactly the class development runs never see.
+Both carve-outs are earned by measurement, not caution. What trips them is data-derived (64-bit
+server ids, say), exactly the class development runs never see. Ints inside a custom type go
+through its adapter, out of the gate's reach.
 
 ---
 
