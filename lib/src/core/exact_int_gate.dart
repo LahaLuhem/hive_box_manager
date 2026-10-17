@@ -20,3 +20,16 @@ void ensureExactIntKey(int key) {
         'read back as a different key',
   );
 }
+
+/// [ensureExactIntKey] for an int inside a value, release mode included. Its own gate so the advice
+/// can offer a BigInt, which a map key can't be.
+void ensureExactIntValue(int value) {
+  if (hiveKeepsExactly(value)) return;
+
+  throw ArgumentError.value(
+    value,
+    'value',
+    "hive stores ints as 64-bit floats and can't hold this one exactly, so after a restart it would "
+        'read back as a different number. Store it as a String or BigInt, or keep JSON as text',
+  );
+}
