@@ -19,8 +19,8 @@ import 'map_edits.dart';
 
 /// A **lazy** box holding a `Map` of [MK] to [MV] per [K] key, read off disk when asked.
 ///
-/// Same rules as [MapBox]: the inner keys are strings, numbers, bools or enums, and a write with an
-/// int key hive can't store exactly fails.
+/// Same rules as [MapBox]: the inner keys are strings, numbers, bools or enums, and a write holding an
+/// int hive can't store exactly fails.
 ///
 /// It opens on the first effect. Until then the sync inspectors ([length], [isEmpty], [isNotEmpty],
 /// [keys], [contains]) throw a [StateError].
@@ -119,7 +119,7 @@ interface class LazyMapBox<MK extends Object, MV extends Object, K extends Objec
   /// Adds [entries] to the map under [key] when run, like [Map.addAll], so a stored entry takes the
   /// incoming value. A key that isn't there yet gets a copy of [entries].
   Task<Unit> addAll(K key, Map<MK, MV> entries) {
-    // Copied now, so a bad int key fails at the call like put's.
+    // Copied now, so later edits to [entries] can't leak in.
     final incomingEntries = storableCopyOf(entries);
 
     return _engine

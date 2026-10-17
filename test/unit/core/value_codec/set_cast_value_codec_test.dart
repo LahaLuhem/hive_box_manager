@@ -65,4 +65,16 @@ void main() {
       check(identical(codec.toStorable(value), value)).isTrue();
     });
   });
+
+  feature('the int check on writes', () {
+    const changed = ProbeKeyLimits.firstWebImpreciseInt;
+    const kept = (1 << 53) + 2;
+
+    scenario('an element hive would change is refused, and one it keeps goes through', () {
+      final codec = SetCastValueCodec<int>();
+
+      check(() => codec.toStorable({1, changed})).throws<ArgumentError>();
+      check(() => codec.toStorable({1, kept})).returnsNormally();
+    });
+  });
 }

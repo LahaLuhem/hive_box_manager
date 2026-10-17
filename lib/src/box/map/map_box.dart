@@ -20,8 +20,8 @@ import 'map_edits.dart';
 /// An **eager** box holding a `Map` of [MK] to [MV] per [K] key.
 ///
 /// The inner keys have to be a `String`, `num`, `bool` or enum, the types sure to still match after
-/// a restart hands back fresh objects. Key by an id otherwise. A write with an int key hive can't store
-/// exactly (some past 2^53) fails at the call, or for [update] when it runs.
+/// a restart hands back fresh objects. Key by an id otherwise. A write holding an int hive can't store
+/// exactly (some past 2^53) fails at the call, or when it runs for [update] and [addAll].
 ///
 /// Writes are copied and reads can't be changed. Everything else works like [ListBox].
 ///
@@ -87,7 +87,7 @@ interface class MapBox<MK extends Object, MV extends Object, K extends Object>._
   /// Adds [entries] to the map under [key] when run, like [Map.addAll], so a stored entry takes the
   /// incoming value. A key that isn't there yet gets a copy of [entries].
   Task<Unit> addAll(K key, Map<MK, MV> entries) {
-    // Copied now, so a bad int key fails at the call like put's.
+    // Copied now, so later edits to [entries] can't leak in.
     final incomingEntries = storableCopyOf(entries);
 
     return _engine
