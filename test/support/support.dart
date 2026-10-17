@@ -20,4 +20,5 @@ export 'harness/unique_box_name.dart';
 export 'mocks.dart';
 export 'pins/probe_key_limits.dart';
 export 'pins/release_probe_runner.dart';
+export 'pins/stored_ints.dart';
 export 'pins/stored_shapes.dart';

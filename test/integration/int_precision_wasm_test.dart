@@ -9,7 +9,7 @@ import 'package:hive_box_manager/hive_box_manager.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
 
-import '../../../support/support.dart';
+import '../support/support.dart';
 
 void main() {
   const imprecise = ProbeKeyLimits.firstWebImpreciseInt;
@@ -37,5 +37,19 @@ void main() {
 
       check(() => box.put(1, {imprecise: 'a'})).throws<ArgumentError>();
     });
+  });
+
+  feature('ints in a value on dart2wasm', () {
+    scenarioOutline<Future<IntVerdicts> Function()>(
+      'hive keeps an int exactly when a round trip through a double does',
+      examples: storedInts,
+      outline: (verdictsOf) async {
+        final verdicts = await verdictsOf();
+
+        check(verdicts.unchangedIn).deepEquals({
+          for (final position in verdicts.unchangedIn.keys) position: verdicts.survivesDouble,
+        });
+      },
+    );
   });
 }
