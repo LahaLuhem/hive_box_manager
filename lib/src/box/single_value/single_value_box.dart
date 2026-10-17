@@ -125,8 +125,7 @@ interface class SingleValueBox<T extends Object>._({required final EagerCrudEngi
 
 /// Testing seam: wires a [SingleValueBox] around an already-open (or fake) [box] instead of going through
 /// the real provider, so unit suites drive the façade against in-memory doubles.
-///
-/// Not exported, so only suites importing this file directly can see it.
+@internal
 @visibleForTesting
 SingleValueBox<T> singleValueBoxAround<T extends Object>(
   Box<Object?> box, {

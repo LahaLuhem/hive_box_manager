@@ -1,5 +1,7 @@
 import 'dart:collection';
 
+import 'package:meta/meta.dart';
+
 import 'element_type_check.dart';
 import 'int_check.dart';
 import 'value_codec.dart';
@@ -8,6 +10,7 @@ import 'value_codec.dart';
 ///
 /// The result is wrapped unmodifiable on top, which costs nothing: an eager get aliases hive's own cache,
 /// so a view keeps consumers out of it without copying on every read.
+@internal
 final class CollectionCastValueCodec<E extends Object>() implements ValueCodec<List<E>> {
   /// Trips a development assert for an [E] that can't read back typed after a restart.
   this {

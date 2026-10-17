@@ -217,7 +217,8 @@ interface class SetBox<T extends Object, K extends Object>._({
   }
 }
 
-/// Testing seam: a [SetBox] around an open or fake [box]. Not exported.
+/// Testing seam: a [SetBox] around an open or fake [box].
+@internal
 @visibleForTesting
 SetBox<T, K> setBoxAround<T extends Object, K extends Object>(
   Box<Object?> box, {

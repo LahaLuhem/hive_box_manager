@@ -1,3 +1,5 @@
+import 'package:meta/meta.dart';
+
 /// One stored value could not be decoded, naming the [key] whose record failed.
 ///
 /// Whole-box and scan reads wrap. A single-key read already fails at a known key, so that one lets [cause]
@@ -13,6 +15,7 @@ final class const UndecodableValueException({
   required final Object cause,
 }) implements Exception {
   /// The engines throw this. Build one yourself only to fake a decode failure in a test.
+  @visibleForTesting
   this;
 
   @override

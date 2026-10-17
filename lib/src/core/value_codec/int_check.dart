@@ -1,17 +1,23 @@
 import 'dart:typed_data';
 
+import 'package:meta/meta.dart';
+
 import '../exact_int_gate.dart';
 
 /// Throws when a value holds an int hive would change.
+@internal
 typedef IntCheck = void Function(Object? value);
 
 /// The check a write runs on a [T] before hive stores it, or null when a [T] can't hold an int.
+@internal
 IntCheck? intCheckFor<T extends Object>() => _checksFor<T>().one;
 
 /// [intCheckFor] for each element of a list or set of [E].
+@internal
 IntCheck? elementsCheckFor<E extends Object>() => _checksFor<E>().each;
 
 /// [intCheckFor] for each key and value of a map of [MK] to [MV]. A key gets the key gate's error.
+@internal
 IntCheck? entriesCheckFor<MK extends Object, MV extends Object>() {
   final checksKeys = intCheckFor<MK>() != null;
   final valueCheck = intCheckFor<MV>();

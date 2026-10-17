@@ -1,5 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:hive_ce/hive.dart';
+import 'package:meta/meta.dart';
 import 'package:synchronized/synchronized.dart';
 
 import '/src/observer/box_observer.dart';
@@ -25,6 +26,7 @@ import '../value_codec/value_codec.dart';
 /// from disk before first use does open first, since it has to reach storage.
 ///
 /// Writes to one hive box run one at a time, so a read-modify-write can't lose another write.
+@internal
 final class LazyCrudEngine<T extends Object>({
   required final String _boxName,
   required final Future<LazyBox<Object?>> Function() _openBox,
@@ -68,6 +70,8 @@ final class LazyCrudEngine<T extends Object>({
       return _valueCodec.fromStored(storedValue);
     } on Object catch (error, stackTrace) {
       Error.throwWithStackTrace(
+        // The engines are the one place outside tests that builds it.
+        // ignore: invalid_use_of_visible_for_testing_member
         UndecodableValueException(boxName: name, key: semanticKey, cause: error),
         stackTrace,
       );
@@ -157,6 +161,8 @@ final class LazyCrudEngine<T extends Object>({
 
       final (error, stackTrace) = failure;
       Error.throwWithStackTrace(
+        // The engines are the one place outside tests that builds it.
+        // ignore: invalid_use_of_visible_for_testing_member
         UndecodableValueException(boxName: name, key: semanticKeyOf(rawKeys[index]), cause: error),
         stackTrace,
       );

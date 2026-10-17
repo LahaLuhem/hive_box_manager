@@ -2,11 +2,14 @@
 /// @docImport 'identity_value_codec.dart';
 library;
 
-/// Internal read/write-boundary transform between consumer values [T] and what hive stores.
+import 'package:meta/meta.dart';
+
+/// Read/write-boundary transform between consumer values [T] and what hive stores.
 ///
 /// This seam is how `dynamic` is kept off the public surface. Boxes open as `Object?` and hive reads
 /// collections of custom types back as `List<dynamic>`, so the codec puts [T] back at the boundary. It
 /// stays internal because a public value codec is exactly where someone could launder `dynamic` in again.
+@internal
 abstract interface class ValueCodec<T extends Object>._() {
   /// Adapts [value] for storage. The engine writes the result as is.
   Object toStorable(T value);

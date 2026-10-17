@@ -1,8 +1,10 @@
 import 'package:collection/collection.dart';
+import 'package:meta/meta.dart';
 
 import '/src/core/restart_safe.dart';
 
 /// What a set box tells [T] elements apart by: [idOf], or the element itself for value types.
+@internal
 Object Function(T element) resolveIdOf<T extends Object>(Object Function(T element)? idOf) {
   if (idOf == null) {
     assert(
@@ -26,6 +28,7 @@ Object Function(T element) resolveIdOf<T extends Object>(Object Function(T eleme
 }
 
 /// [elements] with the first one per id, as a plain set so it compares the same after a restart.
+@internal
 Set<T> dedupedById<T extends Object>(Iterable<T> elements, Object Function(T element) idOf) {
   final firstPerId = _firstPerId(elements, idOf);
   final deduped = Set.of(firstPerId.values);
@@ -40,6 +43,7 @@ Set<T> dedupedById<T extends Object>(Iterable<T> elements, Object Function(T ele
 
 /// [stored] with each element [incoming] shares an id with replaced where it sits, and the rest of
 /// [incoming] on the end.
+@internal
 Set<T> upsertedById<T extends Object>(
   Iterable<T> stored,
   Iterable<T> incoming,

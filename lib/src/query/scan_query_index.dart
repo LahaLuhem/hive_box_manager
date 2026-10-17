@@ -1,3 +1,5 @@
+import 'package:meta/meta.dart';
+
 import '/src/codec/dual/dual_key_codec.dart';
 import '/src/core/utils/no_op.dart';
 import 'query_index_strategy.dart';
@@ -7,6 +9,7 @@ import 'query_index_strategy.dart';
 /// O(K) per query, and free until you call one, which is why queries fold into the dual façades rather
 /// than being their own family. It keeps no state of its own, hence the no-op hooks, and the keys arrive
 /// through a closure so a scan always sees the current keystore.
+@internal
 final class ScanQueryIndex<K1 extends Object, K2 extends Object>({
   required final Iterable<Object> Function() _rawKeys,
   required final DualKeyCodec<K1, K2> _codec,

@@ -278,8 +278,7 @@ interface class DualKeyBox<T extends Object, K1 extends Object, K2 extends Objec
 
 /// Testing seam: wraps a [DualKeyBox] around an already-open (or fake) [box], skipping the real provider
 /// so unit suites can use in-memory doubles.
-///
-/// Not exported, so only suites importing this file directly can see it.
+@internal
 @visibleForTesting
 DualKeyBox<T, K1, K2> dualKeyBoxAround<T extends Object, K1 extends Object, K2 extends Object>(
   Box<Object?> box, {

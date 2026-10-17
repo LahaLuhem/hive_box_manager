@@ -183,8 +183,8 @@ interface class KeyedBox<T extends Object, K extends Object>._({
 }
 
 /// Testing seam: wraps a [KeyedBox] around an already-open (or fake) [box], skipping the real provider
-/// so unit suites can drive the façade against in-memory doubles. Not exported, so only suites that
-/// import this file directly can see it.
+/// so unit suites can drive the façade against in-memory doubles.
+@internal
 @visibleForTesting
 KeyedBox<T, K> keyedBoxAround<T extends Object, K extends Object>(
   Box<Object?> box, {

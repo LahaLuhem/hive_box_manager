@@ -279,8 +279,7 @@ interface class LazyDualKeyBox<T extends Object, K1 extends Object, K2 extends O
 
 /// Testing seam: wraps a [LazyDualKeyBox] around [openBox] rather than the real provider, so unit suites
 /// can use in-memory doubles and scripted opens.
-///
-/// Not exported, so only suites importing this file directly can see it.
+@internal
 @visibleForTesting
 LazyDualKeyBox<T, K1, K2>
 lazyDualKeyBoxAround<T extends Object, K1 extends Object, K2 extends Object>(

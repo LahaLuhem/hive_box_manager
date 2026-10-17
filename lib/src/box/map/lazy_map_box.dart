@@ -182,7 +182,8 @@ interface class LazyMapBox<MK extends Object, MV extends Object, K extends Objec
   Task<Unit> deleteFromDisk() => _engine.deleteFromDisk();
 }
 
-/// Testing seam: a [LazyMapBox] around [openBox] instead of the real provider. Not exported.
+/// Testing seam: a [LazyMapBox] around [openBox] instead of the real provider.
+@internal
 @visibleForTesting
 LazyMapBox<MK, MV, K> lazyMapBoxAround<MK extends Object, MV extends Object, K extends Object>(
   String name,

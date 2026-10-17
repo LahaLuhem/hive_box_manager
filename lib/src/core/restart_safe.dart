@@ -1,5 +1,8 @@
+import 'package:meta/meta.dart';
+
 /// Whether [T] is `String`, `num`, `bool` or an enum, the types that still compare equal after a restart
 /// hands back fresh objects.
+@internal
 bool isRestartSafeType<T extends Object>() {
   // A type can't be tested directly, but an empty list of it can.
   final probe = <T>[];
@@ -8,5 +11,6 @@ bool isRestartSafeType<T extends Object>() {
 }
 
 /// [isRestartSafeType] for a value whose type is only known at run time.
+@internal
 bool isRestartSafeValue(Object? value) =>
     value is String || value is num || value is bool || value is Enum;

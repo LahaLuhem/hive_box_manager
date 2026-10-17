@@ -1,3 +1,5 @@
+import 'package:meta/meta.dart';
+
 import 'int_key_codec.dart';
 import 'key_codec.dart';
 import 'string_key_codec.dart';
@@ -8,6 +10,7 @@ import 'string_key_codec.dart';
 /// Any other [K] without a codec trips an assert while wiring. Construction always runs in development
 /// and the check doesn't depend on data, so the assert is the real contract. The [ArgumentError] behind
 /// it is the release fallback, since a codec-less box can't work at all.
+@internal
 KeyCodec<K> resolveKeyCodec<K extends Object>(KeyCodec<K>? explicitCodec) {
   if (explicitCodec != null) return explicitCodec;
 

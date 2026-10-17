@@ -3,6 +3,8 @@ library;
 
 import 'dart:collection';
 
+import 'package:meta/meta.dart';
+
 import '/src/core/restart_safe.dart';
 import 'element_type_check.dart';
 import 'int_check.dart';
@@ -10,6 +12,7 @@ import 'value_codec.dart';
 
 /// [CollectionCastValueCodec] for maps, which hive reads back as `Map<dynamic, dynamic>` whatever they
 /// hold.
+@internal
 final class MapCastValueCodec<MK extends Object, MV extends Object>()
     implements ValueCodec<Map<MK, MV>> {
   /// Trips development asserts for an [MK] that might not compare equal after a restart, or an [MV]
