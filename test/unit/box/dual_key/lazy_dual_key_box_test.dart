@@ -182,4 +182,31 @@ void main() {
       await check(facade.queryByPrimary(1).run()).throws<HiveError>();
     });
   });
+
+  feature('LazyDualKeyBox ints hive would change', () {
+    const changed = ProbeKeyLimits.firstWebImpreciseInt;
+    const kept = (1 << 53) + 2;
+
+    scenario('a write holding one fails at the call, before the box opens', () async {
+      final ints = lazyDualKeyBoxAround<int, int, int>('grid', opener.open);
+
+      check(() => ints.put(1, 2, changed)).throws<ArgumentError>();
+      check(() => ints.putAll({(1, 2): changed})).throws<ArgumentError>();
+      check(() => ints.putAllBy([changed], primaryOf: (_) => 1, secondaryOf: (_) => 2))
+          .throws<ArgumentError>();
+      check(opener.count).equals(0);
+
+      await ints.put(1, 2, kept).run();
+
+      check(box.store.values).deepEquals([kept]);
+    });
+
+    scenario('an update to one fails when it runs, leaving the stored value', () async {
+      final ints = lazyDualKeyBoxAround<int, int, int>('grid', opener.open);
+      await ints.put(1, 2, kept).run();
+
+      await check(ints.update(1, 2, (_) => changed).run()).throws<ArgumentError>();
+      check(box.store.values).deepEquals([kept]);
+    });
+  });
 }

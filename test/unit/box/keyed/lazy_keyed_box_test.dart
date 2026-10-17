@@ -256,4 +256,30 @@ void main() {
       check(box.wasDeletedFromDisk).isTrue();
     });
   });
+
+  feature('LazyKeyedBox ints hive would change', () {
+    const changed = ProbeKeyLimits.firstWebImpreciseInt;
+    const kept = (1 << 53) + 2;
+
+    scenario('a write holding one fails at the call, before the box opens', () async {
+      final ints = lazyKeyedBoxAround<int, String>('logs', opener.open);
+
+      check(() => ints.put('a', changed)).throws<ArgumentError>();
+      check(() => ints.putAll({'a': changed})).throws<ArgumentError>();
+      check(() => ints.putAllBy([changed], keyOf: (_) => 'a')).throws<ArgumentError>();
+      check(opener.count).equals(0);
+
+      await ints.put('a', kept).run();
+
+      check(box.store.values).deepEquals([kept]);
+    });
+
+    scenario('an update to one fails when it runs, leaving the stored value', () async {
+      final ints = lazyKeyedBoxAround<int, String>('logs', opener.open);
+      await ints.put('a', kept).run();
+
+      await check(ints.update('a', (_) => changed).run()).throws<ArgumentError>();
+      check(box.store.values).deepEquals([kept]);
+    });
+  });
 }

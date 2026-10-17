@@ -236,4 +236,29 @@ void main() {
       check(box.store).isEmpty();
     });
   });
+
+  feature('DualKeyBox ints hive would change', () {
+    const changed = ProbeKeyLimits.firstWebImpreciseInt;
+    const kept = (1 << 53) + 2;
+
+    scenario('a write holding one fails at the call, and one hive keeps goes through', () async {
+      final ints = dualKeyBoxAround<int, int, int>(box);
+
+      check(() => ints.put(1, 2, changed)).throws<ArgumentError>();
+      check(() => ints.putAll({(1, 2): changed})).throws<ArgumentError>();
+      check(() => ints.putAllBy([changed], primaryOf: (_) => 1, secondaryOf: (_) => 2))
+          .throws<ArgumentError>();
+      await ints.put(1, 2, kept).run();
+
+      check(box.store.values).deepEquals([kept]);
+    });
+
+    scenario('an update to one fails when it runs, leaving the stored value', () async {
+      final ints = dualKeyBoxAround<int, int, int>(box);
+      await ints.put(1, 2, kept).run();
+
+      await check(ints.update(1, 2, (_) => changed).run()).throws<ArgumentError>();
+      check(box.store.values).deepEquals([kept]);
+    });
+  });
 }

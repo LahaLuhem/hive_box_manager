@@ -131,4 +131,26 @@ void main() {
       check(box.store).isEmpty();
     });
   });
+
+  feature('SingleValueBox ints hive would change', () {
+    const changed = ProbeKeyLimits.firstWebImpreciseInt;
+    const kept = (1 << 53) + 2;
+
+    scenario('a set holding one fails at the call, and one hive keeps goes through', () async {
+      final count = singleValueBoxAround<int>(box);
+
+      check(() => count.set(changed)).throws<ArgumentError>();
+      await count.set(kept).run();
+
+      check(box.store.values).deepEquals([kept]);
+    });
+
+    scenario('an update to one fails when it runs, leaving the stored value', () async {
+      final count = singleValueBoxAround<int>(box);
+      await count.set(kept).run();
+
+      await check(count.update((_) => changed).run()).throws<ArgumentError>();
+      check(box.store.values).deepEquals([kept]);
+    });
+  });
 }

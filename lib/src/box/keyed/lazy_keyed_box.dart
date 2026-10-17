@@ -57,8 +57,7 @@ interface class LazyKeyedBox<T extends Object, K extends Object>._({
     assertRestorableValueType<T>();
 
     return LazyKeyedBox<T, K>._(
-      // Explicit type arguments: a bare `const IdentityValueCodec()` can't mention T, so inference
-      // quietly picks `Never` and the first put blows up at run time.
+      // Explicit type arguments on purpose, see CODESTYLE #type-safety.
       engine: LazyCrudEngine<T>(
         boxName: name,
         openBox: () => BoxProvider().openLazyBox(
@@ -68,7 +67,7 @@ interface class LazyKeyedBox<T extends Object, K extends Object>._({
           compactionStrategy: compactionStrategy,
           crashRecovery: crashRecovery,
         ),
-        valueCodec: IdentityValueCodec<T>(),
+        valueCodec: identityCodecFor<T>(),
         observer: observer,
       ),
       codec: resolveKeyCodec<K>(codec),
@@ -191,11 +190,11 @@ LazyKeyedBox<T, K> lazyKeyedBoxAround<T extends Object, K extends Object>(
   KeyCodec<K>? codec,
   BoxObserver? observer,
 }) => LazyKeyedBox<T, K>._(
-  // Explicit type arguments on purpose, see the note inside the unnamed constructor.
+  // Explicit type arguments on purpose, see CODESTYLE #type-safety.
   engine: LazyCrudEngine<T>(
     boxName: name,
     openBox: openBox,
-    valueCodec: IdentityValueCodec<T>(),
+    valueCodec: identityCodecFor<T>(),
     observer: observer,
   ),
   codec: resolveKeyCodec<K>(codec),

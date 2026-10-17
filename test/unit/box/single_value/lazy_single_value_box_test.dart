@@ -122,4 +122,28 @@ void main() {
       check(box.wasDeletedFromDisk).isTrue();
     });
   });
+
+  feature('LazySingleValueBox ints hive would change', () {
+    const changed = ProbeKeyLimits.firstWebImpreciseInt;
+    const kept = (1 << 53) + 2;
+
+    scenario('a set holding one fails at the call, before the box opens', () async {
+      final count = lazySingleValueBoxAround<int>('config', opener.open);
+
+      check(() => count.set(changed)).throws<ArgumentError>();
+      check(opener.count).equals(0);
+
+      await count.set(kept).run();
+
+      check(box.store.values).deepEquals([kept]);
+    });
+
+    scenario('an update to one fails when it runs, leaving the stored value', () async {
+      final count = lazySingleValueBoxAround<int>('config', opener.open);
+      await count.set(kept).run();
+
+      await check(count.update((_) => changed).run()).throws<ArgumentError>();
+      check(box.store.values).deepEquals([kept]);
+    });
+  });
 }

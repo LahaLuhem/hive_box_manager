@@ -111,7 +111,7 @@ interface class SingleValueBox<T extends Object>._({required final EagerCrudEngi
         return SingleValueBox<T>._(
           engine: EagerCrudEngine<T>(
             box: box,
-            valueCodec: IdentityValueCodec<T>(),
+            valueCodec: identityCodecFor<T>(),
             observer: observer,
           ),
         );
@@ -133,5 +133,5 @@ SingleValueBox<T> singleValueBoxAround<T extends Object>(
   BoxObserver? observer,
 }) => SingleValueBox<T>._(
   // Explicit type arguments on purpose, see CODESTYLE #type-safety.
-  engine: EagerCrudEngine<T>(box: box, valueCodec: IdentityValueCodec<T>(), observer: observer),
+  engine: EagerCrudEngine<T>(box: box, valueCodec: identityCodecFor<T>(), observer: observer),
 );

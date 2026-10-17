@@ -1,8 +1,15 @@
+import 'int_check.dart';
 import 'value_codec.dart';
+
+/// [IdentityValueCodec] for a [T], checking ints on the way to disk when a [T] can hold one.
+IdentityValueCodec<T> identityCodecFor<T extends Object>() => switch (intCheckFor<T>()) {
+  final intCheck? => _IntCheckingValueCodec<T>(intCheck),
+  null => IdentityValueCodec<T>(),
+};
 
 /// Pass-through codec for plainly-typed boxes: hive's adapters already round-trip [T].
 final class const IdentityValueCodec<T extends Object>() implements ValueCodec<T> {
-  /// Const so engines can default to it without an allocation per box.
+  /// Const, since it holds nothing.
   this;
 
   @override
@@ -10,4 +17,15 @@ final class const IdentityValueCodec<T extends Object>() implements ValueCodec<T
 
   @override
   T fromStored(Object storedValue) => storedValue as T;
+}
+
+// A subclass rather than a sibling, so reads keep one implementation the compiler can call directly.
+final class _IntCheckingValueCodec<T extends Object>(final IntCheck _intCheck)
+    extends IdentityValueCodec<T> {
+  @override
+  Object toStorable(T value) {
+    _intCheck(value);
+
+    return value;
+  }
 }

@@ -165,12 +165,11 @@ interface class KeyedBox<T extends Object, K extends Object>._({
         );
         observer?.onOpened(name);
 
-        // Explicit type arguments: a bare `const IdentityValueCodec()` can't mention T, so inference
-        // quietly picks `Never` and the first put blows up at run time.
+        // Explicit type arguments on purpose, see CODESTYLE #type-safety.
         return KeyedBox<T, K>._(
           engine: EagerCrudEngine<T>(
             box: box,
-            valueCodec: IdentityValueCodec<T>(),
+            valueCodec: identityCodecFor<T>(),
             observer: observer,
           ),
           codec: keyCodec,
@@ -192,7 +191,7 @@ KeyedBox<T, K> keyedBoxAround<T extends Object, K extends Object>(
   KeyCodec<K>? codec,
   BoxObserver? observer,
 }) => KeyedBox<T, K>._(
-  // Explicit type arguments on purpose, see the note inside `open`.
-  engine: EagerCrudEngine<T>(box: box, valueCodec: IdentityValueCodec<T>(), observer: observer),
+  // Explicit type arguments on purpose, see CODESTYLE #type-safety.
+  engine: EagerCrudEngine<T>(box: box, valueCodec: identityCodecFor<T>(), observer: observer),
   codec: resolveKeyCodec<K>(codec),
 );

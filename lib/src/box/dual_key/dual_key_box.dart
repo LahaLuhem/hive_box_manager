@@ -263,7 +263,7 @@ interface class DualKeyBox<T extends Object, K1 extends Object, K2 extends Objec
         return DualKeyBox<T, K1, K2>._(
           engine: EagerCrudEngine<T>(
             box: box,
-            valueCodec: IdentityValueCodec<T>(),
+            valueCodec: identityCodecFor<T>(),
             observer: observer,
           ),
           dualCodec: dualCodec,
@@ -290,7 +290,7 @@ DualKeyBox<T, K1, K2> dualKeyBoxAround<T extends Object, K1 extends Object, K2 e
 
   // Explicit type arguments on purpose, see CODESTYLE #type-safety.
   return DualKeyBox<T, K1, K2>._(
-    engine: EagerCrudEngine<T>(box: box, valueCodec: IdentityValueCodec<T>(), observer: observer),
+    engine: EagerCrudEngine<T>(box: box, valueCodec: identityCodecFor<T>(), observer: observer),
     dualCodec: dualCodec,
   );
 }
