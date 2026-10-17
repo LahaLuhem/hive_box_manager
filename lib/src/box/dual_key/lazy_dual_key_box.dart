@@ -67,7 +67,7 @@ interface class LazyDualKeyBox<T extends Object, K1 extends Object, K2 extends O
           compactionStrategy: compactionStrategy,
           crashRecovery: crashRecovery,
         ),
-        valueCodec: IdentityValueCodec<T>(),
+        valueCodec: identityCodecFor<T>(),
         observer: observer,
       ),
       dualCodec: dualCodec,
@@ -296,7 +296,7 @@ lazyDualKeyBoxAround<T extends Object, K1 extends Object, K2 extends Object>(
     engine: LazyCrudEngine<T>(
       boxName: name,
       openBox: openBox,
-      valueCodec: IdentityValueCodec<T>(),
+      valueCodec: identityCodecFor<T>(),
       observer: observer,
     ),
     dualCodec: dualCodec,

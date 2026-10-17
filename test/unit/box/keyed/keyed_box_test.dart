@@ -2,6 +2,8 @@
 @Tags(['unit'])
 library;
 
+import 'dart:convert';
+
 import 'package:checks/checks.dart';
 import 'package:hive_box_manager/src/box/keyed/keyed_box.dart';
 import 'package:hive_box_manager/src/event/typed_box_event.dart';
@@ -206,6 +208,37 @@ void main() {
       await facade.delete(7).run();
 
       check(observer.calls).deepEquals(['written:users:7:v', 'read:users:7:v', 'deleted:users:7']);
+    });
+  });
+
+  feature('KeyedBox ints hive would change', () {
+    const changed = ProbeKeyLimits.firstWebImpreciseInt;
+    const kept = (1 << 53) + 2;
+
+    scenario('a write holding one fails at the call, and one hive keeps goes through', () async {
+      final ints = keyedBoxAround<int, String>(box);
+
+      check(() => ints.put('a', changed)).throws<ArgumentError>();
+      check(() => ints.putAll({'a': changed})).throws<ArgumentError>();
+      check(() => ints.putAllBy([changed], keyOf: (_) => 'a')).throws<ArgumentError>();
+      await ints.put('a', kept).run();
+
+      check(box.store.values).deepEquals([kept]);
+    });
+
+    scenario('an update to one fails when it runs, leaving the stored value', () async {
+      final ints = keyedBoxAround<int, String>(box);
+      await ints.put('a', kept).run();
+
+      await check(ints.update('a', (_) => changed).run()).throws<ArgumentError>();
+      check(box.store.values).deepEquals([kept]);
+    });
+
+    scenario('a JSON value holding one fails at the call too', () {
+      final responses = keyedBoxAround<Map<Object?, Object?>, String>(box);
+      final response = jsonDecode('{"items": [{"id": $changed}]}') as Map<String, Object?>;
+
+      check(() => responses.put('a', response)).throws<ArgumentError>();
     });
   });
 }

@@ -56,7 +56,7 @@ interface class LazySingleValueBox<T extends Object>._({required final LazyCrudE
           compactionStrategy: compactionStrategy,
           crashRecovery: crashRecovery,
         ),
-        valueCodec: IdentityValueCodec<T>(),
+        valueCodec: identityCodecFor<T>(),
         observer: observer,
       ),
     );
@@ -135,7 +135,7 @@ LazySingleValueBox<T> lazySingleValueBoxAround<T extends Object>(
   engine: LazyCrudEngine<T>(
     boxName: name,
     openBox: openBox,
-    valueCodec: IdentityValueCodec<T>(),
+    valueCodec: identityCodecFor<T>(),
     observer: observer,
   ),
 );
