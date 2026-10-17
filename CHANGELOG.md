@@ -1,6 +1,7 @@
 ## [Unreleased]
 ### Fixed
-- Concurrent lazy writes to a box no longer lose each other
+- \[#38\] Concurrent lazy writes to a box no longer lose each other
+- \[#44\] Collection values in KeyedBox, SingleValueBox and DualKeyBox throw once read from disk
 
 ## [1.2.0] - 2026-10-06
 ### Added
