@@ -12,7 +12,9 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hive_box_manager/src/core/engine/lazy_crud_engine.dart';
 import 'package:hive_box_manager/src/core/raw_key.dart';
 import 'package:hive_box_manager/src/core/value_codec/identity_value_codec.dart';
+import 'package:hive_box_manager/src/core/value_codec/value_codec.dart';
 import 'package:hive_ce/hive.dart';
+import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
 import '../../../support/support.dart';
@@ -31,13 +33,15 @@ void main() {
   late RecordingBoxObserver observer;
   late CountingOpener opener;
 
-  LazyCrudEngine<String> makeEngine({Future<LazyBox<Object?>> Function()? openBox}) =>
-      LazyCrudEngine(
-        boxName: 'logs',
-        openBox: openBox ?? opener.open,
-        valueCodec: const IdentityValueCodec(),
-        observer: observer,
-      );
+  LazyCrudEngine<String> makeEngine({
+    Future<LazyBox<Object?>> Function()? openBox,
+    ValueCodec<String> valueCodec = const IdentityValueCodec(),
+  }) => LazyCrudEngine(
+    boxName: 'logs',
+    openBox: openBox ?? opener.open,
+    valueCodec: valueCodec,
+    observer: observer,
+  );
 
   setUp(() {
     box = FakeLazyBox(name: 'logs');
@@ -180,6 +184,16 @@ void main() {
       check(() => engine.putAll([entry(1, 'a'), entry(-1, 'b')])).throws<ArgumentError>();
       check(() => engine.edit(const RawKey(-1), -1, (storedOrNone) => storedOrNone))
           .throws<ArgumentError>();
+      check(opener.count).equals(0);
+    });
+
+    scenario('a value the codec refuses fails at the call too, before the box opens', () {
+      final refusing = MockValueCodec();
+      when(refusing.toStorable('v')).thenThrow(ArgumentError('refused'));
+      final engine = makeEngine(valueCodec: refusing);
+
+      check(() => engine.put(const RawKey(7), 7, 'v')).throws<ArgumentError>();
+      check(() => engine.putAll([entry(7, 'v')])).throws<ArgumentError>();
       check(opener.count).equals(0);
     });
 

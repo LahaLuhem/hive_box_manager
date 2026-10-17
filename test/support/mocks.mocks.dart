@@ -6,6 +6,7 @@
 import 'dart:async' as _i3;
 import 'dart:typed_data' as _i6;
 
+import 'package:hive_box_manager/src/core/value_codec/value_codec.dart' as _i8;
 import 'package:hive_ce/hive_ce.dart' as _i2;
 import 'package:hive_ce/src/box/default_compaction_strategy.dart' as _i5;
 import 'package:hive_ce/src/box/default_key_comparator.dart' as _i4;
@@ -34,6 +35,10 @@ class _FakeBox_0<E1> extends _i1.SmartFake implements _i2.Box<E1> {
 
 class _FakeLazyBox_1<E1> extends _i1.SmartFake implements _i2.LazyBox<E1> {
   _FakeLazyBox_1(Object parent, Invocation parentInvocation) : super(parent, parentInvocation);
+}
+
+class _FakeObject_2 extends _i1.SmartFake implements Object {
+  _FakeObject_2(Object parent, Invocation parentInvocation) : super(parent, parentInvocation);
 }
 
 /// A class which mocks [HiveInterface].
@@ -201,6 +206,13 @@ class MockHiveInterface extends _i1.Mock implements _i2.HiveInterface {
   @override
   _i3.Future<void> close() => (super.noSuchMethod(
     Invocation.method(#close, []),
+    returnValue: _i3.Future<void>.value(),
+    returnValueForMissingStub: _i3.Future<void>.value(),
+  ) as _i3.Future<void>);
+
+  @override
+  _i3.Future<void> flush() => (super.noSuchMethod(
+    Invocation.method(#flush, []),
     returnValue: _i3.Future<void>.value(),
     returnValueForMissingStub: _i3.Future<void>.value(),
   ) as _i3.Future<void>);
@@ -621,4 +633,26 @@ class MockLazyBox extends _i1.Mock implements _i2.LazyBox<Object?> {
     returnValue: _i3.Future<void>.value(),
     returnValueForMissingStub: _i3.Future<void>.value(),
   ) as _i3.Future<void>);
+}
+
+/// A class which mocks [ValueCodec].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockValueCodec extends _i1.Mock implements _i8.ValueCodec<String> {
+  @override
+  Object toStorable(String? value) => (super.noSuchMethod(
+    Invocation.method(#toStorable, [value]),
+    returnValue: _FakeObject_2(this, Invocation.method(#toStorable, [value])),
+    returnValueForMissingStub: _FakeObject_2(this, Invocation.method(#toStorable, [value])),
+  ) as Object);
+
+  @override
+  String fromStored(Object? storedValue) => (super.noSuchMethod(
+    Invocation.method(#fromStored, [storedValue]),
+    returnValue: _i7.dummyValue<String>(this, Invocation.method(#fromStored, [storedValue])),
+    returnValueForMissingStub: _i7.dummyValue<String>(
+      this,
+      Invocation.method(#fromStored, [storedValue]),
+    ),
+  ) as String);
 }
