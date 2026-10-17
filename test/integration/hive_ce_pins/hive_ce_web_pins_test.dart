@@ -83,8 +83,8 @@ void main() {
     });
 
     scenarioOutline<Future<ShapeVerdicts> Function()>(
-      'the wiring check allows exactly the element shapes that read back typed',
-      examples: nestedElementShapes,
+      'the wiring check allows exactly the shapes that read back typed',
+      examples: storedShapes,
       outline: (verdictsOf) async {
         final verdicts = await verdictsOf();
 

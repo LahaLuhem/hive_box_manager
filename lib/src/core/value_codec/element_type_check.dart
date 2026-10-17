@@ -22,32 +22,44 @@ void checkEntryTypes<K extends Object, V extends Object>(Map<Object?, Object?> m
   offender.value! as V;
 }
 
-/// Whether a stored collection of [E] still reads back as one after a restart. The cast only reaches
-/// the outer collection, so an [E] that's itself a collection has to be a shape hive keeps typed.
-bool isRestorableElementType<E extends Object>() {
+/// Whether a stored [T] still reads back as one after a restart, on its own or inside a collection.
+bool isRestorableType<T extends Object>() {
   // A type can't be tested directly, but an empty list of it can.
-  final probe = <E>[];
+  final probe = <T>[];
   final isCollection = probe is List<Iterable<Object?>> || probe is List<Map<Object?, Object?>>;
 
   // Exact shapes only: hive hands an Int32List back as a plain List<int>, for one.
   return !isCollection ||
-      _isExactly<E, List<int>>() ||
-      _isExactly<E, List<double>>() ||
-      _isExactly<E, List<bool>>() ||
-      _isExactly<E, List<String>>() ||
-      _isExactly<E, Set<int>>() ||
-      _isExactly<E, Set<double>>() ||
-      _isExactly<E, Set<String>>() ||
-      _isExactly<E, Uint8List>();
+      _isExactly<T, List<int>>() ||
+      _isExactly<T, List<double>>() ||
+      _isExactly<T, List<bool>>() ||
+      _isExactly<T, List<String>>() ||
+      _isExactly<T, Set<int>>() ||
+      _isExactly<T, Set<double>>() ||
+      _isExactly<T, Set<String>>() ||
+      _isExactly<T, Uint8List>() ||
+      // Untyped to begin with, which is exactly what hive rebuilds.
+      _isExactly<T, List<Object?>>() ||
+      _isExactly<T, Set<Object?>>() ||
+      _isExactly<T, Map<Object?, Object?>>();
 }
 
-/// Trips a development assert when [E] fails [isRestorableElementType].
+/// Trips a development assert when [E] fails [isRestorableType].
 void assertRestorableElementType<E extends Object>() {
   assert(
-    isRestorableElementType<E>(),
+    isRestorableType<E>(),
     '$E elements come back from disk untyped, so every read after a restart would throw. Only lists '
-    'of int, double, bool or String, sets of int, double or String, and Uint8List nest safely. Wrap '
-    'anything else in a type with its own adapter.',
+    'of int, double, bool or String, sets of int, double or String, Uint8List, and lists, sets and '
+    'maps of dynamic nest safely. Wrap anything else in a type with its own adapter.',
+  );
+}
+
+/// [assertRestorableElementType] for a box's whole value.
+void assertRestorableValueType<T extends Object>() {
+  assert(
+    isRestorableType<T>(),
+    "$T doesn't come back from disk as itself, so every read after a restart would throw. Store a "
+    'collection in a ListBox, SetBox or MapBox, or wrap it in a type with its own adapter.',
   );
 }
 

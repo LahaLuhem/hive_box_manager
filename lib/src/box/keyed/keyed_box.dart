@@ -10,6 +10,7 @@ import '/src/codec/key/key_codec_resolution.dart';
 import '/src/core/box_provider.dart';
 import '/src/core/engine/eager_crud_engine.dart';
 import '/src/core/raw_key.dart';
+import '/src/core/value_codec/element_type_check.dart';
 import '/src/core/value_codec/identity_value_codec.dart';
 import '/src/event/typed_box_event.dart';
 import '/src/observer/box_observer.dart';
@@ -150,6 +151,7 @@ interface class KeyedBox<T extends Object, K extends Object>._({
     CompactionStrategy? compactionStrategy,
     bool crashRecovery = true,
   }) {
+    assertRestorableValueType<T>();
     final keyCodec = resolveKeyCodec<K>(codec);
 
     return Task(() async {

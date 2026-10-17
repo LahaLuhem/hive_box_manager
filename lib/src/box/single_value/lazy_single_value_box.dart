@@ -1,4 +1,3 @@
-/// @docImport '../list/lazy_list_box.dart';
 /// @docImport 'single_value_box.dart';
 library;
 
@@ -8,6 +7,7 @@ import 'package:meta/meta.dart';
 
 import '/src/core/box_provider.dart';
 import '/src/core/engine/lazy_crud_engine.dart';
+import '/src/core/value_codec/element_type_check.dart';
 import '/src/core/value_codec/identity_value_codec.dart';
 import '/src/observer/box_observer.dart';
 import 'single_value_slot_key.dart';
@@ -23,8 +23,7 @@ import 'single_value_slot_key.dart';
 /// delete.
 ///
 /// The sync inspectors ([length], [isEmpty], [isNotEmpty]) need the keystore, so before the first effect
-/// they throw a [StateError] telling you what to run. Don't store a collection as [T], that walks straight
-/// back into the reification trap [LazyListBox] exists to handle.
+/// they throw a [StateError] telling you what to run.
 ///
 /// Whatever hive objects to comes out of the [Task] when it runs. [close] and [deleteFromDisk] are terminal,
 /// and closing before first use won't open the box just to close it.
@@ -36,28 +35,32 @@ interface class LazySingleValueBox<T extends Object>._({required final LazyCrudE
   /// Engine setup is still hive_ce's job, so `Hive.init(path)` and your adapters come first, before
   /// the first effect runs. [cipher], [keyComparator], [compactionStrategy] and [crashRecovery] go straight
   /// through at the eventual open. [observer] hears everything this box does, starting with that open.
-  new(
+  factory(
     String name, {
     HiveCipher? cipher,
     BoxObserver? observer,
     KeyComparator? keyComparator,
     CompactionStrategy? compactionStrategy,
     bool crashRecovery = true,
-  }) : this._(
-         // Explicit type arguments on purpose, see CODESTYLE #type-safety.
-         engine: LazyCrudEngine<T>(
-           boxName: name,
-           openBox: () => BoxProvider().openLazyBox(
-             name,
-             cipher: cipher,
-             keyComparator: keyComparator,
-             compactionStrategy: compactionStrategy,
-             crashRecovery: crashRecovery,
-           ),
-           valueCodec: IdentityValueCodec<T>(),
-           observer: observer,
-         ),
-       );
+  }) {
+    assertRestorableValueType<T>();
+
+    return LazySingleValueBox<T>._(
+      // Explicit type arguments on purpose, see CODESTYLE #type-safety.
+      engine: LazyCrudEngine<T>(
+        boxName: name,
+        openBox: () => BoxProvider().openLazyBox(
+          name,
+          cipher: cipher,
+          keyComparator: keyComparator,
+          compactionStrategy: compactionStrategy,
+          crashRecovery: crashRecovery,
+        ),
+        valueCodec: IdentityValueCodec<T>(),
+        observer: observer,
+      ),
+    );
+  }
 
   /// The box name, there before the box ever opens. Observers hear it with every event.
   String get name => _engine.name;

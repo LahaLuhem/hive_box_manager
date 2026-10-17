@@ -312,9 +312,13 @@ zero-copy **view**: eager gets alias hive's own cache, so a per-read defensive c
 hot path for a hole the view closes for free. This is the sanctioned scenario call under
 CODESTYLE's unmodifiable-collections idiom. Nested collections stay out, because the outer cast
 can't reach the inner ones, and one development assert refuses them while wiring, for list and set
-elements and map values alike. The exception is the few shapes hive keeps typed, pinned as list
-elements and as map values on the VM and both web compilers, so the assert can't drift from what
-hive does.
+elements and map values alike. `KeyedBox`, `SingleValueBox` and `DualKeyBox` check their whole
+value too, since their `T` is the whole collection and leaves no element type to cast to.
+
+The check lets through the shapes hive keeps typed, plus `dynamic` lists, sets and maps, which is
+what hive rebuilds the rest as. They're pinned nested and on their own, on the VM and both web
+compilers, so the assert can't drift from hive. On the web, a list of `String`, `double` or `bool`
+stored before hive_ce 2.21.0 still comes back untyped until it's written again.
 
 Sets come back as `Set<dynamic>` and cast just as well. What they need on top is equality that
 survives a restart. A set dedups with the element's `==`, and a read from disk builds fresh

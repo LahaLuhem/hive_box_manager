@@ -48,6 +48,16 @@ void main() {
           .throws<AssertionError>();
     });
 
+    scenario(
+      'a value type hive hands back untyped fails the wiring assert before anything opens',
+      () {
+        check(() => LazyDualKeyBox<Map<String, Object?>, int, int>('blob'))
+            .throws<AssertionError>();
+        check(() => LazyDualKeyBox<List<String>, int, int>('tags')).returnsNormally();
+        check(() => LazyDualKeyBox<List<Object?>, int, int>('json')).returnsNormally();
+      },
+    );
+
     scenario('the sync inspectors throw StateError before the first open, then work', () async {
       check(() => facade.length).throws<StateError>();
       check(() => facade.keys).throws<StateError>();

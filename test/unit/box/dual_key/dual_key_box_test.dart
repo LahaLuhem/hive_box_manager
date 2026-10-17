@@ -66,6 +66,16 @@ void main() {
     scenario('non-(int, int) parts without a codec fail the wiring assert', () {
       check(() => dualKeyBoxAround<String, DateTime, int>(box)).throws<AssertionError>();
     });
+
+    scenario(
+      'a value type hive hands back untyped fails the wiring assert before anything opens',
+      () {
+        check(() => DualKeyBox.open<Map<String, Object?>, int, int>('blob'))
+            .throws<AssertionError>();
+        check(() => DualKeyBox.open<List<String>, int, int>('tags')).returnsNormally();
+        check(() => DualKeyBox.open<List<Object?>, int, int>('json')).returnsNormally();
+      },
+    );
   });
 
   feature('DualKeyBox reads', () {

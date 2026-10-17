@@ -23,6 +23,17 @@ void main() {
     facade = lazySingleValueBoxAround('config', opener.open, observer: observer);
   });
 
+  feature('LazySingleValueBox wiring', () {
+    scenario(
+      'a value type hive hands back untyped fails the wiring assert before anything opens',
+      () {
+        check(() => LazySingleValueBox<Map<String, Object?>>('blob')).throws<AssertionError>();
+        check(() => LazySingleValueBox<List<String>>('tags')).returnsNormally();
+        check(() => LazySingleValueBox<List<Object?>>('json')).returnsNormally();
+      },
+    );
+  });
+
   feature('LazySingleValueBox auto-open and slot compatibility', () {
     scenario('construction opens nothing; the first effect opens once and hits slot 0', () async {
       check(opener.count).equals(0);

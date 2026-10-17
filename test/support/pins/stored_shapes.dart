@@ -6,11 +6,11 @@ import 'package:hive_ce/hive.dart';
 import '../fixtures/person.dart';
 import '../harness/unique_box_name.dart';
 
-/// What the wiring check says about an element shape, and what a reopen actually hands back.
+/// What the wiring check says about a shape, and what a reopen actually hands back.
 typedef ShapeVerdicts = ({bool isAllowed, bool readsBackTyped});
 
 /// The pins want the 2 verdicts to agree on every platform, so drift on either side fails loudly.
-final Map<String, Future<ShapeVerdicts> Function()> nestedElementShapes = {
+final Map<String, Future<ShapeVerdicts> Function()> storedShapes = {
   'List<int>': () => _verdicts(<int>[1]),
   'List<double>': () => _verdicts(<double>[1.5]),
   'List<bool>': () => _verdicts(<bool>[true]),
@@ -25,18 +25,22 @@ final Map<String, Future<ShapeVerdicts> Function()> nestedElementShapes = {
   'Set<bool>': () => _verdicts(<bool>{true}),
   'Map<String, int>': () => _verdicts(<String, int>{'a': 1}),
   'Int32List': () => _verdicts(Int32List.fromList([1])),
+  'List<Object?>': () => _verdicts(<Object?>['a', 1]),
+  'Set<Object?>': () => _verdicts(<Object?>{'a', 1}),
+  'Map<Object?, Object?>': () => _verdicts(<Object?, Object?>{'a': 1}),
 };
 
 Future<ShapeVerdicts> _verdicts<E extends Object>(E sample) async =>
-    (isAllowed: isRestorableElementType<E>(), readsBackTyped: await _readsBackTyped(sample));
+    (isAllowed: isRestorableType<E>(), readsBackTyped: await _readsBackTyped(sample));
 
-/// Stores [sample] both ways a box holds one, in a list and as a map value, and reopens before looking.
+/// Stores [sample] every way a box holds one, and reopens before looking.
 Future<bool> _readsBackTyped<E extends Object>(E sample) async {
-  final boxName = uniqueBoxName('nested');
+  final boxName = uniqueBoxName('shapes');
   final box = await Hive.openBox<Object>(boxName);
   await box.putAll({
     'in a list': [sample],
     'as a map value': {'key': sample},
+    'on its own': sample,
   });
   await box.close();
 
@@ -44,6 +48,7 @@ Future<bool> _readsBackTyped<E extends Object>(E sample) async {
   final readBack = [
     (reopened.get('in a list')! as List<Object?>).single,
     (reopened.get('as a map value')! as Map<Object?, Object?>).values.single,
+    reopened.get('on its own'),
   ];
   await reopened.deleteFromDisk();
 

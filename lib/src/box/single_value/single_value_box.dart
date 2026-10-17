@@ -1,4 +1,3 @@
-/// @docImport '../list/list_box.dart';
 /// @docImport 'lazy_single_value_box.dart';
 library;
 
@@ -8,22 +7,20 @@ import 'package:meta/meta.dart';
 
 import '/src/core/box_provider.dart';
 import '/src/core/engine/eager_crud_engine.dart';
+import '/src/core/value_codec/element_type_check.dart';
 import '/src/core/value_codec/identity_value_codec.dart';
 import '/src/observer/box_observer.dart';
 import 'single_value_slot_key.dart';
 
 /// A typed, fpdart-first façade over an **eager** hive box holding exactly one [T] value.
 ///
-/// For the lone setting, the token, the config blob: no keys on the surface, just the value. It sits
+/// For the lone setting, the token, a settings object: no keys on the surface, just the value. It sits
 /// under one fixed slot internally, the same one the 0.0.x single managers used, so that data still
 /// reads. Eager means the value is in memory once the box is open, so reads are synchronous and writes
 /// are [Task]s. Reach for [LazySingleValueBox] when the value is big or rarely read.
 ///
 /// [clear] is the only way to unset it. There is no separate delete, since there is nothing else to
 /// delete.
-///
-/// Don't store a collection as [T], that walks straight back into the reification trap [ListBox] exists
-/// to handle.
 ///
 /// Whatever hive objects to (a closed box, a missing adapter) comes out of the [Task] when it runs.
 /// [close] and [deleteFromDisk] are terminal: the handle is spent, and getting back in means a fresh
@@ -96,30 +93,34 @@ interface class SingleValueBox<T extends Object>._({required final EagerCrudEngi
     KeyComparator? keyComparator,
     CompactionStrategy? compactionStrategy,
     bool crashRecovery = true,
-  }) => Task(() async {
-    try {
-      final box = await BoxProvider().openEagerBox(
-        name,
-        cipher: cipher,
-        keyComparator: keyComparator,
-        compactionStrategy: compactionStrategy,
-        crashRecovery: crashRecovery,
-      );
-      observer?.onOpened(name);
+  }) {
+    assertRestorableValueType<T>();
 
-      // Explicit type arguments on purpose, see CODESTYLE #type-safety.
-      return SingleValueBox<T>._(
-        engine: EagerCrudEngine<T>(
-          box: box,
-          valueCodec: IdentityValueCodec<T>(),
-          observer: observer,
-        ),
-      );
-    } on Object catch (error, stackTrace) {
-      observer?.onOperationError(name, 'open', error, stackTrace);
-      rethrow;
-    }
-  });
+    return Task(() async {
+      try {
+        final box = await BoxProvider().openEagerBox(
+          name,
+          cipher: cipher,
+          keyComparator: keyComparator,
+          compactionStrategy: compactionStrategy,
+          crashRecovery: crashRecovery,
+        );
+        observer?.onOpened(name);
+
+        // Explicit type arguments on purpose, see CODESTYLE #type-safety.
+        return SingleValueBox<T>._(
+          engine: EagerCrudEngine<T>(
+            box: box,
+            valueCodec: IdentityValueCodec<T>(),
+            observer: observer,
+          ),
+        );
+      } on Object catch (error, stackTrace) {
+        observer?.onOperationError(name, 'open', error, stackTrace);
+        rethrow;
+      }
+    });
+  }
 }
 
 /// Testing seam: wires a [SingleValueBox] around an already-open (or fake) [box] instead of going through
