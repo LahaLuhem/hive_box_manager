@@ -5,6 +5,7 @@ import 'dart:collection';
 
 import '/src/core/restart_safe.dart';
 import 'element_type_check.dart';
+import 'int_check.dart';
 import 'value_codec.dart';
 
 /// [CollectionCastValueCodec] for maps, which hive reads back as `Map<dynamic, dynamic>` whatever they
@@ -22,8 +23,14 @@ final class MapCastValueCodec<MK extends Object, MV extends Object>()
     assertRestorableElementType<MV>();
   }
 
+  final IntCheck? _intCheck = entriesCheckFor<MK, MV>();
+
   @override
-  Object toStorable(Map<MK, MV> value) => value;
+  Object toStorable(Map<MK, MV> value) {
+    _intCheck?.call(value);
+
+    return value;
+  }
 
   @override
   Map<MK, MV> fromStored(Object storedValue) {

@@ -4,6 +4,7 @@ library;
 import 'dart:collection';
 
 import 'element_type_check.dart';
+import 'int_check.dart';
 import 'value_codec.dart';
 
 /// [CollectionCastValueCodec] for sets, which hive reads back as `Set<dynamic>` unless they hold
@@ -14,8 +15,14 @@ final class SetCastValueCodec<E extends Object>() implements ValueCodec<Set<E>> 
     assertRestorableElementType<E>();
   }
 
+  final IntCheck? _intCheck = elementsCheckFor<E>();
+
   @override
-  Object toStorable(Set<E> value) => value;
+  Object toStorable(Set<E> value) {
+    _intCheck?.call(value);
+
+    return value;
+  }
 
   @override
   Set<E> fromStored(Object storedValue) {

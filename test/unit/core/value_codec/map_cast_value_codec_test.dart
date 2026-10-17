@@ -99,4 +99,32 @@ void main() {
       check(MapCastValueCodec<String, List<String>>.new).returnsNormally();
     });
   });
+
+  feature('the int check on writes', () {
+    const changed = ProbeKeyLimits.firstWebImpreciseInt;
+    const kept = (1 << 53) + 2;
+
+    scenarioOutline<({Object Function() write, String name})>(
+      'an int hive would change is refused, naming whether it was a key or a value',
+      examples: {
+        'a key': (
+          write: () => MapCastValueCodec<int, String>().toStorable({changed: 'a'}),
+          name: 'key',
+        ),
+        'a value': (
+          write: () => MapCastValueCodec<String, int>().toStorable({'a': changed}),
+          name: 'value',
+        ),
+      },
+      outline: (row) =>
+          check(row.write)
+              .throws<ArgumentError>()
+              .has((error) => error.name, 'name')
+              .equals(row.name),
+    );
+
+    scenario('one hive keeps goes through', () {
+      check(() => MapCastValueCodec<int, int>().toStorable({kept: kept})).returnsNormally();
+    });
+  });
 }

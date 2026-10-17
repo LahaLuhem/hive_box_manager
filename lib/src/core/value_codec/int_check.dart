@@ -17,6 +17,7 @@ IntCheck? entriesCheckFor<MK extends Object, MV extends Object>() {
   final valueCheck = intCheckFor<MV>();
   if (!checksKeys && valueCheck == null) return null;
 
+  // One forEach, since walking keys or values alone runs slower.
   return (map) => (map! as Map<Object?, Object?>).forEach((key, value) {
     if (checksKeys && key is int) ensureExactIntKey(key);
     valueCheck?.call(value);

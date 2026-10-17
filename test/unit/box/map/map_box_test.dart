@@ -150,33 +150,44 @@ void main() {
     });
   });
 
-  feature("MapBox inner int keys hive can't store exactly", () {
-    final imprecise = {ProbeKeyLimits.firstWebImpreciseInt: 'a'};
-    late MapBox<int, String, int> byId;
+  feature('MapBox ints hive would change', () {
+    const changed = ProbeKeyLimits.firstWebImpreciseInt;
+    late MapBox<int, int, int> byId;
 
     setUp(() => byId = mapBoxAround(box));
 
     scenarioOutline<Task<Unit> Function()>(
-      'a write with one fails at the call',
+      'a write holding one fails at the call',
       examples: {
-        'put': () => byId.put(1, imprecise),
-        'putAll': () => byId.putAll({1: imprecise}),
-        'addAll': () => byId.addAll(1, imprecise),
+        'put, as a key': () => byId.put(1, {changed: 1}),
+        'put, as a value': () => byId.put(1, {1: changed}),
+        'putAll, as a key': () => byId.putAll({
+          1: {changed: 1},
+        }),
+        'putAll, as a value': () => byId.putAll({
+          1: {1: changed},
+        }),
       },
-      outline: (write) => check(write).throws<ArgumentError>(),
+      outline: (write) {
+        check(write).throws<ArgumentError>();
+      },
     );
 
-    scenarioOutline<int>(
-      "update can't store one either: the task fails and the box is left alone",
-      examples: {'on a stored key': 1, 'on an absent key': 2},
-      outline: (key) async {
-        await byId.put(1, {1: 'stored'}).run();
+    scenarioOutline<Task<Object> Function()>(
+      'an edit adding one fails when it runs, and the box is left alone',
+      examples: {
+        'update on a stored key': () => byId.update(1, (_) => {changed: 1}),
+        'update on an absent key': () =>
+            byId.update(2, (_) => {1: changed}, ifAbsent: () => {1: changed}),
+        'addAll, as a key': () => byId.addAll(1, {changed: 1}),
+        'addAll, as a value': () => byId.addAll(1, {1: changed}),
+      },
+      outline: (edit) async {
+        await byId.put(1, {1: 1}).run();
 
-        await check(byId.update(key, (_) => imprecise, ifAbsent: () => imprecise).run())
-            .throws<ArgumentError>();
-
+        await check(edit().run()).throws<ArgumentError>();
         check(byId.keys).deepEquals([1]);
-        check(byId.getOr(1)).deepEquals({1: 'stored'});
+        check(byId.getOr(1)).deepEquals({1: 1});
       },
     );
   });

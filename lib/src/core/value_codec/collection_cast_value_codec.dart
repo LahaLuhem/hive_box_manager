@@ -1,6 +1,7 @@
 import 'dart:collection';
 
 import 'element_type_check.dart';
+import 'int_check.dart';
 import 'value_codec.dart';
 
 /// hive reads a list of a custom type back as `List<dynamic>`, so this casts it back on the way out.
@@ -13,8 +14,14 @@ final class CollectionCastValueCodec<E extends Object>() implements ValueCodec<L
     assertRestorableElementType<E>();
   }
 
+  final IntCheck? _intCheck = elementsCheckFor<E>();
+
   @override
-  Object toStorable(List<E> value) => value;
+  Object toStorable(List<E> value) {
+    _intCheck?.call(value);
+
+    return value;
+  }
 
   @override
   List<E> fromStored(Object storedValue) {

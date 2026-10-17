@@ -2,6 +2,7 @@
 library;
 
 import 'package:checks/checks.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:hive_box_manager/src/box/set/set_box.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:test/test.dart';
@@ -266,5 +267,43 @@ void main() {
       check(() => facade.get(1)).throws<HiveError>();
       await check(facade.add(1, 'b').run()).throws<HiveError>();
     });
+  });
+
+  feature('SetBox ints hive would change', () {
+    const changed = ProbeKeyLimits.firstWebImpreciseInt;
+    const kept = (1 << 53) + 2;
+    late SetBox<int, String> ints;
+
+    setUp(() => ints = setBoxAround(box));
+
+    scenario('a write holding one fails at the call, and one hive keeps goes through', () async {
+      check(() => ints.put('a', [1, changed])).throws<ArgumentError>();
+      check(
+        () => ints.putAll({
+          'a': [changed],
+        }),
+      ).throws<ArgumentError>();
+      check(() => ints.putAllGrouped([changed], keyOf: (_) => 'a')).throws<ArgumentError>();
+      await ints.put('a', [kept]).run();
+
+      check(ints.getOr('a')).deepEquals({kept});
+    });
+
+    scenarioOutline<Task<Object> Function()>(
+      'an edit adding one fails when it runs, leaving the stored value',
+      examples: {
+        'add': () => ints.add('a', changed),
+        'addAll': () => ints.addAll('a', [changed]),
+        'upsert': () => ints.upsert('a', changed),
+        'upsertAll': () => ints.upsertAll('a', [changed]),
+        'update': () => ints.update('a', (_) => {changed}),
+      },
+      outline: (edit) async {
+        await ints.put('a', [kept]).run();
+
+        await check(edit().run()).throws<ArgumentError>();
+        check(ints.getOr('a')).deepEquals({kept});
+      },
+    );
   });
 }

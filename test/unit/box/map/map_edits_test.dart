@@ -28,14 +28,5 @@ void main() {
 
       check(storableCopyOf(caseInsensitive)['ADA']).isNull();
     });
-
-    scenarioOutline<Map<Object, String> Function()>(
-      "an int key hive can't store exactly fails at the call",
-      examples: {
-        'int keys': () => storableCopyOf<int, String>({ProbeKeyLimits.firstWebImpreciseInt: 'a'}),
-        'num keys': () => storableCopyOf<num, String>({ProbeKeyLimits.firstWebImpreciseInt: 'a'}),
-      },
-      outline: (copy) => check(copy).throws<ArgumentError>(),
-    );
   });
 }
