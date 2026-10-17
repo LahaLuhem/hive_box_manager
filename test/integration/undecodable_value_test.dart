@@ -110,6 +110,22 @@ void main() {
       check((await box.queryByPrimary(2).run()).map((thing) => thing.id)).deepEquals(['c']);
       check((await box.queryBySecondary(1).run()).map((thing) => thing.id)).deepEquals(['a', 'c']);
     });
+
+    scenario('an eager dual scan does the same', () async {
+      // Mistyped, not flaky: a throwing adapter would sink the eager open first.
+      final seeded = await DualKeyBox.open<Object, int, int>('eagerDual').run();
+      await seeded.put(1, 1, 1).run();
+      await seeded.put(1, 2, 'two').run();
+      await seeded.put(2, 1, 3).run();
+      await Hive.close();
+
+      final box = await DualKeyBox.open<int, int, int>('eagerDual').run();
+      final failure = await captureUndecodable(() async => box.queryByPrimary(1));
+
+      check(failure.key).equals((1, 2));
+      check(box.queryByPrimary(2)).deepEquals([3]);
+      check(box.queryBySecondary(1)).deepEquals([1, 3]);
+    });
   });
 
   feature('an eager read-all names the key that failed to decode', () {

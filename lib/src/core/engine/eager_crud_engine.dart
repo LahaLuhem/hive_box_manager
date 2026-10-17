@@ -76,6 +76,15 @@ final class EagerCrudEngine<T extends Object>({
   T getOr(RawKey rawKey, Object semanticKey, T fallback) =>
       get(rawKey, semanticKey).getOrElse(() => fallback);
 
+  /// [get] for a scan, where a value the codec refuses has to name [semanticKey], since the caller
+  /// can't tell which match broke.
+  Option<T> getInScan(RawKey rawKey, Object semanticKey) {
+    final storedValue = _box.get(rawKey.value);
+    _observer?.onRead(name, semanticKey, storedValue);
+
+    return storedValue == null ? const None() : Some(decodeStored(storedValue, semanticKey));
+  }
+
   /// Whether [rawKey] is stored right now. No observer event, so no semantic key is needed.
   bool contains(RawKey rawKey) => _box.containsKey(rawKey.value);
 

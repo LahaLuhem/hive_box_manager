@@ -212,8 +212,8 @@ interface class DualKeyBox<T extends Object, K1 extends Object, K2 extends Objec
   /// Reads every match in [rawKeys], skipping keys that vanish mid-scan (races are the consumer's timeline,
   /// not an error).
   List<T> _matchesFor(Iterable<Object> rawKeys) => rawKeys
-      // Already raw, so the scan hands it straight over. The decode is only for the read event.
-      .map((rawKey) => _engine.get(RawKey(rawKey), _dualCodec.decode(rawKey)).toNullable())
+      // Already raw, so the scan hands it straight over.
+      .map((rawKey) => _engine.getInScan(RawKey(rawKey), _dualCodec.decode(rawKey)).toNullable())
       .nonNulls
       .toList(growable: false);
 
