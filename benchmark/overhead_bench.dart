@@ -11,8 +11,9 @@
 // Usage: overhead_bench prep <n> <workDir> overhead_bench get <impl> <n> <boxKind> <workDir> [passes]
 // overhead_bench values <impl> <n> <boxKind> <workDir> overhead_bench contains <impl> <n> <boxKind>
 // <workDir> overhead_bench put <impl> <n> overhead_bench putall <impl> <n> overhead_bench delete <impl>
-// <n> overhead_bench deleteall <impl> <n> overhead_bench single <impl> <op> <n> <boxKind> with impl:
-// facade | raw, boxKind: eager | lazy, op: get | set
+// <n> overhead_bench deleteall <impl> <n> overhead_bench single <impl> <op> <n> <boxKind> overhead_bench
+// putint <impl> <n> <boxKind> overhead_bench putjson <impl> <n> with impl: facade | raw, boxKind: eager |
+// lazy, op: get | set
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -40,6 +41,9 @@ const maxLazyGetOps = 10000;
 /// count when you want the sustained one, and label it as such wherever it lands.
 const defaultGetPasses = 1;
 
+/// Id-sized, but a float holds it exactly, so the lane keeps writing once ints get checked.
+const sampleInt = 1700000000000;
+
 Future<void> main(List<String> args) async {
   switch (args) {
     case ['prep', final n, final workDir]:
@@ -64,6 +68,16 @@ Future<void> main(List<String> args) async {
       await runDelete(impl, int.parse(n), batched: true);
     case ['single', final impl, final op, final n, final boxKind]:
       await runSingleValue(impl, op, int.parse(n), boxKind);
+    case ['putint', final impl, final n, final boxKind]:
+      await runTypedPut<int>('putint', impl, int.parse(n), boxKind, sampleInt);
+    case ['putjson', final impl, final n]:
+      await runTypedPut<Map<Object?, Object?>>(
+        'putjson',
+        impl,
+        int.parse(n),
+        'eager',
+        cachedResponse(),
+      );
     default:
       throw ArgumentError.value(args.join(' '), 'args', 'unrecognised invocation');
   }
@@ -465,5 +479,80 @@ Future<void> runPut(String impl, int n) async {
   emit({'mode': 'put', 'impl': impl, 'n': n, 'micros': stopwatch.elapsedMicroseconds});
   workDir.deleteSync(recursive: true);
 }
+
+/// Puts by value type, since what a write costs can depend on what it stores. Apart from [runPut] so
+/// its rows keep the shape the committed results were taken in.
+Future<void> runTypedPut<T extends Object>(
+  String mode,
+  String impl,
+  int n,
+  String boxKind,
+  T value,
+) async {
+  final dir = scratchBox(mode);
+
+  final stopwatch = Stopwatch();
+  if (boxKind == 'eager' && impl == 'facade') {
+    final box = await KeyedBox.open<T, int>(boxName).run();
+    stopwatch.start();
+    for (var i = 0; i < n; i++) {
+      await box.put(i, value).run();
+    }
+    stopwatch.stop();
+  } else if (boxKind == 'eager') {
+    final box = await Hive.openBox<T>(boxName);
+    stopwatch.start();
+    for (var i = 0; i < n; i++) {
+      await box.put(i, value);
+    }
+    stopwatch.stop();
+  } else if (impl == 'facade') {
+    final box = LazyKeyedBox<T, int>(boxName);
+    await box.ensureInitialised().run();
+    stopwatch.start();
+    for (var i = 0; i < n; i++) {
+      await box.put(i, value).run();
+    }
+    stopwatch.stop();
+  } else {
+    final box = await Hive.openLazyBox<T>(boxName);
+    stopwatch.start();
+    for (var i = 0; i < n; i++) {
+      await box.put(i, value);
+    }
+    stopwatch.stop();
+  }
+
+  await Hive.close();
+  emit({
+    'mode': mode,
+    'impl': impl,
+    'n': n,
+    'boxKind': boxKind,
+    'ops': n,
+    'micros': stopwatch.elapsedMicroseconds,
+  });
+  dir.deleteSync(recursive: true);
+}
+
+/// Through JSON text, so its lists and maps come out untyped, like a cached API response's.
+Map<String, Object?> cachedResponse() => jsonDecode(
+  jsonEncode({
+    'items': [
+      for (var i = 0; i < 20; i++)
+        {
+          'id': sampleInt + i,
+          'name': 'user$i',
+          'tags': ['a', 'b', 'c'],
+          'score': 1.5,
+          'meta': {
+            'n': i,
+            'flags': [1, 2, 3],
+          },
+        },
+    ],
+    'next': 'cursor',
+  }),
+) as Map<String, Object?>;
 
 void emit(Map<String, Object> record) => stdout.writeln(jsonEncode(record));

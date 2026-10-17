@@ -66,6 +66,9 @@ for _ in $(seq "$REPS"); do
     "$BIN" single "$impl" get "$PUT_N" lazy >> "$OUT"
     "$BIN" single "$impl" set "$PUT_N" eager >> "$OUT"
     "$BIN" single "$impl" set "$PUT_N" lazy >> "$OUT"
+    "$BIN" putint "$impl" "$PUT_N" eager >> "$OUT"
+    "$BIN" putint "$impl" "$PUT_N" lazy >> "$OUT"
+    "$BIN" putjson "$impl" "$PUT_N" >> "$OUT"
   done
 done
 
