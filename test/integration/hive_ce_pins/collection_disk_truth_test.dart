@@ -1,5 +1,5 @@
-// Pins what hive_ce actually reads back for a collection after a restart, which is what the
-// value-codec design rests on. Same-session cache reads flatter the engine, so every scenario
+// Pins what hive_ce actually reads back for a collection or an int after a restart, which is what
+// the value-codec design rests on. Same-session cache reads flatter the engine, so every scenario
 // here closes and reopens before asserting.
 //
 // The typed collection box guard is assert-gated. With asserts on it refuses the open outright, and
@@ -126,6 +126,20 @@ void main() {
 
       check((box.get('map')! as Map<Object?, Object?>).keys).deepEquals([neighbour]);
     });
+  });
+
+  feature('ints in a value after a reopen', () {
+    scenarioOutline<Future<IntVerdicts> Function()>(
+      'hive keeps an int exactly when a round trip through a double does',
+      examples: storedInts,
+      outline: (verdictsOf) async {
+        final verdicts = await verdictsOf();
+
+        check(verdicts.unchangedIn).deepEquals({
+          for (final position in verdicts.unchangedIn.keys) position: verdicts.survivesDouble,
+        });
+      },
+    );
   });
 
   feature('the #150 trap with asserts stripped (release truth, via subprocess)', () {
