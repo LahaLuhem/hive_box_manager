@@ -6,11 +6,11 @@ Maintainer tooling, excluded from the published tarball. 3 lanes live here:
   pass): measures put / putAll / open / get / scan / query / RSS / file size per key-encoding
   scheme (arithmetic packed int, String composite, 0.0.x bit-shift reference) at 1K/10K/100K.
 - **Wrapper-overhead lane** (`overhead_bench.dart` + `overhead_driver.sh`): façade vs raw hive_ce,
-  fourteen lanes across `KeyedBox` / `LazyKeyedBox` (get, values, contains, put, putAll, delete,
-  deleteAll) and `SingleValueBox` / `LazySingleValueBox` (get, set), the aim-#4 proof. The target
-  is two-currency (tens of ns per op on memory paths, single-digit percent on disk paths) because a
-  flat percentage is meaningless on the cheap lanes (see below). The eager read path carries
-  `vm:prefer-inline` pragmas exactly because this lane holds it to raw speed.
+  across `KeyedBox` / `LazyKeyedBox` (get, values, contains, put, putAll, delete, deleteAll, and
+  puts of an int and of a JSON value) and `SingleValueBox` / `LazySingleValueBox` (get, set), the
+  aim-#4 proof. The target is two-currency (tens of ns per op on memory paths, single-digit percent
+  on disk paths) because a flat percentage is meaningless on the cheap lanes (see below). The eager
+  read path carries `vm:prefer-inline` pragmas exactly because this lane holds it to raw speed.
 - **List-box lane** (`list_box_bench.dart` + `list_box_driver.sh`): `ListBox` against 2
   hand-rolled baselines, across 2 element types and the elements-per-key axis.
 

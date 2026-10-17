@@ -38,7 +38,7 @@ DIVERGENCE_PCT = 10.0  # median-vs-min gap above which the run is contaminated, 
 CHEAP_OP_NS = 50.0
 
 # Every lane below has an exact raw hive_ce counterpart, which is what makes a percentage
-# meaningful. Grouped reads first, then writes, then the single-value façades.
+# meaningful. Grouped reads first, then writes, then the single-value façades, then typed puts.
 LANES = (
     ("get", "eager", "get (eager)"),
     ("get", "lazy", "get (lazy)"),
@@ -54,6 +54,9 @@ LANES = (
     ("single-get", "lazy", "single get (lazy)"),
     ("single-set", "eager", "single set (eager)"),
     ("single-set", "lazy", "single set (lazy)"),
+    ("putint", "eager", "put int (eager)"),
+    ("putint", "lazy", "put int (lazy)"),
+    ("putjson", "eager", "put json (eager)"),
 )
 
 
