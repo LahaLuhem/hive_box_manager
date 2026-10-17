@@ -91,9 +91,11 @@ final class EagerCrudEngine<T extends Object>({
   /// Writes [value] under [rawKey].
   Task<Unit> put(RawKey rawKey, Object semanticKey, T value) {
     ensureStorableRawKey(rawKey.value);
+    // Out here, so a value the codec refuses fails before any task exists, like a bad key.
+    final storableValue = _valueCodec.toStorable(value);
 
     return _guard('put', () async {
-      await _box.put(rawKey.value, _valueCodec.toStorable(value));
+      await _box.put(rawKey.value, storableValue);
       _observer?.onWritten(name, semanticKey, value);
 
       return unit;

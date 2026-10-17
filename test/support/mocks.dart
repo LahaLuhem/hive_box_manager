@@ -6,6 +6,7 @@
 library;
 
 import 'package:hive_box_manager/src/core/utils/no_op.dart';
+import 'package:hive_box_manager/src/core/value_codec/value_codec.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:mockito/annotations.dart';
 
@@ -16,6 +17,7 @@ export 'mocks.mocks.dart';
   MockSpec<HiveInterface>(),
   MockSpec<Box<Object?>>(),
   MockSpec<LazyBox<Object?>>(),
+  MockSpec<ValueCodec<String>>(),
 ])
 // deliberately empty anchor
 //ignore: unused_element

@@ -168,10 +168,12 @@ final class LazyCrudEngine<T extends Object>({
   /// Writes [value] under [rawKey].
   Task<Unit> put(RawKey rawKey, Object semanticKey, T value) {
     ensureStorableRawKey(rawKey.value);
+    // Out here, so a value the codec refuses fails before any task exists, like a bad key.
+    final storableValue = _valueCodec.toStorable(value);
 
     return Task(
       () => _write('put', (box) async {
-        await box.put(rawKey.value, _valueCodec.toStorable(value));
+        await box.put(rawKey.value, storableValue);
         _observer?.onWritten(name, semanticKey, value);
 
         return unit;

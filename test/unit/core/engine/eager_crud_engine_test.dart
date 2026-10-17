@@ -203,6 +203,15 @@ void main() {
       check(box.store).isEmpty();
     });
 
+    scenario('a value the codec refuses fails at the call too', () {
+      final refusing = MockValueCodec();
+      when(refusing.toStorable('v')).thenThrow(ArgumentError('refused'));
+      final strict = EagerCrudEngine<String>(box: box, valueCodec: refusing);
+
+      check(() => strict.put(const RawKey(7), 7, 'v')).throws<ArgumentError>();
+      check(() => strict.putAll([entry(7, 'v')])).throws<ArgumentError>();
+    });
+
     scenario('one bad key in a batch fails the whole call before anything is written', () {
       check(() => engine.putAll([entry(1, 'a'), entry(-1, 'b')])).throws<ArgumentError>();
       check(box.store).isEmpty();
