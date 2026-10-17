@@ -193,6 +193,11 @@ keep in working memory:
   several beliefs about `hive_ce`'s limits (key types, negative-number keys, dataset-size ceilings,
   reading collections of custom types) that turned out false or merely unproven. Before building on
   "Hive can't do X", confirm it against the current `hive_ce` and its docs, and record the finding.
+- **Let hive handle what it does on purpose.** Add a wrapper check only where the wrapper disagrees
+  with hive for safety, like ints a float can't hold. A trade-off hive made deliberately, like
+  rounding far-dated microseconds, gets documented instead of overruled, since every check costs the
+  writes that pass through it. Check by type before walking values, and walk only for a common case,
+  like ints in cached JSON. An opt-in mode for costlier checks is the path to build up to.
 - **Prefer an existing package over a custom solution.** Before hand-rolling, look for a package
   that already solves it and wrap it. Vet the candidate before adopting: pure Dart and web-safe,
   permissive licence, and currently maintained, not just download count.
