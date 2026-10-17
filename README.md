@@ -70,7 +70,7 @@ Start here. Match what you're storing to a family, then grab its eager or lazy v
 | You're storing                | Reach for               | Real-world fit                              |
 |-------------------------------|-------------------------|---------------------------------------------|
 | Many values, one key each     | `KeyedBox<T, K>`        | users, todos, cache entries                 |
-| Exactly one value             | `SingleValueBox<T>`     | a session token, the theme, one config blob |
+| Exactly one value             | `SingleValueBox<T>`     | a session token, the theme, typed settings  |
 | A list of values per key      | `ListBox<T, K>`         | tags per post, history per day              |
 | A set of values per key       | `SetBox<T, K>`          | members per team, favourites per user       |
 | A map of values per key       | `MapBox<MK, MV, K>`     | prices per store, settings per user         |
@@ -230,7 +230,7 @@ await archive.ensureInitialised().run(); // optional explicit warm-up
 
 ### 📍 SingleValueBox
 
-One value, no keys. A token, a theme, one config blob.
+One value, no keys. A token, a theme, a settings class with [its own adapter](#2-wire-up-hive-once).
 
 <details>
 <summary>Set, read, clear, watch</summary>
@@ -284,7 +284,8 @@ Worth knowing:
 - **List semantics only:** order preserved, duplicates allowed. For no duplicates, there's
   [`SetBox`](#-setbox).
 - **Nesting:** a list or set of `int`, `double` or `String` nests fine (lists of `bool` and
-  `Uint8List` too), since hive keeps those typed. Anything else nested, a `List<Person>` say, trips
+  `Uint8List` too), since hive keeps those typed. So do lists, sets and maps of `dynamic`. Anything
+  else nested, a `List<Person>` say, trips
   a development assert when you open the box, because the cast only reaches the outer list. Model
   those as adapter-registered value types instead. Same goes for `SetBox`.
 - `LazyListBox` is the same surface on the lazy axis.

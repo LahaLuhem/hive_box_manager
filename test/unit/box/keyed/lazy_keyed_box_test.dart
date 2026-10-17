@@ -52,6 +52,15 @@ void main() {
       check(() => lazyKeyedBoxAround<String, DateTime>('logs', () async => box))
           .throws<AssertionError>();
     });
+
+    scenario(
+      'a value type hive hands back untyped fails the wiring assert before anything opens',
+      () {
+        check(() => LazyKeyedBox<Map<String, Object?>, int>('blob')).throws<AssertionError>();
+        check(() => LazyKeyedBox<List<String>, int>('tags')).returnsNormally();
+        check(() => LazyKeyedBox<List<Object?>, int>('json')).returnsNormally();
+      },
+    );
   });
 
   feature('LazyKeyedBox auto-open', () {

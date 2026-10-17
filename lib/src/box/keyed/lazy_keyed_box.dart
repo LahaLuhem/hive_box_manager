@@ -10,6 +10,7 @@ import '/src/codec/key/key_codec_resolution.dart';
 import '/src/core/box_provider.dart';
 import '/src/core/engine/lazy_crud_engine.dart';
 import '/src/core/raw_key.dart';
+import '/src/core/value_codec/element_type_check.dart';
 import '/src/core/value_codec/identity_value_codec.dart';
 import '/src/event/lazy_typed_box_event.dart';
 import '/src/observer/box_observer.dart';
@@ -44,7 +45,7 @@ interface class LazyKeyedBox<T extends Object, K extends Object>._({
   /// one trips an assert while wiring. [cipher], [keyComparator], [compactionStrategy] and [crashRecovery]
   /// go straight through to hive_ce at the eventual open. [observer] hears everything this box does,
   /// starting with that open.
-  new(
+  factory(
     String name, {
     KeyCodec<K>? codec,
     HiveCipher? cipher,
@@ -52,23 +53,27 @@ interface class LazyKeyedBox<T extends Object, K extends Object>._({
     KeyComparator? keyComparator,
     CompactionStrategy? compactionStrategy,
     bool crashRecovery = true,
-  }) : this._(
-         // Explicit type arguments: a bare `const IdentityValueCodec()` can't mention T, so inference
-         // quietly picks `Never` and the first put blows up at run time.
-         engine: LazyCrudEngine<T>(
-           boxName: name,
-           openBox: () => BoxProvider().openLazyBox(
-             name,
-             cipher: cipher,
-             keyComparator: keyComparator,
-             compactionStrategy: compactionStrategy,
-             crashRecovery: crashRecovery,
-           ),
-           valueCodec: IdentityValueCodec<T>(),
-           observer: observer,
-         ),
-         codec: resolveKeyCodec<K>(codec),
-       );
+  }) {
+    assertRestorableValueType<T>();
+
+    return LazyKeyedBox<T, K>._(
+      // Explicit type arguments: a bare `const IdentityValueCodec()` can't mention T, so inference
+      // quietly picks `Never` and the first put blows up at run time.
+      engine: LazyCrudEngine<T>(
+        boxName: name,
+        openBox: () => BoxProvider().openLazyBox(
+          name,
+          cipher: cipher,
+          keyComparator: keyComparator,
+          compactionStrategy: compactionStrategy,
+          crashRecovery: crashRecovery,
+        ),
+        valueCodec: IdentityValueCodec<T>(),
+        observer: observer,
+      ),
+      codec: resolveKeyCodec<K>(codec),
+    );
+  }
 
   @pragma('vm:prefer-inline')
   RawKey _rawKeyFor(K key) => RawKey(_codec.encode(key));

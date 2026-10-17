@@ -21,6 +21,17 @@ void main() {
     facade = singleValueBoxAround(box, observer: observer);
   });
 
+  feature('SingleValueBox wiring', () {
+    scenario(
+      'a value type hive hands back untyped fails the wiring assert before anything opens',
+      () {
+        check(() => SingleValueBox.open<Map<String, Object?>>('blob')).throws<AssertionError>();
+        check(() => SingleValueBox.open<List<String>>('tags')).returnsNormally();
+        check(() => SingleValueBox.open<List<Object?>>('json')).returnsNormally();
+      },
+    );
+  });
+
   feature('SingleValueBox slot compatibility', () {
     scenario('the value is stored under raw slot key 0 (0.0.x boxes read in place)', () async {
       await facade.set('v').run();

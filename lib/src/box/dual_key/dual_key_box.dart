@@ -13,6 +13,7 @@ import '/src/codec/dual/dual_key_codec_resolution.dart';
 import '/src/core/box_provider.dart';
 import '/src/core/engine/eager_crud_engine.dart';
 import '/src/core/raw_key.dart';
+import '/src/core/value_codec/element_type_check.dart';
 import '/src/core/value_codec/identity_value_codec.dart';
 import '/src/event/typed_box_event.dart';
 import '/src/observer/box_observer.dart';
@@ -244,6 +245,7 @@ interface class DualKeyBox<T extends Object, K1 extends Object, K2 extends Objec
     CompactionStrategy? compactionStrategy,
     bool crashRecovery = true,
   }) {
+    assertRestorableValueType<T>();
     final dualCodec = resolveDualKeyCodec<K1, K2>(codec);
 
     return Task(() async {

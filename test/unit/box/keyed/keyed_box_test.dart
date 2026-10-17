@@ -51,6 +51,15 @@ void main() {
     scenario('a key type without an identity default and no codec fails the wiring assert', () {
       check(() => keyedBoxAround<String, DateTime>(box)).throws<AssertionError>();
     });
+
+    scenario(
+      'a value type hive hands back untyped fails the wiring assert before anything opens',
+      () {
+        check(() => KeyedBox.open<Map<String, Object?>, int>('blob')).throws<AssertionError>();
+        check(() => KeyedBox.open<List<String>, int>('tags')).returnsNormally();
+        check(() => KeyedBox.open<List<Object?>, int>('json')).returnsNormally();
+      },
+    );
   });
 
   feature('KeyedBox reads', () {
