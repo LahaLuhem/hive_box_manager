@@ -465,15 +465,16 @@ contents while your observer reports what the code did to them.
 ## 📏 Eager or lazy? (measured)
 
 Folklore says "lazy opens instantly and saves all the memory." The maintainer benchmark (macOS
-Apple Silicon, AOT, hive_ce 2.19.3) disagrees:
+Apple Silicon, AOT, [setup here](https://github.com/LahaLuhem/hive_box_manager/blob/master/benchmark/README.md#results))
+disagrees:
 
-- **Opening costs about the same either way**, and it scales with file size: ~70 ms at 100K
-  int-keyed entries, ~3.4 s at 1M (lazy shaves 5 to 10% off, not an order of magnitude). Hive parses
+- **Opening costs about the same either way**, and it scales with file size: ~65 ms at 100K
+  int-keyed entries, ~3.3 s at 1M (lazy saves at most 10%, not an order of magnitude). Hive parses
   every frame to build the keystore on any open. What lazy skips is holding onto the *values*.
 - **Keys always live in RAM**, eager or lazy: 22 to 64 MB at 100K entries, 210 to 340 MB at 1M.
   The spread is the key encoding, not the box kind: String keys run 50 to 80% heavier than int keys.
-- **Reads are where they split.** An eager get is ~1.1 to 1.4 µs from memory. A lazy get pays for
-  a disk read at ~26 µs.
+- **Reads are where they split.** An eager get is ~0.5 to 1 µs from memory. A lazy get pays for a
+  disk read at ~25 µs.
 
 Open cost tracks file size on both axes (the 2 lines sit right on top of each other), while
 reads are where they part ways:
@@ -528,7 +529,7 @@ it. Wrapper cost depends on how expensive the thing being wrapped is, so it spli
 |---------------------------------------------------------------------|---------------------------------------------------------------------|--------------------------------------------------------------------------|
 | `KeyedBox` / `SingleValueBox`, memory reads (get, contains, values) | 1 to 22 ns per op                                                   | free                                                                     |
 | Any effect that reaches disk (put, delete, lazy get)                | 300 to 760 ns per op, 2 to 7%                                       | free, disk dominates                                                     |
-| `ListBox` reads                                                     | ~290 ns per `get`, plus ~8 to 13 ns per element of a custom type    | 2.6x to 3.1x on one-element lists, 0.9x to 1.8x on thousand-element ones |
+| `ListBox` reads                                                     | ~265 to 330 ns per `get`, plus ~10 to 13 ns per custom-type element | 2.8x to 3.1x on one-element lists, 0.9x to 1.8x on thousand-element ones |
 | Batch writes (`putAll`, `deleteAll`)                                | 1 to 35 ns per entry                                                | free                                                                     |
 | Writes that hold ints                                               | nothing measurable for an int, ~5% for a 20-record JSON response    | free, except walking JSON. Types without ints skip it                    |
 | Open time, keystore RAM, file size                                  | no measurable difference                                            | identical                                                                |
@@ -563,11 +564,11 @@ while the wrapper's stays flat, so take the nanoseconds and ignore the multiple.
 <details>
 <summary>Where a composite key can cost you, measured</summary>
 
-This surface takes `(K1, K2)` records, and there is one way to encode them that costs ~25x the
+This surface takes `(K1, K2)` records, and there is one way to encode them that costs ~24x the
 others. 8 variants of the same two-part encode, each changing exactly one thing from the one
 above it:
 
-![8 key-shape variants by ns per op: the 3 that route a generic-parameterised record through a checked parameter cost about 355 ns, every other shape sits near 15 ns](https://raw.githubusercontent.com/LahaLuhem/hive_box_manager/master/benchmark/reports/key_shape_attribution.png)
+![8 key-shape variants by ns per op: the 3 that route a generic-parameterised record through a checked parameter cost about 370 ns, every other shape sits near 15 ns](https://raw.githubusercontent.com/LahaLuhem/hive_box_manager/master/benchmark/reports/key_shape_attribution.png)
 
 Records are free. Generics are free. An extra adapter call frame is free. What costs ~350 ns is a
 **record type built from a class's own type parameters, sitting in a checked parameter position**:
@@ -584,7 +585,7 @@ relationship, so this stays measured rather than remembered.
 
 **`ListBox` prices differently**, because raw hive has no list-valued box to compare against. Its
 baseline is the code you would hand-write, and there are 2 of those. Against the version with a
-`.cast<T>()` at the read boundary, `ListBox` costs the ~290 ns per `get` above. Per element it
+`.cast<T>()` at the read boundary, `ListBox` costs the per-`get` term above. Per element it
 depends on what hive hands back. A `List<String>` comes back typed and goes out without a cast, so
 it costs less per element than the hand-roll. A custom type's elements are each checked once at the
 read, which is what lets a wrong type fail there and name its key. Against the version without a
@@ -598,10 +599,10 @@ included, so the read view really is copy-free.
 
 | Operation                     | packed int                         | String composite |
 |-------------------------------|------------------------------------|------------------|
-| eager get, 100K entries       | 119 ms                             | 163 ms           |
-| box open (eager), 100K        | 77 ms                              | 144 ms           |
-| putAll, 100K                  | 132 ms                             | 232 ms           |
-| reverse query, 100K           | 6.2 ms                             | 11.6 ms          |
+| eager get, 100K entries       | 48 ms                              | 104 ms           |
+| box open (eager), 100K        | 68 ms                              | 143 ms           |
+| putAll, 100K                  | 83 ms                              | 174 ms           |
+| reverse query, 100K           | 4.8 ms                             | 11.1 ms          |
 | keystore RSS after open, 100K | 35 MB                              | 64 MB            |
 | box file size, 100K           | 1.9 MB                             | 2.7 MB           |
 | lazy get / single put         | codec-indifferent (disk dominates) |                  |
