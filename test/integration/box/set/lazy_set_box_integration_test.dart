@@ -86,8 +86,10 @@ void main() {
       check((await second.get(9).run()).isNone()).isTrue();
     });
 
-    scenario('a custom element type without idOf fails while wiring', () {
-      check(() => LazySetBox<Member, int>('members')).throws<AssertionError>();
+    scenario('without idOf, an element that compares by identity fails at the first write', () {
+      final noIdOf = LazySetBox<Member, int>('members');
+
+      check(() => noIdOf.put(1, [Member(1, 'a')])).throws<AssertionError>();
     });
   });
 }

@@ -16,12 +16,15 @@ bool isRestartSafeType<T extends Object>() {
       probe is List<Duration>;
 }
 
-/// [isRestartSafeType] for a value whose type is only known at run time.
+/// Whether [value] still compares equal to the fresh copy a restart hands back.
 @internal
-bool isRestartSafeValue(Object? value) =>
+bool isRestartSafeValue(Object value) =>
     value is String ||
     value is num ||
     value is bool ||
     value is Enum ||
     value is DateTime ||
-    value is Duration;
+    value is Duration ||
+    // A class that defines == has to define hashCode too, so one still on Object's own compares by
+    // identity. Numbers, strings, bools and enums share that hash, which is why they go first.
+    value.hashCode != identityHashCode(value);

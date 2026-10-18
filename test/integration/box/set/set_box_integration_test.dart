@@ -12,7 +12,11 @@ import '../../../support/support.dart';
 void main() {
   useTempHive('hbm_set_box_');
 
-  setUpAll(() => Hive.registerAdapter(const MemberAdapter()));
+  setUpAll(
+    () => Hive
+      ..registerAdapter(const MemberAdapter())
+      ..registerAdapter(const PersonAdapter()),
+  );
 
   Future<SetBox<Member, int>> openMembers() =>
       SetBox.open<Member, int>('members', idOf: (member) => member.id).run();
@@ -58,11 +62,12 @@ void main() {
     });
 
     scenarioOutline<Future<Set<Object>> Function()>(
-      'a DateTime or Duration element needs no idOf, and a reopen still matches it',
+      'an element that compares by value needs no idOf, and a reopen still matches it',
       examples: {
         'DateTime': () => addAgainAfterReopen<DateTime>(DateTime.utc(2026, 10, 3, 12, 0, 0, 0, 1)),
         'Duration': () =>
             addAgainAfterReopen<Duration>(const Duration(milliseconds: 1500, microseconds: 7)),
+        'a class with its own ==': () => addAgainAfterReopen<Person>(const Person('ada', 36)),
       },
       outline: (addAgain) async => check(await addAgain()).length.equals(1),
     );
@@ -140,8 +145,13 @@ void main() {
       check(() => reopened.getOr(1).add(Member(3, 'rogue'))).throws<UnsupportedError>();
     });
 
-    scenario('a custom element type without idOf fails while wiring', () {
-      check(() => SetBox.open<Member, int>('members')).throws<AssertionError>();
-    });
+    scenario(
+      'without idOf, an element that compares by identity fails at the first write',
+      () async {
+        final noIdOf = await SetBox.open<Member, int>('members').run();
+
+        check(() => noIdOf.put(1, [Member(1, 'a')])).throws<AssertionError>();
+      },
+    );
   });
 }

@@ -28,9 +28,9 @@ final class const _Member(final int id, final String name) {
     (sample, resolveIdOf<T>(null)(sample));
 
 void main() {
-  feature('resolving idOf while wiring', () {
+  feature('resolving idOf', () {
     scenarioOutline<(Object, Object) Function()>(
-      'a value-type element needs no idOf and is its own id',
+      'an element that compares by value needs no idOf and is its own id',
       examples: {
         'String': () => _identifiedByItself('a'),
         'int': () => _identifiedByItself(1),
@@ -40,6 +40,8 @@ void main() {
         'enum': () => _identifiedByItself(Colour.red),
         'DateTime': () => _identifiedByItself(DateTime.utc(2026, 10, 3, 12, 0, 0, 0, 1)),
         'Duration': () => _identifiedByItself(const Duration(microseconds: 7)),
+        'a class with its own ==': () => _identifiedByItself(const _Member(1, 'Alex')),
+        'a String held as an Object': () => _identifiedByItself<Object>('a'),
       },
       outline: (resolve) {
         final (sample, id) = resolve();
@@ -48,19 +50,21 @@ void main() {
       },
     );
 
-    scenarioOutline<Object Function()>(
-      'any other element type without idOf fails the wiring assert',
+    scenarioOutline<Object Function(_Thing) Function()>(
+      'without idOf, an element that compares by identity fails the assert at its first id',
       examples: {
-        'identity ==': () => resolveIdOf<_Thing>(null),
-        'value ==': () => resolveIdOf<_Member>(null),
-        'Object': () => resolveIdOf<Object>(null),
-        'Comparable<String>': () => resolveIdOf<Comparable<String>>(null),
+        'a class without its own ==': () => resolveIdOf<_Thing>(null),
+        'one held as an Object': () => resolveIdOf<Object>(null),
       },
-      outline: (resolve) => check(resolve).throws<AssertionError>(),
+      outline: (resolve) {
+        final identify = resolve();
+
+        check(() => identify(_Thing('a'))).throws<AssertionError>();
+      },
     );
 
     scenarioOutline<Object Function(_Thing)>(
-      'idOf may return any value type',
+      'idOf may return anything that compares by value',
       examples: {
         'String': (thing) => thing.id,
         'int': (thing) => thing.id.length,
@@ -68,6 +72,8 @@ void main() {
         'enum': (thing) => Colour.red,
         'DateTime': (thing) => DateTime.utc(2026, 10, 3, 12, 0, 0, 0, 1),
         'Duration': (thing) => Duration(microseconds: thing.id.length),
+        'a record': (thing) => (thing.id, 1),
+        'a class with its own ==': (thing) => _Member(1, thing.id),
       },
       outline: (idOf) {
         final thing = _Thing('a');
@@ -77,11 +83,10 @@ void main() {
     );
 
     scenarioOutline<Object Function(_Thing)>(
-      'an idOf returning anything else fails the id assert',
+      'an idOf returning something that compares by identity fails the id assert',
       examples: {
         'the element': (thing) => thing,
         'a list': (thing) => [thing.id],
-        'a record': (thing) => (thing.id, 1),
       },
       outline: (idOf) {
         final resolved = resolveIdOf<_Thing>(idOf);

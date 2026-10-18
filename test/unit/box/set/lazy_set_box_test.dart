@@ -42,8 +42,10 @@ void main() {
           .throws<AssertionError>();
     });
 
-    scenario('a custom element type without idOf fails the wiring assert', () {
-      check(() => lazySetBoxAround<Member, int>('tags', () async => box)).throws<AssertionError>();
+    scenario('without idOf, an element that compares by identity fails at the first write', () {
+      final noIdOf = lazySetBoxAround<Member, int>('tags', () async => box);
+
+      check(() => noIdOf.put(1, [Member(1, 'a')])).throws<AssertionError>();
     });
 
     scenario('an element type hive hands back untyped fails the wiring assert', () {
