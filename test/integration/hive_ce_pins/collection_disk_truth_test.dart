@@ -1,5 +1,5 @@
-// Pins what hive_ce reads back after a restart, which the value codecs rely on. Same-session reads
-// come from the write cache, so every scenario closes and reopens before asserting.
+// Pins what hive_ce reads back after a restart, which the value codecs rely on. Same-session eager
+// reads come from the write cache, so every scenario reads from disk: after a reopen, or lazily.
 //
 // The pinned subject is `dynamic` itself (what hive reifies for collections), so the DCM ban is lifted
 // for this file.
@@ -137,7 +137,7 @@ void main() {
     );
   });
 
-  feature('DateTime and Duration after a reopen', () {
+  feature('DateTime and Duration read back from disk', () {
     scenarioOutline<Future<Map<String, bool>> Function()>(
       'hive keeps microseconds inside the range, and whole milliseconds anywhere',
       examples: keptTimes,
