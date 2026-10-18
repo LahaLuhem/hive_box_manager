@@ -1,7 +1,6 @@
-// Pins the web platform for the key and codec design: the packing arithmetic stays exact under both
-// dart2js and dart2wasm, and IndexedDB serves the same post-reopen collection shapes the VM does. Reads
-// happen after a close and reopen, so this is IndexedDB truth rather than write-cache truth. A real
-// process restart isn't reachable from `dart test`, which stays the known gap.
+// Pins hive_ce on dart2js and dart2wasm: key packing stays exact, and IndexedDB hands back what the
+// VM does after a reopen. A real process restart isn't reachable from `dart test`, so the reopen stands
+// in for it.
 //
 // The shape being pinned is `dynamic` itself, so the DCM ban is lifted for this file.
 // ignore_for_file: avoid-dynamic
@@ -92,6 +91,28 @@ void main() {
           because: 'hive reads it back typed: ${verdicts.readsBackTyped}',
           verdicts.isAllowed,
         ).equals(verdicts.readsBackTyped);
+      },
+    );
+  });
+
+  feature('DateTime and Duration after a reopen', () {
+    scenarioOutline<Future<Map<String, bool>> Function()>(
+      'hive keeps microseconds inside the range, and whole milliseconds anywhere',
+      examples: keptTimes,
+      outline: (unchangedInOf) async {
+        final unchangedIn = await unchangedInOf();
+
+        check(unchangedIn).deepEquals({for (final position in unchangedIn.keys) position: true});
+      },
+    );
+
+    scenarioOutline<Future<Map<String, bool>> Function()>(
+      'past the range, hive changes the microseconds',
+      examples: changedTimes,
+      outline: (unchangedInOf) async {
+        final unchangedIn = await unchangedInOf();
+
+        check(unchangedIn).deepEquals({for (final position in unchangedIn.keys) position: false});
       },
     );
   });

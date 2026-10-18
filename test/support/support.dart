@@ -22,3 +22,4 @@ export 'pins/probe_key_limits.dart';
 export 'pins/release_probe_runner.dart';
 export 'pins/stored_ints.dart';
 export 'pins/stored_shapes.dart';
+export 'pins/stored_times.dart';
