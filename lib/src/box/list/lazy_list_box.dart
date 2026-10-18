@@ -9,6 +9,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:meta/meta.dart';
 
+import '/src/box/set/element_id.dart';
 import '/src/codec/key/key_codec.dart';
 import '/src/codec/key/key_codec_resolution.dart';
 import '/src/core/box_provider.dart';
@@ -43,6 +44,7 @@ import 'list_edits.dart';
 interface class LazyListBox<T extends Object, K extends Object>._({
   required final LazyCrudEngine<List<T>> _engine,
   required final KeyCodec<K> _codec,
+  required final Object Function(T element) _idOf,
 }) {
   /// Wires up a box that opens on first use. Building it touches nothing.
   ///
@@ -53,6 +55,7 @@ interface class LazyListBox<T extends Object, K extends Object>._({
   new(
     String name, {
     KeyCodec<K>? codec,
+    Object Function(T element)? idOf,
     HiveCipher? cipher,
     BoxObserver? observer,
     KeyComparator? keyComparator,
@@ -73,6 +76,7 @@ interface class LazyListBox<T extends Object, K extends Object>._({
            observer: observer,
          ),
          codec: resolveKeyCodec<K>(codec),
+         idOf: resolveIdOf<T>(idOf),
        );
 
   @pragma('vm:prefer-inline')
@@ -163,18 +167,20 @@ interface class LazyListBox<T extends Object, K extends Object>._({
       )
       .map((_) => unit);
 
-  /// Removes the first [value] from the list under [key] when run, same as `List.remove`. A missing
-  /// key or element is a no-op, and taking the last element out leaves an empty list rather than deleting
-  /// the key. One disk read plus O(n) in the stored list.
+  /// Removes the first element matching [value] from the list under [key] when run. A restart hands
+  /// back fresh objects, so an element that compares by identity only matches through `idOf`. A missing
+  /// key or element is a no-op, and an emptied list keeps its key. One disk read, then O(n).
   Task<Unit> remove(K key, T value) => _engine.edit(
     _rawKeyFor(key),
     key,
-    (storedOrNone) => storedOrNone.flatMap(
-      (storedValues) => Option.fromPredicate(
-        storedValues.indexOf(value),
+    (storedOrNone) => storedOrNone.flatMap((storedValues) {
+      final removedId = _idOf(value);
+
+      return Option.fromPredicate(
+        storedValues.indexWhere((element) => _idOf(element) == removedId),
         (index) => index >= 0,
-      ).map((index) => copyWithoutIndex(storedValues, index)),
-    ),
+      ).map((index) => copyWithoutIndex(storedValues, index));
+    }),
   );
 
   /// Deletes [key] and its whole list when run. Deleting something that isn't there is a no-op.
@@ -251,6 +257,7 @@ LazyListBox<T, K> lazyListBoxAround<T extends Object, K extends Object>(
   String name,
   Future<LazyBox<Object?>> Function() openBox, {
   KeyCodec<K>? codec,
+  Object Function(T element)? idOf,
   BoxObserver? observer,
 }) => LazyListBox<T, K>._(
   // Explicit type arguments on purpose, see CODESTYLE #type-safety.
@@ -261,4 +268,5 @@ LazyListBox<T, K> lazyListBoxAround<T extends Object, K extends Object>(
     observer: observer,
   ),
   codec: resolveKeyCodec<K>(codec),
+  idOf: resolveIdOf<T>(idOf),
 );

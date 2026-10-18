@@ -9,6 +9,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:meta/meta.dart';
 
+import '/src/box/set/element_id.dart';
 import '/src/codec/key/key_codec.dart';
 import '/src/codec/key/key_codec_resolution.dart';
 import '/src/core/box_provider.dart';
@@ -47,6 +48,7 @@ import 'list_edits.dart';
 interface class ListBox<T extends Object, K extends Object>._({
   required final EagerCrudEngine<List<T>> _engine,
   required final KeyCodec<K> _codec,
+  required final Object Function(T element) _idOf,
 }) {
   @pragma('vm:prefer-inline')
   RawKey _rawKeyFor(K key) => RawKey(_codec.encode(key));
@@ -132,18 +134,20 @@ interface class ListBox<T extends Object, K extends Object>._({
       )
       .map((_) => unit);
 
-  /// Removes the first [value] from the list under [key] when run, same as `List.remove`. A missing
-  /// key or element is a no-op, and taking the last element out leaves an empty list rather than deleting
-  /// the key. O(n) in the stored list.
+  /// Removes the first element matching [value] from the list under [key] when run. A restart hands
+  /// back fresh objects, so an element that compares by identity only matches through `idOf`. A missing
+  /// key or element is a no-op, and an emptied list keeps its key. O(n) in the stored list.
   Task<Unit> remove(K key, T value) => _engine.edit(
     _rawKeyFor(key),
     key,
-    (storedOrNone) => storedOrNone.flatMap(
-      (storedValues) => Option.fromPredicate(
-        storedValues.indexOf(value),
+    (storedOrNone) => storedOrNone.flatMap((storedValues) {
+      final removedId = _idOf(value);
+
+      return Option.fromPredicate(
+        storedValues.indexWhere((element) => _idOf(element) == removedId),
         (index) => index >= 0,
-      ).map((index) => copyWithoutIndex(storedValues, index)),
-    ),
+      ).map((index) => copyWithoutIndex(storedValues, index));
+    }),
   );
 
   /// Deletes [key] and its whole list when run. Deleting something that isn't there is a no-op.
@@ -219,6 +223,7 @@ interface class ListBox<T extends Object, K extends Object>._({
   static Task<ListBox<T, K>> open<T extends Object, K extends Object>(
     String name, {
     KeyCodec<K>? codec,
+    Object Function(T element)? idOf,
     HiveCipher? cipher,
     BoxObserver? observer,
     KeyComparator? keyComparator,
@@ -228,6 +233,7 @@ interface class ListBox<T extends Object, K extends Object>._({
     // Built before the Task, so its wiring assert fires at the call like the key codec's.
     final valueCodec = CollectionCastValueCodec<T>();
     final keyCodec = resolveKeyCodec<K>(codec);
+    final elementIdOf = resolveIdOf<T>(idOf);
 
     return Task(() async {
       try {
@@ -244,6 +250,7 @@ interface class ListBox<T extends Object, K extends Object>._({
         return ListBox<T, K>._(
           engine: EagerCrudEngine<List<T>>(box: box, valueCodec: valueCodec, observer: observer),
           codec: keyCodec,
+          idOf: elementIdOf,
         );
       } on Object catch (error, stackTrace) {
         observer?.onOperationError(name, 'open', error, stackTrace);
@@ -260,6 +267,7 @@ interface class ListBox<T extends Object, K extends Object>._({
 ListBox<T, K> listBoxAround<T extends Object, K extends Object>(
   Box<Object?> box, {
   KeyCodec<K>? codec,
+  Object Function(T element)? idOf,
   BoxObserver? observer,
 }) => ListBox<T, K>._(
   // Explicit type arguments on purpose, see CODESTYLE #type-safety.
@@ -269,4 +277,5 @@ ListBox<T, K> listBoxAround<T extends Object, K extends Object>(
     observer: observer,
   ),
   codec: resolveKeyCodec<K>(codec),
+  idOf: resolveIdOf<T>(idOf),
 );

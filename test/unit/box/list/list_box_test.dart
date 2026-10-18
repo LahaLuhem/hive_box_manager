@@ -148,6 +148,28 @@ void main() {
       check(observer.calls).isEmpty();
       check(facade.getOr(1)).deepEquals(['a']);
     });
+
+    scenario(
+      'without idOf, removing an element that compares by identity fails the assert',
+      () async {
+        final members = listBoxAround<Member, int>(box);
+        await members.put(1, [Member(1, 'a')]).run();
+
+        await check(members.remove(1, Member(1, 'a')).run()).throws<AssertionError>();
+      },
+    );
+
+    scenario(
+      'with idOf, remove takes out an edited copy by its id, whatever its == says',
+      () async {
+        final people = listBoxAround<Person, int>(box, idOf: (person) => person.name);
+        await people.put(1, const [Person('ada', 36), Person('bob', 40)]).run();
+
+        await people.remove(1, const Person('ada', 37)).run();
+
+        check(people.getOr(1)).deepEquals(const [Person('bob', 40)]);
+      },
+    );
   });
 
   feature('ListBox keyed surface and failure paths', () {
