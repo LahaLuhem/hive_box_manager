@@ -332,8 +332,8 @@ stored before hive_ce 2.21.0 still comes back untyped until it's written again.
 Sets come back as `Set<dynamic>` and cast just as well. What they need on top is equality that
 survives a restart. A set dedups with the element's `==`, and a read from disk builds fresh objects,
 so a type that compares by identity never matches its stored copy. `SetBox` dedups by an `idOf`
-instead (strings, numbers, bools, enums, `DateTime` and `Duration` are their own id), and only on
-writes, which keeps reads a zero-copy cast view:
+instead (anything that compares by value is its own id), and only on writes, which keeps reads a
+zero-copy cast view:
 
 - **Every write dedups the whole set**, not only what comes in, so an id stored twice some other way
   (raw hive, say) is down to its first element after the next write.
@@ -351,14 +351,22 @@ Maps come back as `Map<dynamic, dynamic>` whatever they hold, primitives include
 same way, keys and values checked in one pass. Their inner keys have the set's problem with no
 `idOf` to lean on:
 
-- **Inner keys are strings, numbers, bools, enums, `DateTime` or `Duration`**, the types that still
-  compare equal after a restart. A map finds keys by `==`, and the type alone can't say whether a
-  custom class compares by value or by identity, so a development assert refuses it and the map gets
-  keyed by an id. It depends only on the type, so it fires on every development run, which is why an
-  assert is enough.
+- **Inner keys have to compare by value**, since a map finds keys by `==` and has no `idOf`, so a
+  key that compares by identity means keying the map by an id.
 - **hive gets a plain `Map.of(...)`**, for the same reason sets get a plain `Set.of(...)`.
 - **Entry helpers follow `Map`**, since the names promise its behaviour: `addAll` lets the incoming
   value win and `remove` takes one entry out. Like the siblings, an emptied map keeps its key.
+
+Lists, sets and maps tell the 2 kinds apart the same way:
+
+- **By `hashCode`.** Dart can't ask a type about its `==`, but a class that overrides it has to
+  override `hashCode` too, so a value still on Object's own compares by identity. Numbers, strings,
+  bools and enums share that hash, so they're checked first.
+- **At the first write**, or the first `remove` on a list, since the check needs a value. Only runs
+  that write see the assert, and an append-only list never does.
+- **An `idOf` wins over `==`**, so an edited copy still matches by its id.
+- **Comparing by value isn't an exact round trip.** A value class with a far-dated time field still
+  drifts.
 
 ---
 

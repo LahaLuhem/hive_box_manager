@@ -83,12 +83,15 @@ void main() {
         'an enum': MapCastValueCodec<Colour, int>.new,
         'DateTime': MapCastValueCodec<DateTime, int>.new,
         'Duration': MapCastValueCodec<Duration, int>.new,
+        'a class with its own ==': MapCastValueCodec<Person, int>.new,
       },
       outline: (wire) => check(wire).returnsNormally(),
     );
 
-    scenario('any other key type fails the wiring assert', () {
-      check(MapCastValueCodec<Member, int>.new).throws<AssertionError>();
+    scenario('a key that compares by identity fails the assert at the first write', () {
+      final codec = MapCastValueCodec<Member, int>();
+
+      check(() => codec.toStorable({Member(1, 'a'): 1})).throws<AssertionError>();
     });
 
     scenario('a value type hive hands back untyped fails the wiring assert', () {

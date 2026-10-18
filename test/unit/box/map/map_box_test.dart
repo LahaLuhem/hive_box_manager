@@ -35,10 +35,10 @@ void main() {
       check(() => mapBoxAround<String, int, DateTime>(box)).throws<AssertionError>();
     });
 
-    scenario('an inner key type a restart breaks fails the wiring assert, at the call', () {
-      check(() => mapBoxAround<Person, int, int>(box)).throws<AssertionError>();
-      check(() => MapBox.open<Person, int, int>('by_person')).throws<AssertionError>();
-      check(() => mapBoxAround<Colour, int, int>(box)).returnsNormally();
+    scenario('an inner key that compares by identity fails the assert at the first write', () {
+      final byMember = mapBoxAround<Member, int, int>(box);
+
+      check(() => byMember.put(1, {Member(1, 'a'): 1})).throws<AssertionError>();
     });
 
     scenario('a value type hive hands back untyped fails the wiring assert, at the call', () {

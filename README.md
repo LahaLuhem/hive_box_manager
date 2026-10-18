@@ -283,6 +283,10 @@ Worth knowing:
   purpose.
 - **List semantics only:** order preserved, duplicates allowed. For no duplicates, there's
   [`SetBox`](#-setbox).
+- **Elements that compare by identity**, Dart's default for a class, never match the fresh copies a
+  restart hands back. Give the box an `idOf`, like `idOf: (member) => member.id`, and `remove`
+  matches by it, an edited copy included. Anything with its own `==` needs none, and a missing one
+  trips a development assert at the first `remove`.
 - **Nesting:** a list or set of `int`, `double` or `String` nests fine (lists of `bool` and
   `Uint8List` too), since hive keeps those typed. So do lists, sets and maps of `dynamic`. Anything
   else nested, a `List<Person>` say, trips
@@ -318,9 +322,9 @@ final core = teams.getOr('core'); // Set<Member>: unmodifiable view, empty when 
 
 Worth knowing:
 
-- `idOf` returns a String, number, bool, enum, `DateTime` or `Duration`. Elements of those types are
-  their own id, so `SetBox.open<String, int>('favourites')` needs none. Any other element type
-  without one trips an assert while wiring.
+- `idOf` can return anything that compares by value, a record included. Elements that compare by
+  value are their own id, so `SetBox.open<String, int>('favourites')` needs none, and one that
+  compares by identity without it trips an assert at the first write.
 - Sets you read keep their **insertion order**, even after a restart. They're plain sets though, so
   `core.contains(...)` uses `==`, not `idOf`. Look an id up with `any` instead.
 - Writes are copied, reads come back typed after a restart, and absent isn't empty, all like
@@ -353,9 +357,8 @@ Worth knowing:
 
 - The box key comes last, like every family: `MapBox<String, double, int>` holds a
   `Map<String, double>` under each `int`.
-- Inner keys are strings, numbers, bools, enums, `DateTime` or `Duration`, the types that still
-  compare equal after a restart hands back fresh objects. Anything else trips an assert while
-  wiring, so key by an id.
+- Inner keys have to compare by value, since a map has no `idOf` to fall back on, so key by an id
+  otherwise. One that compares by identity trips an assert at the first write.
 - An int hive can't store exactly (some past 2^53), as a key or a value, fails with an
   `ArgumentError`, [as in every box](#-safer-than-raw-hive-at-near-native-speed).
 - `addAll` and `remove` follow `Map`: the incoming value wins, and removing an absent key or entry
