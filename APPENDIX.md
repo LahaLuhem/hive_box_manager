@@ -292,6 +292,12 @@ Both carve-outs are earned by measurement, not caution. What trips them is data-
 server ids, say), exactly the class development runs never see. Ints inside a custom type go
 through its adapter, out of the gate's reach.
 
+Times get no gate. hive rounds the microseconds of a `DateTime` or `Duration` past a range of dates
+(the README gives it), pinned on the VM and both web compilers. Inside it they come back exact,
+which is why sets and maps take them as their own ids. The rounding is the price hive chose for
+keeping its file format, and what hits it, an "end of time" date with microseconds say, is rare next
+to 64-bit ids. So the wrapper leaves it to hive and says so.
+
 ---
 
 <a id="collection-handling"></a>
@@ -324,10 +330,10 @@ compilers, so the assert can't drift from hive. On the web, a list of `String`, 
 stored before hive_ce 2.21.0 still comes back untyped until it's written again.
 
 Sets come back as `Set<dynamic>` and cast just as well. What they need on top is equality that
-survives a restart. A set dedups with the element's `==`, and a read from disk builds fresh
-objects, so a type that compares by identity never matches its stored copy. `SetBox` dedups by an
-`idOf` instead (strings, numbers, bools and enums are their own id), and only on writes, which
-keeps reads a zero-copy cast view:
+survives a restart. A set dedups with the element's `==`, and a read from disk builds fresh objects,
+so a type that compares by identity never matches its stored copy. `SetBox` dedups by an `idOf`
+instead (strings, numbers, bools, enums, `DateTime` and `Duration` are their own id), and only on
+writes, which keeps reads a zero-copy cast view:
 
 - **Every write dedups the whole set**, not only what comes in, so an id stored twice some other way
   (raw hive, say) is down to its first element after the next write.
@@ -345,10 +351,11 @@ Maps come back as `Map<dynamic, dynamic>` whatever they hold, primitives include
 same way, keys and values checked in one pass. Their inner keys have the set's problem with no
 `idOf` to lean on:
 
-- **Inner keys are strings, numbers, bools or enums**, the types sure to compare equal after a
-  restart. A map finds keys by `==`, and the type alone can't say whether a custom class compares
-  by value or by identity, so a development assert refuses it and the map gets keyed by an id. It
-  depends only on the type, so it fires on every development run, which is why an assert is enough.
+- **Inner keys are strings, numbers, bools, enums, `DateTime` or `Duration`**, the types that still
+  compare equal after a restart. A map finds keys by `==`, and the type alone can't say whether a
+  custom class compares by value or by identity, so a development assert refuses it and the map gets
+  keyed by an id. It depends only on the type, so it fires on every development run, which is why an
+  assert is enough.
 - **hive gets a plain `Map.of(...)`**, for the same reason sets get a plain `Set.of(...)`.
 - **Entry helpers follow `Map`**, since the names promise its behaviour: `addAll` lets the incoming
   value win and `remove` takes one entry out. Like the siblings, an emptied map keeps its key.

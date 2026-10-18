@@ -318,9 +318,9 @@ final core = teams.getOr('core'); // Set<Member>: unmodifiable view, empty when 
 
 Worth knowing:
 
-- `idOf` returns a String, number, bool or enum. Elements of those types are their own id, so
-  `SetBox.open<String, int>('favourites')` needs none. Any other element type without one trips an
-  assert while wiring.
+- `idOf` returns a String, number, bool, enum, `DateTime` or `Duration`. Elements of those types are
+  their own id, so `SetBox.open<String, int>('favourites')` needs none. Any other element type
+  without one trips an assert while wiring.
 - Sets you read keep their **insertion order**, even after a restart. They're plain sets though, so
   `core.contains(...)` uses `==`, not `idOf`. Look an id up with `any` instead.
 - Writes are copied, reads come back typed after a restart, and absent isn't empty, all like
@@ -353,8 +353,9 @@ Worth knowing:
 
 - The box key comes last, like every family: `MapBox<String, double, int>` holds a
   `Map<String, double>` under each `int`.
-- Inner keys are strings, numbers, bools or enums, the types sure to compare equal after a
-  restart hands back fresh objects. Anything else trips an assert while wiring, so key by an id.
+- Inner keys are strings, numbers, bools, enums, `DateTime` or `Duration`, the types that still
+  compare equal after a restart hands back fresh objects. Anything else trips an assert while
+  wiring, so key by an id.
 - An int hive can't store exactly (some past 2^53), as a key or a value, fails with an
   `ArgumentError`, [as in every box](#-safer-than-raw-hive-at-near-native-speed).
 - `addAll` and `remove` follow `Map`: the incoming value wins, and removing an absent key or entry
@@ -508,6 +509,12 @@ fail when they run. Nothing reaches disk either way.
 
 > A 64-bit id inside your own type goes through your adapter, which this package can't see. Store
 > it as a `String` or a `BigInt` there. To cache a JSON response holding one, store its text.
+
+Times are left to hive. A `DateTime` or `Duration` keeps its microseconds for dates from 1691-04-06
+to 2248-09-26 and durations shorter than about 278 years. Past that, hive rounds them, so
+`9999-12-31T23:59:59.999999Z` comes back as the start of year 10000, and 2 stamps a microsecond
+apart can become 1 set element or map key. Whole milliseconds always come back exact. hive chose
+that to keep its file format, so this package doesn't overrule it.
 
 ### ⚡ What that costs
 
