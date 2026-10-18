@@ -1,10 +1,5 @@
-// Pins what hive_ce actually reads back for a collection or an int after a restart, which is what
-// the value-codec design rests on. Same-session cache reads flatter the engine, so every scenario
-// here closes and reopens before asserting.
-//
-// The typed collection box guard is assert-gated. With asserts on it refuses the open outright, and
-// with asserts off (probed through a subprocess) it opens and then blows up at the first get, which
-// is the real trap.
+// Pins what hive_ce reads back after a restart, which the value codecs rely on. Same-session reads
+// come from the write cache, so every scenario closes and reopens before asserting.
 //
 // The pinned subject is `dynamic` itself (what hive reifies for collections), so the DCM ban is lifted
 // for this file.
@@ -138,6 +133,28 @@ void main() {
         check(verdicts.unchangedIn).deepEquals({
           for (final position in verdicts.unchangedIn.keys) position: verdicts.survivesDouble,
         });
+      },
+    );
+  });
+
+  feature('DateTime and Duration after a reopen', () {
+    scenarioOutline<Future<Map<String, bool>> Function()>(
+      'hive keeps microseconds inside the range, and whole milliseconds anywhere',
+      examples: keptTimes,
+      outline: (unchangedInOf) async {
+        final unchangedIn = await unchangedInOf();
+
+        check(unchangedIn).deepEquals({for (final position in unchangedIn.keys) position: true});
+      },
+    );
+
+    scenarioOutline<Future<Map<String, bool>> Function()>(
+      'past the range, hive changes the microseconds',
+      examples: changedTimes,
+      outline: (unchangedInOf) async {
+        final unchangedIn = await unchangedInOf();
+
+        check(unchangedIn).deepEquals({for (final position in unchangedIn.keys) position: false});
       },
     );
   });
