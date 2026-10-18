@@ -56,7 +56,7 @@ void main() {
     });
 
     scenarioOutline<Future<String?> Function()>(
-      'every inner key type the wiring allows still finds its entry after a reopen',
+      'every inner key that compares by value still finds its entry after a reopen',
       examples: {
         'String': () => lookUpAfterReopen('ada'),
         'int': () => lookUpAfterReopen(7),
@@ -65,6 +65,7 @@ void main() {
         'an enum': () => lookUpAfterReopen(Colour.red),
         'DateTime': () => lookUpAfterReopen(DateTime.utc(2026, 10, 3, 12, 0, 0, 0, 1)),
         'Duration': () => lookUpAfterReopen(const Duration(milliseconds: 1500, microseconds: 7)),
+        'a class with its own ==': () => lookUpAfterReopen(const Person('ada', 36)),
       },
       outline: (lookUp) async => check(await lookUp()).equals('found'),
     );

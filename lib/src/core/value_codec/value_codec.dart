@@ -10,7 +10,7 @@ import 'package:meta/meta.dart';
 /// collections of custom types back as `List<dynamic>`, so the codec puts [T] back at the boundary. It
 /// stays internal because a public value codec is exactly where someone could launder `dynamic` in again.
 @internal
-abstract interface class ValueCodec<T extends Object>._() {
+abstract interface class const ValueCodec<T extends Object>._() {
   /// Adapts [value] for storage. The engine writes the result as is.
   Object toStorable(T value);
 

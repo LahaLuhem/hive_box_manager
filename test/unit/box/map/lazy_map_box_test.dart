@@ -38,11 +38,10 @@ void main() {
           .throws<AssertionError>();
     });
 
-    scenario('an inner key type a restart breaks fails the wiring assert', () {
-      check(() => lazyMapBoxAround<Person, int, int>('prices', () async => box))
-          .throws<AssertionError>();
-      check(() => LazyMapBox<Person, int, int>('by_person')).throws<AssertionError>();
-      check(() => lazyMapBoxAround<Colour, int, int>('prices', () async => box)).returnsNormally();
+    scenario('an inner key that compares by identity fails the assert at the first write', () {
+      final byMember = lazyMapBoxAround<Member, int, int>('prices', () async => box);
+
+      check(() => byMember.put(1, {Member(1, 'a'): 1})).throws<AssertionError>();
     });
 
     scenario('a value type hive hands back untyped fails the wiring assert', () {

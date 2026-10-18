@@ -15,14 +15,8 @@ import 'value_codec.dart';
 @internal
 final class MapCastValueCodec<MK extends Object, MV extends Object>()
     implements ValueCodec<Map<MK, MV>> {
-  /// Trips development asserts for an [MK] that might not compare equal after a restart, or an [MV]
-  /// that won't read back typed.
-  this
-    : assert(
-        isRestartSafeType<MK>(),
-        'A map keyed by $MK may find nothing after a restart, which hands back fresh keys. Key '
-        'it by a String, num, bool, enum, DateTime or Duration instead, like an id.',
-      ) {
+  /// Trips a development assert for an [MV] that won't read back typed.
+  this {
     assertRestorableElementType<MV>();
   }
 
@@ -30,6 +24,12 @@ final class MapCastValueCodec<MK extends Object, MV extends Object>()
 
   @override
   Object toStorable(Map<MK, MV> value) {
+    assert(
+      value.keys.every(isRestartSafeValue),
+      '${value.keys.firstWhere((key) => !isRestartSafeValue(key)).runtimeType} keys compare by '
+      'identity, so after a restart a lookup never finds them. Key the map by something with its '
+      'own ==, like an id.',
+    );
     _intCheck?.call(value);
 
     return value;
