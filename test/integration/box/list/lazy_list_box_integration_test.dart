@@ -15,7 +15,11 @@ import '../../../support/support.dart';
 void main() {
   final tempHive = useTempHive('hbm_lazy_list_box_');
 
-  setUpAll(() => Hive.registerAdapter(const PersonAdapter()));
+  setUpAll(
+    () => Hive
+      ..registerAdapter(const PersonAdapter())
+      ..registerAdapter(const MemberAdapter()),
+  );
 
   feature('LazyListBox against real hive', () {
     scenario('custom-type lists reify typed across close + a new instance', () async {
@@ -74,6 +78,17 @@ void main() {
 
       check(await facade.update(1, (values) => [...values, 'c']).run()).deepEquals(['b', 'a', 'c']);
       await check(facade.update(9, (values) => values).run()).throws<ArgumentError>();
+    });
+
+    scenario('with idOf, remove takes out the written object and one just read', () async {
+      final members = LazyListBox<Member, int>('members', idOf: (member) => member.id);
+      final ada = Member(1, 'ada');
+      await members.put(1, [ada, Member(2, 'bob'), Member(3, 'cy')]).run();
+
+      await members.remove(1, ada).run();
+      await members.remove(1, (await members.getOr(1).run()).first).run();
+
+      check((await members.getOr(1).run()).names).deepEquals(['cy']);
     });
 
     scenario('writes carry Some of the view, deletes carry None', () async {

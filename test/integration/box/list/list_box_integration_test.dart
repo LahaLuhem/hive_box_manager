@@ -14,7 +14,11 @@ import '../../../support/support.dart';
 void main() {
   final tempHive = useTempHive('hbm_list_box_');
 
-  setUpAll(() => Hive.registerAdapter(const PersonAdapter()));
+  setUpAll(
+    () => Hive
+      ..registerAdapter(const PersonAdapter())
+      ..registerAdapter(const MemberAdapter()),
+  );
 
   feature('ListBox disk truth against real hive (the issue-#150 path)', () {
     scenario('custom-type lists reify typed across close + reopen', () async {
@@ -96,6 +100,18 @@ void main() {
 
       await facade.remove(9, 'a').run();
       check(facade.get(9).isNone()).isTrue();
+    });
+
+    scenario('with idOf, remove takes out a copy rebuilt after a reopen', () async {
+      int idOf(Member member) => member.id;
+      var members = await ListBox.open<Member, int>('members', idOf: idOf).run();
+      await members.put(1, [Member(1, 'ada'), Member(2, 'bob')]).run();
+      await members.close().run();
+      members = await ListBox.open<Member, int>('members', idOf: idOf).run();
+
+      await members.remove(1, Member(1, 'ada')).run();
+
+      check(members.getOr(1).names).deepEquals(['bob']);
     });
 
     scenario('update seeds, rewrites, and mirrors Map.update on absence', () async {

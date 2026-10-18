@@ -160,6 +160,16 @@ void main() {
       check(await facade.getOr(1).run()).deepEquals(['a']);
     });
 
+    scenario(
+      'without idOf, removing an element that compares by identity fails the assert',
+      () async {
+        final members = lazyListBoxAround<Member, int>('tags', () async => box);
+        await members.put(1, [Member(1, 'a')]).run();
+
+        await check(members.remove(1, Member(1, 'a')).run()).throws<AssertionError>();
+      },
+    );
+
     scenario('putAllGrouped collects a flat iterable into one list per extracted key', () async {
       await facade.putAllGrouped(['bb', 'a', 'dd', 'c'], keyOf: (value) => value.length).run();
 

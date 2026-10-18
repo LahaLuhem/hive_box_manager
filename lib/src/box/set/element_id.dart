@@ -3,7 +3,7 @@ import 'package:meta/meta.dart';
 
 import '/src/core/restart_safe.dart';
 
-/// What a set box tells [T] elements apart by: [idOf], or the element itself.
+/// What a set or list box tells [T] elements apart by: [idOf], or the element itself.
 @internal
 Object Function(T element) resolveIdOf<T extends Object>(Object Function(T element)? idOf) {
   if (idOf == null) {
