@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Render the benchmark charts (PNG) from the committed JSONL results.
 
-seaborn (whitegrid theme) over matplotlib, fed polars frames via seaborn's dataframe
-interchange support (0.13+), matching the sibling packages' chart house style; run under uv
-(see benchmark/README.md). Reads ``../results/*.jsonl``, filters to the ``facade`` impl, takes
-per-config medians, and writes ``../reports/*.png``.
+seaborn (whitegrid theme) over matplotlib, with the data in polars, matching the sibling
+packages' chart house style. Run under uv (see benchmark/README.md). Reads
+``../results/*.jsonl``, filters to the ``facade`` impl, takes per-config medians, and writes
+``../reports/*.png``.
 
 Maintainer tooling; not shipped (``benchmark/`` is excluded from the pub.dev
 tarball, so none of this reaches downstream users).
@@ -116,7 +116,8 @@ def render(series_map, *, order, title, xlabel, ylabel, out_name, log_y=False, a
     fig, ax = plt.subplots(figsize=FIG_SIZE)
 
     sns.lineplot(
-        data=frame,
+        # polars 2 dropped the interchange protocol seaborn reads frames through.
+        data=frame.to_pandas(),
         x="n",
         y="value",
         hue="series",

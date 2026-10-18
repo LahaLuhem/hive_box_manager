@@ -82,14 +82,14 @@ Neither is a performance problem, and quoting either percentage would be a lie b
 percentage is a fact about the denominator.
 
 The list-box lane has the same hazard from the other direction: on `List<String>` its `get` ratio
-falls from 2.6x at one element per key to 0.97x at a thousand, which looks like the wrapper getting
-cheaper at scale. It isn't. A **~290 ns fixed term per get** just stops dominating. What each element
+falls from 2.8x at one element per key to 0.94x at a thousand, which looks like the wrapper getting
+cheaper at scale. It isn't. A **~265 ns fixed term per get** just stops dominating. What each element
 adds over `correct` depends on its type:
 
 | Element type | Per element | Why |
 |---|---|---|
 | `List<String>` | nothing, less than `correct` | hive reads it back typed, so it goes out without a cast |
-| `List<Person>` | ~8 ns at 100 per key, ~13 at 1000 | it comes back `List<dynamic>`, so each element gets checked once at the read |
+| `List<Person>` | ~10 ns at 100 per key, ~13 at 1000 | it comes back `List<dynamic>`, so each element gets checked once at the read |
 
 The second isn't linear in length, so quote it per length. Never quote the ratio at one length.
 
@@ -376,13 +376,11 @@ Raw JSONL backing the top-level README's performance tables and codec-crossover 
 | `results_list_box.jsonl` | list-box lane, AOT: 3 impls x 2 element types x list length |
 | `results_key_shape.jsonl` | key-shape lane, AOT: which type shape costs what, with its controls |
 
-Environment for all of them: macOS 15.7.8 on Apple Silicon (arm64), Dart 3.13.1, hive_ce 2.19.3,
-2026-08-21, all 6 re-run in one session. Values were a constant 1 byte by design, isolating key
-cost. Web performance is unmeasured (ordering assumed to follow the VM).
-
-`results_list_box.jsonl` is the exception: re-run on 2026-10-04 with macOS 15.7.9, Dart 3.13.5 and
-hive_ce 2.20.1, after reads started checking elements, at load 3.7 rising to 10.9. A second pass at
-load 12 to 17 agreed on every claim above.
+Environment for all of them: macOS 15.7.9 on Apple Silicon (arm64), Dart 3.13.5, hive_ce 2.22.0. The
+matrix, 1M, key-shape and list-box lanes were re-run in one session on 2026-10-18, at load 2.6,
+rising to 11.5 by the end of the AOT matrix and settling at 3.4 to 5.3 after. Values were a constant
+1 byte by design, isolating key cost. Web performance is unmeasured (ordering assumed to follow the
+VM).
 
 `results_overhead.jsonl` is the second of 2 passes taken on 2026-10-17 with macOS 15.7.9, Dart
 3.13.5 and hive_ce 2.22.0, after writes started checking ints, at load 3.9 falling to 3.3. Its typed
@@ -418,10 +416,9 @@ GitHub URL, so they render on pub.dev without shipping in the tarball (`benchmar
 `.pubignore`d): codec get + keystore-RSS scaling (packed vs String), and open time + per-read
 latency (eager vs lazy). The fifth, `key_shape_attribution.png`, comes from
 [`python/key_shape.py`](python/key_shape.py) and is referenced the same way, from the top-level
-README's composite-key note. Built with seaborn
-over matplotlib, data in polars (seaborn reads polars frames directly via the dataframe
-interchange protocol), matching the sibling packages' chart style. Colours are the Okabe-Ito
-CVD-safe pair, with line style and marker as a second cue so identity never rests on colour alone.
+README's composite-key note. Built with seaborn over matplotlib, data in polars, matching the
+sibling packages' chart style. Colours are the Okabe-Ito CVD-safe pair, with line style and marker
+as a second cue so identity never rests on colour alone.
 
 The Python lives in [`python/`](python/) as a [`uv`](https://docs.astral.sh/uv/) project
 (`pyproject.toml` + committed `uv.lock` + `.python-version`), so nothing installs onto your machine
