@@ -21,7 +21,7 @@ final class MapCastValueCodec<MK extends Object, MV extends Object>()
     : assert(
         isRestartSafeType<MK>(),
         'A map keyed by $MK may find nothing after a restart, which hands back fresh keys. Key '
-        'it by a String, num, bool or enum instead, like an id.',
+        'it by a String, num, bool, enum, DateTime or Duration instead, like an id.',
       ) {
     assertRestorableElementType<MV>();
   }

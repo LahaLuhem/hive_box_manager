@@ -19,9 +19,11 @@ import 'map_edits.dart';
 
 /// An **eager** box holding a `Map` of [MK] to [MV] per [K] key.
 ///
-/// The inner keys have to be a `String`, `num`, `bool` or enum, the types sure to still match after
-/// a restart hands back fresh objects. Key by an id otherwise. A write holding an int hive can't store
-/// exactly (some past 2^53) fails at the call, or when it runs for [update] and [addAll].
+/// The inner keys have to be a `String`, `num`, `bool`, enum, `DateTime` or `Duration`, the types that
+/// still match after a restart hands back fresh objects. Key by an id otherwise.
+///
+/// A write holding an int hive can't store exactly (some past 2^53) fails at the call, or when it runs
+/// for [update] and [addAll].
 ///
 /// Writes are copied and reads can't be changed. Everything else works like [ListBox].
 ///

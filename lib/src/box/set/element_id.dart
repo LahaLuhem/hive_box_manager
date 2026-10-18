@@ -9,8 +9,8 @@ Object Function(T element) resolveIdOf<T extends Object>(Object Function(T eleme
   if (idOf == null) {
     assert(
       isRestartSafeType<T>(),
-      'No idOf for a set of $T. A restart hands back fresh objects, so only String, num, bool and '
-      'enum elements can be told apart without one. Pass idOf:.',
+      'No idOf for a set of $T. A restart hands back fresh objects, so only String, num, bool, '
+      'enum, DateTime and Duration elements can be told apart without one. Pass idOf:.',
     );
 
     return (element) => element;
@@ -20,7 +20,7 @@ Object Function(T element) resolveIdOf<T extends Object>(Object Function(T eleme
     final id = idOf(element);
     assert(
       isRestartSafeValue(id),
-      'idOf returned a ${id.runtimeType}. Return a String, num, bool or enum.',
+      'idOf returned a ${id.runtimeType}. Return a String, num, bool, enum, DateTime or Duration.',
     );
 
     return id;
