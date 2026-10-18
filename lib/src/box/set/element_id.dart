@@ -3,24 +3,27 @@ import 'package:meta/meta.dart';
 
 import '/src/core/restart_safe.dart';
 
-/// What a set box tells [T] elements apart by: [idOf], or the element itself for value types.
+/// What a set box tells [T] elements apart by: [idOf], or the element itself.
 @internal
 Object Function(T element) resolveIdOf<T extends Object>(Object Function(T element)? idOf) {
   if (idOf == null) {
-    assert(
-      isRestartSafeType<T>(),
-      'No idOf for a set of $T. A restart hands back fresh objects, so only String, num, bool, '
-      'enum, DateTime and Duration elements can be told apart without one. Pass idOf:.',
-    );
+    return (element) {
+      assert(
+        isRestartSafeValue(element),
+        '${element.runtimeType} compares by identity, so the copies a restart hands back never '
+        'match it. Pass idOf:, or give it its own == and hashCode.',
+      );
 
-    return (element) => element;
+      return element;
+    };
   }
 
   return (element) {
     final id = idOf(element);
     assert(
       isRestartSafeValue(id),
-      'idOf returned a ${id.runtimeType}. Return a String, num, bool, enum, DateTime or Duration.',
+      'idOf returned a ${id.runtimeType}, which compares by identity. Return something with its own '
+      '==, like a String or a record.',
     );
 
     return id;

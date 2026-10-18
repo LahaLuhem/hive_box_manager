@@ -18,8 +18,9 @@ import 'element_id.dart';
 
 /// An **eager** box holding a `Set` of [T] per [K] key.
 ///
-/// A restart hands back fresh objects, so pass `idOf` to say what makes 2 elements the same. Strings,
-/// numbers, bools, enums, `DateTime` and `Duration` can skip it. Writes keep one element per id.
+/// A restart hands back fresh objects, so elements that compare by identity need an `idOf` to say what
+/// makes 2 the same. Ones that compare by value, like strings or a class with its own `==`, don't.
+/// Writes keep one element per id.
 ///
 /// Writes are copied and reads can't be changed. Everything else works like [ListBox].
 ///
@@ -175,8 +176,9 @@ interface class SetBox<T extends Object, K extends Object>._({
 
   /// Opens the box named [name] when run. The adapter you register is for the **element** type [T].
   ///
-  /// Leaving out [codec] or [idOf] where the type needs one trips an assert. The hive options go
-  /// straight through, and [observer] hears everything from the open on.
+  /// Leaving out [codec] where the key type needs one trips an assert here, and leaving out a needed
+  /// [idOf] trips one at the first write. The hive options go straight through, and [observer] hears
+  /// everything from the open on.
   static Task<SetBox<T, K>> open<T extends Object, K extends Object>(
     String name, {
     KeyCodec<K>? codec,

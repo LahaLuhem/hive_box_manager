@@ -30,7 +30,8 @@ interface class LazySetBox<T extends Object, K extends Object>._({
   required final Object Function(T element) _idOf,
 }) {
   /// Wires up a box that opens on first use, so `Hive.init` and your adapters only need to be ready
-  /// by the first effect. Leaving out [codec] or [idOf] where the type needs one trips an assert.
+  /// by the first effect. Leaving out [codec] where the key type needs one trips an assert here, and
+  /// leaving out a needed [idOf] trips one at the first write.
   new(
     String name, {
     KeyCodec<K>? codec,
