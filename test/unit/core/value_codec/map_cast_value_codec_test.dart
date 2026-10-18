@@ -81,18 +81,15 @@ void main() {
         'num': MapCastValueCodec<num, int>.new,
         'bool': MapCastValueCodec<bool, int>.new,
         'an enum': MapCastValueCodec<Colour, int>.new,
+        'DateTime': MapCastValueCodec<DateTime, int>.new,
+        'Duration': MapCastValueCodec<Duration, int>.new,
       },
       outline: (wire) => check(wire).returnsNormally(),
     );
 
-    scenarioOutline<Object Function()>(
-      'any other key type fails the wiring assert',
-      examples: {
-        'a custom type': MapCastValueCodec<Member, int>.new,
-        'DateTime, which loses its microseconds': MapCastValueCodec<DateTime, int>.new,
-      },
-      outline: (wire) => check(wire).throws<AssertionError>(),
-    );
+    scenario('any other key type fails the wiring assert', () {
+      check(MapCastValueCodec<Member, int>.new).throws<AssertionError>();
+    });
 
     scenario('a value type hive hands back untyped fails the wiring assert', () {
       check(MapCastValueCodec<String, List<Person>>.new).throws<AssertionError>();

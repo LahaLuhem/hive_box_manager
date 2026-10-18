@@ -34,8 +34,6 @@ void main() {
     return await openPeople();
   }
 
-  /// Stores one entry under [entryKey], reopens, and looks it up again the way an app would after a
-  /// restart.
   Future<String?> lookUpAfterReopen<MK extends Object>(MK entryKey) async {
     final box = await MapBox.open<MK, String, int>('by_key_type').run();
     await box.put(1, {entryKey: 'found'}).run();
@@ -65,6 +63,8 @@ void main() {
         'double': () => lookUpAfterReopen(1.5),
         'bool': () => lookUpAfterReopen(true),
         'an enum': () => lookUpAfterReopen(Colour.red),
+        'DateTime': () => lookUpAfterReopen(DateTime.utc(2026, 10, 3, 12, 0, 0, 0, 1)),
+        'Duration': () => lookUpAfterReopen(const Duration(milliseconds: 1500, microseconds: 7)),
       },
       outline: (lookUp) async => check(await lookUp()).equals('found'),
     );

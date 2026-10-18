@@ -24,6 +24,17 @@ void main() {
     return await openMembers();
   }
 
+  Future<Set<E>> addAgainAfterReopen<E extends Object>(E element) async {
+    final box = await SetBox.open<E, int>('by_element_type').run();
+    await box.put(1, [element]).run();
+    await box.close().run();
+
+    final reopened = await SetBox.open<E, int>('by_element_type').run();
+    await reopened.add(1, element).run();
+
+    return reopened.getOr(1);
+  }
+
   feature('SetBox against real hive', () {
     scenario('a set of a custom type reads back typed after a reopen', () async {
       final box = await openMembers();
@@ -45,6 +56,16 @@ void main() {
       check(box.getOr(1)).isA<Set<String>>();
       check(box.getOr(1).toList()).deepEquals(['b', 'a']);
     });
+
+    scenarioOutline<Future<Set<Object>> Function()>(
+      'a DateTime or Duration element needs no idOf, and a reopen still matches it',
+      examples: {
+        'DateTime': () => addAgainAfterReopen<DateTime>(DateTime.utc(2026, 10, 3, 12, 0, 0, 0, 1)),
+        'Duration': () =>
+            addAgainAfterReopen<Duration>(const Duration(milliseconds: 1500, microseconds: 7)),
+      },
+      outline: (addAgain) async => check(await addAgain()).length.equals(1),
+    );
 
     scenario('re-adding a stored id after a reopen keeps the stored element', () async {
       final box = await openMembers();

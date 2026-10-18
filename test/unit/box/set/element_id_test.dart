@@ -38,6 +38,8 @@ void main() {
         'num': () => _identifiedByItself<num>(1),
         'bool': () => _identifiedByItself(true),
         'enum': () => _identifiedByItself(Colour.red),
+        'DateTime': () => _identifiedByItself(DateTime.utc(2026, 10, 3, 12, 0, 0, 0, 1)),
+        'Duration': () => _identifiedByItself(const Duration(microseconds: 7)),
       },
       outline: (resolve) {
         final (sample, id) = resolve();
@@ -64,6 +66,8 @@ void main() {
         'int': (thing) => thing.id.length,
         'bool': (thing) => thing.id.isEmpty,
         'enum': (thing) => Colour.red,
+        'DateTime': (thing) => DateTime.utc(2026, 10, 3, 12, 0, 0, 0, 1),
+        'Duration': (thing) => Duration(microseconds: thing.id.length),
       },
       outline: (idOf) {
         final thing = _Thing('a');
