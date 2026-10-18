@@ -36,21 +36,28 @@ const _rangeMillis = 8796093022208;
 const _rangeMicros = _rangeMillis * 1000;
 
 Future<Map<String, bool>> _unchangedIn(Object sample) async {
+  final stored = {for (final MapEntry(:key, :value) in _positions.entries) key: value.wrap(sample)};
+
   final boxName = uniqueBoxName('times');
   final box = await Hive.openBox<Object>(boxName);
-  await box.putAll({
-    for (final MapEntry(:key, :value) in _positions.entries) key: value.wrap(sample),
-  });
+  await box.putAll(stored);
   await box.close();
-
   final reopened = await Hive.openBox<Object>(boxName);
-  final unchangedIn = {
-    for (final MapEntry(:key, :value) in _positions.entries)
-      key: value.unwrap(reopened.get(key)!) == sample,
-  };
+  final afterReopen = {for (final key in stored.keys) key: reopened.get(key)};
   await reopened.deleteFromDisk();
 
-  return unchangedIn;
+  // A lazy box has no cache, so its first read already comes from disk.
+  final lazyBox = await Hive.openLazyBox<Object>(uniqueBoxName('lazy_times'));
+  await lazyBox.putAll(stored);
+  final readLazily = {for (final key in stored.keys) key: await lazyBox.get(key)};
+  await lazyBox.deleteFromDisk();
+
+  return {
+    for (final MapEntry(:key, :value) in _positions.entries) ...{
+      '$key, after a reopen': value.unwrap(afterReopen[key]!) == sample,
+      '$key, read lazily': value.unwrap(readLazily[key]!) == sample,
+    },
+  };
 }
 
 /// One per way a box holds a time.

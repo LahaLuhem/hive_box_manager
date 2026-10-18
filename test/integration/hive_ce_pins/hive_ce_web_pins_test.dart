@@ -95,7 +95,7 @@ void main() {
     );
   });
 
-  feature('DateTime and Duration after a reopen', () {
+  feature('DateTime and Duration read back from disk', () {
     scenarioOutline<Future<Map<String, bool>> Function()>(
       'hive keeps microseconds inside the range, and whole milliseconds anywhere',
       examples: keptTimes,
