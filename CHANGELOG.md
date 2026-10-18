@@ -1,9 +1,12 @@
 ## [Unreleased]
+### Added
+- \[#42\] Lists remove by idOf, value types need none
+
 ### Fixed
-- \[#38\] Concurrent lazy writes to a box no longer lose each other
-- \[#44\] Collection values in KeyedBox, SingleValueBox and DualKeyBox throw once read from disk
 - \[#38\] Refuse ints hive would change
-- Exact times are restart-safe
+- \[#39\] Concurrent lazy writes to one box no longer lose each other
+- \[#40\] Exact times are restart-safe
+- \[#44\] Refuse value types hive can't restore
 
 ## [1.2.0] - 2026-10-06
 ### Added
