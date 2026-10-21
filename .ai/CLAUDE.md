@@ -1,18 +1,17 @@
 # CLAUDE.md for `hive_box_manager`
 
 Claude-Code-specific guidance. Project facts, stack, hard rules, and AI-agent guidelines live in
-[AGENTS.md](./AGENTS.md), the full code-style guide in [`./CODESTYLE.md`](./CODESTYLE.md), and
-design rationale in [`./APPENDIX.md`](./APPENDIX.md). Read AGENTS.md and CODESTYLE.md first.
+[AGENTS.md](./AGENTS.md), the full code-style guide in [`../CODESTYLE.md`](../CODESTYLE.md), and
+design rationale in [`../APPENDIX.md`](../APPENDIX.md). Read AGENTS.md and CODESTYLE.md first.
 
 ## Role & context
 
 You're assisting with **hive_box_manager**: a pure-Dart, fpdart-style developer-experience wrapper
 over `hive_ce` that gives Hive's boxes a typed functional surface (`Task` / `TaskOption` / `Option`,
-no nulls), ready-made CRUD, and purpose-built box variants. It is being rewritten from scratch for
-a breaking `1.0`, so expect greenfield work under settled conventions rather than incremental
-patches. Treat the user as technical and direct. The package is on pub.dev, so changes are visible
-to every downstream user. Breakage is expensive and slow to walk back (unpublished versions stay
-reserved for 7 days).
+no nulls), ready-made CRUD, and purpose-built box variants. Treat the user as technical and
+direct. The package is on pub.dev, so changes are visible
+to every downstream user. Breakage is expensive and slow to walk back (pub.dev never unpublishes a
+version, it only lets you retract one within 7 days of publishing).
 
 ## Communication
 
@@ -85,7 +84,7 @@ pipeline-owned (see *Forbidden* below). Don't plan or make a CHANGELOG edit or a
 
 - **Never commit without being asked.** Not after a fix, not as a "checkpoint". Leave changes in
   the working tree, suggest a message, and let the user land it.
-- **Never push without being asked.** Especially not to `main`.
+- **Never push without being asked.** Especially not to `master`.
 - **Never `--amend`** unless asked. Create a new commit instead.
 - **Never `--no-verify`**, **never `git add -A`**. Stage named paths.
 - When asked for a commit: show `git status` + `git diff`, draft the message, wait for approval.
@@ -93,10 +92,10 @@ pipeline-owned (see *Forbidden* below). Don't plan or make a CHANGELOG edit or a
 
 ## Forbidden / confirm-first actions
 
-- **Never** `dart pub publish`. Publishing is effectively one-way (pub.dev reserves the version for
-  7 days after retraction). Releases go through the **Release** workflow, which the user starts
-  from the Actions tab (it pushes to `master` and triggers publish). If the user wants a release,
-  point them at it, but don't start it.
+- **Never** `dart pub publish`. Publishing is one-way (pub.dev never unpublishes a version, and
+  only lets you retract one within 7 days). Releases go through the **Release** workflow, which
+  the user starts from the Actions tab (it pushes to `master` and triggers publish). If the user
+  wants a release, point them at it, but don't start it.
 - **Never** run `cider` commands or manually edit `CHANGELOG.md` (including `## Unreleased`) or the
   `version:` field. Those are owned by the release run and the changelog automation. Manual
   edits get reordered or overwritten. The `cider:` block in `pubspec.yaml` is static config,
@@ -111,11 +110,11 @@ pipeline-owned (see *Forbidden* below). Don't plan or make a CHANGELOG edit or a
   [dartender's `ci.yml`](https://github.com/LahaLuhem/dartender/blob/main/.github/workflows/ci.yml),
   run with this repo's inputs from [`ci.yml`](../.github/workflows/ci.yml). So does this repo's
   own [`browser.yml`](../.github/workflows/browser.yml).
-- New / changed Managers honour the [Manager contract](./CODESTYLE.md#manager-contract): the
+- New / changed Managers honour the [Manager contract](../CODESTYLE.md#manager-contract): the
   functional surface (`Task` / `TaskOption` / `Option`), no null, `Option` for genuine absence, and
   documented eager-vs-lazy semantics.
 - DCM rules applied by hand, since `dart analyze` doesn't run them:
-  [`CODESTYLE.md#dcm-rules`](./CODESTYLE.md#dcm-rules).
+  [`CODESTYLE.md#dcm-rules`](../CODESTYLE.md#dcm-rules).
 - `dart pub publish --dry-run` clean if the change is publish-relevant, apart from its warning about
   uncommitted files, which fails it until you commit. Do not bump the version or edit the
   CHANGELOG to make it pass, since the release run owns those.

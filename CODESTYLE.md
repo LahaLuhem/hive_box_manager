@@ -397,7 +397,7 @@ Diagnostics follow the maintainer's cross-package observer convention (reference
 Legitimate uses: sealed-class cases across files (Dart requires the same library for sealed
 subtypes) and code-generation outputs. Avoid it for general organisation. Imports are explicit, and
 parts leak `_private` symbols across files. (The pre-1.0 code leaned on `part` to share a base across
-the dual-index managers. Whether the redo keeps that is a design-pass call, not a default.)
+the dual-index managers. The 1.0 code dropped that.)
 
 <a id="idioms-dot-shorthands"></a>
 ### Static dot shorthands where the context type is known

@@ -301,7 +301,7 @@ benchmark/overhead_driver.sh /tmp/hbm_overhead benchmark/results/results_overhea
 Then derive the percentages the top-level README quotes, rather than hand-computing them:
 
 ```sh
-uv run --project benchmark/python python overhead.py
+uv run --directory benchmark/python python overhead.py
 ```
 
 It prints both medians per lane, the per-op delta, and flags anything at or over the 5% target.
@@ -311,7 +311,7 @@ It prints both medians per lane, the per-op delta, and flags anything at or over
 ```sh
 dart compile exe benchmark/list_box_bench.dart -o /tmp/hbm_list_box
 benchmark/list_box_driver.sh /tmp/hbm_list_box benchmark/results/results_list_box.jsonl 5
-uv run --project benchmark/python python list_box.py
+uv run --directory benchmark/python python list_box.py
 ```
 
 ## Running the key-shape lane
@@ -319,7 +319,7 @@ uv run --project benchmark/python python list_box.py
 ```sh
 dart compile exe benchmark/key_shape_bench.dart -o /tmp/hbm_key_shape
 benchmark/key_shape_driver.sh /tmp/hbm_key_shape benchmark/results/results_key_shape.jsonl 7
-uv run --project benchmark/python python key_shape.py   # every claim must print HOLDS
+uv run --directory benchmark/python python key_shape.py   # every claim must print HOLDS
 ```
 
 The reader prints the table, checks each claim, and writes
@@ -392,7 +392,7 @@ with:
 ```sh
 dart compile exe benchmark/overhead_bench.dart -o /tmp/hbm_overhead
 benchmark/overhead_driver.sh /tmp/hbm_overhead benchmark/results/results_overhead.jsonl 9
-uv run --project benchmark/python python overhead.py   # must not print CONTAMINATED
+uv run --directory benchmark/python python overhead.py   # must not print CONTAMINATED
 ```
 
 This lane also carries `putallby`, which does **not** go through the wrapper-overhead machinery: its
@@ -426,8 +426,8 @@ globally. Regenerate whenever the results change:
 
 ```sh
 uv sync --project benchmark/python                    # create .venv, install the pinned stack
-uv run --project benchmark/python python plot.py      # rewrite reports/*.png
-uv run --project benchmark/python python overhead.py  # print the overhead table
+uv run --directory benchmark/python python plot.py      # rewrite reports/*.png
+uv run --directory benchmark/python python overhead.py  # print the overhead table
 ```
 
 [`overhead.py`](python/overhead.py) prints rather than plots (3 lanes make a table, not a

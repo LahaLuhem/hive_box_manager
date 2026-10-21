@@ -39,7 +39,7 @@ CODESTYLE.md
 
 # Example platform scaffolding. pub.dev's "Example" tab renders only example/lib/,
 # example/pubspec.yaml, and example/README.md. The Flutter platform dirs are bloat with
-# no pub.dev-side benefit. (The example app is rebuilt during the redo.)
+# no pub.dev-side benefit.
 example/android/
 example/ios/
 example/macos/

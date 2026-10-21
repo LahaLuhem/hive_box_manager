@@ -3,7 +3,7 @@
   "public_key": "pk_zRQqaALefsVNkJ7uS6fVf",
   "projectTitle": "hive_box_manager",
   "description": "An fpdart-style developer-experience wrapper over hive_ce: gives Hive's Box/LazyBox a typed functional surface (Task/TaskOption/Option, no nulls), ready-made CRUD, and purpose-built box variants (single-value, collection, dual-index, reverse-query).",
-  "branch": "main",
+  "branch": "master",
   "folders": [],
   "excludeFolders": [
     ".git",
@@ -42,9 +42,8 @@
     ".pubignore"
   ],
   "rules": [
-    "hive_box_manager wraps hive_ce's Box/LazyBox behind typed Manager classes with an fpdart surface: reads return Task/TaskOption/Option and writes return Task<Unit>; there is no bare Future or null on the public API, and genuine absence is an Option.",
-    "The package is pure Dart (usable in Flutter, server, and CLI). hive_ce is the storage engine and fpdart is the paradigm; Flutter-specific adapters belong in companion packages, not core.",
-    "The package is being rewritten from scratch for a breaking 1.0. Concrete API rules (the Manager method set, the eager-vs-lazy split, the box variants and their key handling) will be finalised as the redo lands."
+    "hive_box_manager wraps hive_ce's Box/LazyBox behind typed Manager classes with an fpdart surface: reads return Task/TaskOption/Option and writes return Task<Unit>. There is no bare Future or null on the public API, and genuine absence is an Option.",
+    "The package is pure Dart (usable in Flutter, server, and CLI). hive_ce is the storage engine and fpdart is the paradigm. Flutter-specific adapters belong in companion packages, not core."
   ],
   "previousVersions": []
 }
