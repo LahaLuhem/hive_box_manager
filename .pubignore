@@ -9,7 +9,6 @@ test/
 # Local-dev config. Consumer machines have their own.
 .fvmrc
 analysis_options.yaml
-dart_dependency_validator.yaml
 
 # Build / coverage / IDE artefacts.
 build/

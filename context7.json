@@ -36,7 +36,6 @@
     "CHANGELOG.md",
     "LICENSE",
     "analysis_options.yaml",
-    "dart_dependency_validator.yaml",
     "pubspec.lock",
     ".metadata",
     ".pubignore"
