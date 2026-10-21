@@ -107,17 +107,17 @@ pipeline-owned (see *Forbidden* below). Don't plan or make a CHANGELOG edit or a
 
 ## Definition of done
 
-- `dart --no-version-check analyze --fatal-infos --fatal-warnings .` clean (pedantic mode).
-- `dart format --output=none --set-exit-if-changed .` clean.
-- `dart test` green.
+- Every check `ci / ok` waits on passes on your tree: the `needs:` of the `ok` job in
+  [dartender's `ci.yml`](https://github.com/LahaLuhem/dartender/blob/main/.github/workflows/ci.yml),
+  run with this repo's inputs from [`ci.yml`](../.github/workflows/ci.yml). So does this repo's
+  own [`browser.yml`](../.github/workflows/browser.yml).
 - New / changed Managers honour the [Manager contract](./CODESTYLE.md#manager-contract): the
   functional surface (`Task` / `TaskOption` / `Option`), no null, `Option` for genuine absence, and
   documented eager-vs-lazy semantics.
 - DCM rules applied by hand, since `dart analyze` doesn't run them:
   [`CODESTYLE.md#dcm-rules`](./CODESTYLE.md#dcm-rules).
-- Lint clean via the linterpol image for whatever changed. `.github/lint-checks.json` lists the
-  checks, and per-tool config lives in `.rumdl.toml` and `.yamllint.yaml`.
-- `dart pub publish --dry-run` clean if the change is publish-relevant. Do not bump the version or
-  edit the CHANGELOG to make it pass, since the release run owns those.
+- `dart pub publish --dry-run` clean if the change is publish-relevant, apart from its warning about
+  uncommitted files, which fails it until you commit. Do not bump the version or edit the
+  CHANGELOG to make it pass, since the release run owns those.
 - Public API additions carry `///` dartdoc and are reflected in the README.
 - Explicitly call out what you did NOT verify.
