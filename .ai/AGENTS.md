@@ -29,13 +29,14 @@ engine, and `fpdart` is the paradigm. Rationale:
 - **Dart, floored by the `sdk:` constraint in `pubspec.yaml`** (SDK channel pinned in `.fvmrc`).
   One floor for consumers and contributors alike. Rationale and history:
   [`APPENDIX.md#sdk-floor`](./APPENDIX.md#sdk-floor).
-- **`dart test`** for tests, **`dart --no-version-check analyze .`** for pedantic static analysis
-  (pedantic mode is intentional). No Flutter dependency in the package, no platform channels. The
-  `example/` app is Flutter and carries its own pubspec, which dartender's CI checks too.
+- **`dart test`** for tests, **`dart --no-version-check analyze --fatal-infos --fatal-warnings .`**
+  for pedantic static analysis, as CI runs it (pedantic mode is intentional). No Flutter
+  dependency in the package, no platform channels. The `example/` app is Flutter and carries its
+  own pubspec, which dartender's CI checks too.
 - **`dependency_validator`** guards the dependency set. `dart_dependency_validator.yaml` scopes it
   to the published surface and skips the example.
 - **Container-based linters** run from the [`linterpol`](https://github.com/LahaLuhem/linterpol)
-  Docker image, not local installs, so only Docker (plus `jq`) is needed. The check set and image
+  Docker image, not local installs, so only Docker is needed. The check set and image
   tag live in one manifest, [`.github/lint-checks.json`](./.github/lint-checks.json), which
   dartender's `setup.sh` writes, and dartender's CI fans a matrix over it. **A linter only this
   repo needs goes in a workflow of its own**, since the next setup run rewrites the manifest.
@@ -107,11 +108,11 @@ hold, and nothing internal can leak by accident.
    companion packages, never in core. See
    [`APPENDIX.md#packaging-core-and-companions`](./APPENDIX.md#packaging-core-and-companions).
 8. **Semver, strictly.** Any change to a public signature, a deletion, or a behavioural change of a
-   documented contract is breaking. `cider` enforces the version-bump discipline. (The `1.0`
-   rewrite is itself the one sanctioned wholesale break.) Breaking does not automatically mean a
-   major bump: the release run's `major` / `minor` / `patch` is its own deliberate call
-   at release time, decoupled from the `sem-*` label a PR carries (that label only routes the
-   CHANGELOG entry to a section, e.g. `sem-change` → `### Changed`). This repo keeps a breaking
+   documented contract is breaking. (The `1.0` rewrite is itself the one sanctioned wholesale
+   break.) Breaking does not automatically mean a major bump: the release run's `major` /
+   `minor` / `patch` is its own deliberate call at release time, decoupled from the `sem-*`
+   label a PR carries (that label only routes the CHANGELOG entry to a section, e.g.
+   `sem-change` → `### Changed`). This repo keeps a breaking
    change on the current major's minor line when the migration is mechanical (a rename, a plain
    find-and-replace), and reserves a major bump for a break that needs real restructuring. The
    `IterableBox` → `ListBox` rename is breaking and is planned to ship as `1.1.0`, not `2.0.0`,

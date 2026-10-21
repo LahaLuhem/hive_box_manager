@@ -3,7 +3,7 @@
 # The docs deliberately use a 100-column width (matching .editorconfig), inline
 # HTML (<details>/<summary> and <a id> anchors), and a README that leads with a
 # badge block, so the markdownlint defaults that fight those are relaxed here.
-# See AGENTS.md for how the lint set is wired into CI + the release preflight.
+# See AGENTS.md for how the lint set is wired into CI.
 
 [global]
 # CHANGELOG.md is bot-owned (cider + the release automation). The issue templates
