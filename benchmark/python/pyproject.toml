@@ -2,9 +2,9 @@
 # the committed benchmark/results/*.jsonl. Managed by uv (https://docs.astral.sh/uv/):
 #
 #     uv sync --project benchmark/python                 # create .venv, install the pinned stack
-#     uv run --project benchmark/python python plot.py   # regenerate the PNGs
-#     uv run --project benchmark/python ruff check .     # lint
-#     uv run --project benchmark/python ruff format .    # format
+#     uv run --directory benchmark/python python plot.py   # regenerate the PNGs
+#     uv run --directory benchmark/python ruff check .     # lint
+#     uv run --directory benchmark/python ruff format .    # format
 #
 # uv.lock is committed so the charts are reproducible. Maintainer-only: benchmark/
 # is excluded from the pub.dev tarball, so none of this reaches downstream users.

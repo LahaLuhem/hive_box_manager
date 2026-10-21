@@ -2,7 +2,7 @@
 
 Tool-agnostic brief for the runnable demo app under `example/`. Package (library) conventions live
 in the parent [`AGENTS.md`](../AGENTS.md), and example-specific code style in
-[`CODESTYLE.md`](CODESTYLE.md). Read both before working in this subdirectory.
+[`CODESTYLE.md`](../CODESTYLE.md). Read both before working in this subdirectory.
 
 ## Scope
 
@@ -19,13 +19,13 @@ in the parent [`AGENTS.md`](../AGENTS.md), and example-specific code style in
 Feature-first MVVM on the maintainer's standard example stack, mirroring the sibling examples
 (`list_smith`, `platform_adaptive_widgets`, `better_internet_connectivity_checker`):
 
-- **State**: `pmvvm` (`MVVM.builder` + `ViewModel`). See [`CODESTYLE.md`](CODESTYLE.md) for the
+- **State**: `pmvvm` (`MVVM.builder` + `ViewModel`). See [`CODESTYLE.md`](../CODESTYLE.md) for the
   reactivity rule (scoped `ValueNotifier` vs `notifyListeners`) and the view / view-model shape.
 - **Surfaces**: `platform_adaptive_widgets` (Material on Android, Cupertino on iOS), with
   `material_ui` / `cupertino_ui` for the design libraries and `platform_icons` for icons.
 - **Layout**: `lib/main.dart` (app shell: `Hive.initFlutter()` + `PlatformApp`) + `lib/features/`
   (one folder per demo, plus `features/core/` for shared pieces). Full layout in
-  [`CODESTYLE.md`](CODESTYLE.md).
+  [`CODESTYLE.md`](../CODESTYLE.md).
 
 **The demo hub**, one feature per box family, every screen docking the live `BoxObserver` event
 panel from `features/core/`:

@@ -21,14 +21,14 @@ functional surface. It adds no storage engine of its own. 4 aims:
 
 Pure Dart, so it works in Flutter apps, Dart servers, and CLIs alike. `hive_ce` is the storage
 engine, and `fpdart` is the paradigm. Rationale:
-[`APPENDIX.md#pure-dart-not-flutter`](./APPENDIX.md#pure-dart-not-flutter),
-[`APPENDIX.md#fpdart-surface`](./APPENDIX.md#fpdart-surface).
+[`APPENDIX.md#pure-dart-not-flutter`](../APPENDIX.md#pure-dart-not-flutter),
+[`APPENDIX.md#fpdart-surface`](../APPENDIX.md#fpdart-surface).
 
 ## Stack
 
 - **Dart, floored by the `sdk:` constraint in `pubspec.yaml`** (SDK channel pinned in `.fvmrc`).
   One floor for consumers and contributors alike. Rationale and history:
-  [`APPENDIX.md#sdk-floor`](./APPENDIX.md#sdk-floor).
+  [`APPENDIX.md#sdk-floor`](../APPENDIX.md#sdk-floor).
 - **`dart test`** for tests, **`dart --no-version-check analyze --fatal-infos --fatal-warnings .`**
   for pedantic static analysis, as CI runs it (pedantic mode is intentional). No Flutter
   dependency in the package, no platform channels. The `example/` app is Flutter and carries its
@@ -37,7 +37,7 @@ engine, and `fpdart` is the paradigm. Rationale:
   to the published surface and skips the example.
 - **Container-based linters** run from the [`linterpol`](https://github.com/LahaLuhem/linterpol)
   Docker image, not local installs, so only Docker is needed. The check set and image
-  tag live in one manifest, [`.github/lint-checks.json`](./.github/lint-checks.json), which
+  tag live in one manifest, [`.github/lint-checks.json`](../.github/lint-checks.json), which
   dartender's `setup.sh` writes, and dartender's CI fans a matrix over it. **A linter only this
   repo needs goes in a workflow of its own**, since the next setup run rewrites the manifest.
   Per-tool config tuned to the repo lives in `.rumdl.toml` and `.yamllint.yaml`.
@@ -90,14 +90,15 @@ hold, and nothing internal can leak by accident.
    same functional surface: reads return `Task` / `TaskOption` / `Option` (never a bare `Future` or
    `null`), writes return `Task<Unit>`, genuine absence is an `Option` (never a null or a magic
    sentinel), acquisition encodes openness, and `close` / `deleteFromDisk` are terminal. Full spec:
-   [`CODESTYLE.md#manager-contract`](./CODESTYLE.md#manager-contract).
+   [`CODESTYLE.md#manager-contract`](../CODESTYLE.md#manager-contract).
 2. **The public API lives only in `lib/hive_box_manager.dart`**, which re-exports from `lib/src/`.
    Don't make users import `package:hive_box_manager/src/…`. Shared internals stay in `lib/src/`.
 3. **No `null` in the public surface.** Absence is `Option` / `TaskOption`. Laziness is `Task` over
    an eager `Future`. This is aim #1, not a preference.
 4. **No `dynamic` escape hatches.** `strict-casts`, `strict-inference`, `strict-raw-types` are all
    on. This one carries scar tissue: the pre-1.0 collection box leaked `dynamic` through the class
-   hierarchy to dodge a Hive limitation, and removing exactly that is part of why the redo exists.
+   hierarchy to dodge a Hive limitation, and removing exactly that is part of why the 1.0 rewrite
+   happened.
    Never launder a type through `dynamic` or `as`.
 5. **No `print()` in library code.** `avoid_print` is a warning in the shared lints.
 6. **Public symbols carry `///` dartdoc** explaining the guarantee and the semantics (eager vs
@@ -106,7 +107,7 @@ hold, and nothing internal can leak by accident.
    paradigm) are the load-bearing core dependencies. Every other dependency is a promise to all
    downstream users. Flutter-specific adapters (a `ValueListenable` view, a widget binding) go in
    companion packages, never in core. See
-   [`APPENDIX.md#packaging-core-and-companions`](./APPENDIX.md#packaging-core-and-companions).
+   [`APPENDIX.md#packaging-core-and-companions`](../APPENDIX.md#packaging-core-and-companions).
 8. **Semver, strictly.** Any change to a public signature, a deletion, or a behavioural change of a
    documented contract is breaking. (The `1.0` rewrite is itself the one sanctioned wholesale
    break.) Breaking does not automatically mean a major bump: the release run's `major` /
@@ -115,22 +116,22 @@ hold, and nothing internal can leak by accident.
    `sem-change` → `### Changed`). This repo keeps a breaking
    change on the current major's minor line when the migration is mechanical (a rename, a plain
    find-and-replace), and reserves a major bump for a break that needs real restructuring. The
-   `IterableBox` → `ListBox` rename is breaking and is planned to ship as `1.1.0`, not `2.0.0`,
+   `IterableBox` → `ListBox` rename is breaking and shipped as `1.1.0`, not `2.0.0`,
    on exactly that reasoning.
 9. **`master` requires `ci / ok` and `conventions / ok`, from the `dartender` ruleset, and
    `Browser tests (dart2js + dart2wasm)`, from this repo's own `Protected` ruleset.** The last one
    is the browser job's `name:` in `.github/workflows/browser.yml`, and a required check that stops
    reporting blocks every PR, so rename it and `Protected` in the same pass:
-   [`APPENDIX.md#dependabot-automerge`](./APPENDIX.md#dependabot-automerge).
+   [`APPENDIX.md#dependabot-automerge`](../APPENDIX.md#dependabot-automerge).
 10. **`CHANGELOG.md` is bot-owned. Do not edit any section, including `## Unreleased`.** Release
    headers and Dependabot's lines are written by the release run, and the `## Unreleased`
-   lines by [`.github/workflows/changelog.yml`](./.github/workflows/changelog.yml), from the
+   lines by [`.github/workflows/changelog.yml`](../.github/workflows/changelog.yml), from the
    merged PR's title and `sem-*` label. Same prohibition on the `version:` field.
 
 ## PR conventions
 
 Enforced by dartender's `conventions.yml`, through
-[`.github/workflows/conventions.yml`](./.github/workflows/conventions.yml).
+[`.github/workflows/conventions.yml`](../.github/workflows/conventions.yml).
 
 - **Branch name**: `<type>/#<issue>-<slug>`, with `<type>` one of `feature`, `bugfix`, `chore`,
   `refactor`. Example: `feature/#12-lazy-auto-init`.
@@ -147,12 +148,12 @@ Enforced by dartender's `conventions.yml`, through
   | `sem-skip`      | (skip)       | Internal-only change (CI, docs, tests, …)      |
 
   The PR title becomes the changelog line verbatim, so phrase it as a release-note bullet.
-- **PR body must not be empty**, **no merge commits in the PR range** (rebase to integrate `main`),
+- **PR body must not be empty**, **no merge commits in the PR range** (rebase to integrate `master`),
   **commit subjects ≤ 82 characters**.
 
 ## Style
 
-Full guide: [`CODESTYLE.md`](./CODESTYLE.md). The lint posture is deliberately strict. Top rules to
+Full guide: [`CODESTYLE.md`](../CODESTYLE.md). The lint posture is deliberately strict. Top rules to
 keep in working memory:
 
 - Type-annotate every public symbol, make fields and locals `final` by default, and constrain
@@ -177,7 +178,7 @@ keep in working memory:
   go in `APPENDIX.md`, the README being the user-facing entry point.
 - **Read <https://noslopgrenade.com/> before writing any prose.** Docs, dartdoc, comments, benchmark
   headers, commit messages, PR bodies. Fetch the page, don't cite it from memory: it is the intent
-  behind [Prose & voice](./CODESTYLE.md#prose), and skipping it is how the wall of text gets
+  behind [Prose & voice](../CODESTYLE.md#prose), and skipping it is how the wall of text gets
   written.
 - **Read the shared lints before writing code.** The lint posture is far stricter than the
   Dart default, and code that fails lint won't pass review.

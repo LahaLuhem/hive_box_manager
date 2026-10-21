@@ -8,7 +8,7 @@ assignees: ''
 ---
 
 **Which Manager**
-e.g. `BoxManager`, `LazyBoxManager`, a single-index / collection / dual-index variant.
+e.g. `KeyedBox`, `LazyKeyedBox`, `SingleValueBox`, `ListBox`, `DualKeyBox`, or another variant.
 
 **What happened**
 A clear and concise description of the bug.
@@ -17,12 +17,11 @@ A clear and concise description of the bug.
 The Manager setup and the exact call, plus what you got back:
 
 ```dart
-final box = LazyBoxManager<String, int>(boxKey: 'demo', defaultValue: '<none>');
-await box.init();
-await box.put(index: 1, value: 'a').run();
+final box = LazyKeyedBox<String, int>('demo');
+await box.put(1, 'a').run();
 
 final result = await box.get(1).run();
-// expected: 'a'
+// expected: Some('a')
 // got: ...
 ```
 
@@ -30,7 +29,7 @@ final result = await box.get(1).run();
 What should the Manager have returned or stored?
 
 **Environment**
- - `hive_box_manager` version: [e.g. 0.1.0]
+ - `hive_box_manager` version: [from pubspec.lock]
  - `hive_ce` version: [from pubspec.lock]
  - Dart SDK: [`dart --version`]
  - Runtime: [Flutter / Dart server / CLI / web]
