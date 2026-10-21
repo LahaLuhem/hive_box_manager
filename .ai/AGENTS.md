@@ -33,8 +33,8 @@ engine, and `fpdart` is the paradigm. Rationale:
   for pedantic static analysis, as CI runs it (pedantic mode is intentional). No Flutter
   dependency in the package, no platform channels. The `example/` app is Flutter and carries its
   own pubspec, which dartender's CI checks too.
-- **`dependency_validator`** guards the dependency set. `dart_dependency_validator.yaml` scopes it
-  to the published surface and skips the example.
+- **`dependency_validator`** guards the dependency set. It skips `example/` by itself, since that's
+  a package of its own.
 - **Container-based linters** run from the [`linterpol`](https://github.com/LahaLuhem/linterpol)
   Docker image, not local installs, so only Docker is needed. The check set and image
   tag live in one manifest, [`.github/lint-checks.json`](../.github/lint-checks.json), which
@@ -68,7 +68,6 @@ hive_box_manager/
 ├── benchmark/                      Maintainer tooling: key-codec matrix + wrapper-overhead lane
 ├── example/                        Flutter demo app, with its own pubspec
 ├── analysis_options.yaml           Includes dartender's shared lints
-├── dart_dependency_validator.yaml  Scopes dependency_validator (excludes example/)
 ├── pubspec.yaml                    Deps + cider config + topics
 ├── .pubignore                      Files excluded from `pub publish`
 ├── .fvmrc / .editorconfig          Local SDK pin / text-file formatting
