@@ -20,7 +20,7 @@ final class ListBoxViewModel() extends ViewModel {
 
   late final Future<void> _opened;
 
-  static const listKeys = [1, 2, 3];
+  static const listKeys = {1, 2, 3};
 
   @override
   void init() {

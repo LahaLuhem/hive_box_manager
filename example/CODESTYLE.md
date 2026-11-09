@@ -142,8 +142,7 @@ the in-class placement). `init()` and `onUnmount()` bookend the members as the l
 ### Icons
 
 Prefer `platform_icons` (`PlatformIcon(PlatformIcons.x)`), and reach for
-`platformValue(material:, cupertino:)` only when the glyph isn't in the library. The stack is
-mobile-adaptive: `platformValue` throws on desktop/web, so the example targets Android and iOS.
+`platformValue(material:, cupertino:)` only when the glyph isn't in the library.
 
 ### Tests
 

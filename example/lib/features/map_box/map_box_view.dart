@@ -51,6 +51,7 @@ class const MapBoxView({super.key}) extends StatelessWidget {
                 ),
                 PlatformButton.icon(
                   onPressed: vm.onSavePressed,
+                  emphasis: .high,
                   icon: const PlatformIcon(PlatformIcons.checkMark, size: 18),
                   label: const Text('Save'),
                 ),

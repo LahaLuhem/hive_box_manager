@@ -22,9 +22,8 @@ cd example
 flutter run
 ```
 
-The UI stack (`platform_adaptive_widgets`) is Android/iOS-adaptive and throws on other platforms,
-so run on a mobile device or simulator. That's a property of the demo's UI, not of
-`hive_box_manager`, which is pure Dart and runs anywhere Hive does.
+The example ships Android and iOS runners only, so run it on a mobile device or simulator. That's
+the demo's setup, not a limit of `hive_box_manager`, which is pure Dart and runs anywhere Hive does.
 
 ## Tests
 
