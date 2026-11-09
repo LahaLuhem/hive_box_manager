@@ -572,10 +572,10 @@ packages:
     dependency: "direct main"
     description:
       name: platform_adaptive_widgets
-      sha256: bc3c7d9fd1300605253972e138a31379132e6b82a6c0c98561b3219cc3074100
+      sha256: "34ffb34eee062c2bf9929f34ce9435f52fc937c506ac242fa7c0895bc5791818"
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.0"
+    version: "3.1.0"
   platform_icons:
     dependency: "direct main"
     description:
