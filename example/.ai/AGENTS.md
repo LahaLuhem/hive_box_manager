@@ -48,8 +48,6 @@ helpers, and `test/support/` for the temp-dir hive setup and typing helpers.
 
 ## Mobile-targeted
 
-The example's surface stack (`platform_adaptive_widgets`) is Android/iOS only: `platformValue` (and
-`context.platformIcon`) throw on desktop/web, so run the demo on a mobile device or simulator. This
-is a property of the demo's UI stack, not of `hive_box_manager` itself, which is pure Dart and runs
-anywhere (Dart server, CLI, web, Flutter). If a platform-agnostic demo is wanted later, the UI stack
-is the only thing tying it to mobile.
+The example ships Android and iOS runners only, so run the demo on a mobile device or simulator.
+That's the demo's setup, not a limit of `hive_box_manager` itself, which is pure Dart and runs
+anywhere (Dart server, CLI, web, Flutter).

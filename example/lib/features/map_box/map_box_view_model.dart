@@ -21,7 +21,7 @@ final class MapBoxViewModel() extends ViewModel {
 
   late final Future<void> _opened;
 
-  static const userIds = [1, 2, 3];
+  static const userIds = {1, 2, 3};
 
   @override
   void init() {

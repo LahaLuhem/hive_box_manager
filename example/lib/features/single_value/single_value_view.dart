@@ -45,12 +45,13 @@ class const SingleValueView({super.key}) extends StatelessWidget {
                 ),
                 PlatformButton.icon(
                   onPressed: vm.onSavePressed,
+                  emphasis: .high,
                   icon: const PlatformIcon(PlatformIcons.lockFilled),
                   label: const Text('Save'),
                 ),
                 PlatformButton(
                   onPressed: vm.onClearPressed,
-                  materialButtonVariant: MaterialButtonVariant.outlined,
+                  emphasis: .mediumNeutral,
                   child: const Text('Clear'),
                 ),
               ],

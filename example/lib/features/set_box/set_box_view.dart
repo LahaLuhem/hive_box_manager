@@ -36,11 +36,13 @@ class const SetBoxView({super.key}) extends StatelessWidget {
                 ),
                 PlatformButton.icon(
                   onPressed: vm.onAddPressed,
+                  emphasis: .high,
                   icon: const PlatformIcon(PlatformIcons.add, size: 18),
                   label: const Text('Add'),
                 ),
                 PlatformButton.icon(
                   onPressed: vm.onUpsertPressed,
+                  emphasis: .medium,
                   icon: const PlatformIcon(PlatformIcons.pencil, size: 18),
                   label: const Text('Upsert'),
                 ),

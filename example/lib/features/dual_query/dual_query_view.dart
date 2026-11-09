@@ -28,6 +28,7 @@ class const DualQueryView({super.key}) extends StatelessWidget {
               children: [
                 PlatformButton.icon(
                   onPressed: vm.onSeedPressed,
+                  emphasis: .high,
                   icon: const PlatformIcon(PlatformIcons.add, size: 18),
                   label: const Text(
                     'Seed ${DualQueryViewModel.gridSide}x${DualQueryViewModel.gridSide} grid',
@@ -50,11 +51,13 @@ class const DualQueryView({super.key}) extends StatelessWidget {
               children: [
                 PlatformButton.icon(
                   onPressed: vm.onQueryByUserPressed,
+                  emphasis: .medium,
                   icon: const PlatformIcon(PlatformIcons.search, size: 18),
                   label: const Text('By user'),
                 ),
                 PlatformButton.icon(
                   onPressed: vm.onQueryByDayPressed,
+                  emphasis: .medium,
                   icon: const PlatformIcon(PlatformIcons.search, size: 18),
                   label: const Text('By day'),
                 ),

@@ -36,6 +36,7 @@ class const KeyedView({super.key}) extends StatelessWidget {
                 ),
                 PlatformButton.icon(
                   onPressed: vm.onAddPressed,
+                  emphasis: .high,
                   icon: const PlatformIcon(PlatformIcons.add, size: 18),
                   label: const Text('Add'),
                 ),
