@@ -25,6 +25,8 @@ updates:
       pub:
         patterns: ['*']
         update-types: [minor, patch]
+    ignore:
+      - dependency-name: mockito
   - package-ecosystem: pub
     directory: /example
     schedule:
