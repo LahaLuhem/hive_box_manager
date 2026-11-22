@@ -90,12 +90,12 @@ void main() {
 
   feature('MapBox absent vs stored-empty', () {
     scenario('an absent key is None, a stored empty map is Some(empty)', () async {
-      check(facade.get(1).isNone()).isTrue();
+      check(facade.get(1).isNone()).isTrue;
 
       await facade.put(1, <String, int>{}).run();
 
-      check(facade.get(1).toNullable()).isNotNull().isEmpty();
-      check(facade.contains(1)).isTrue();
+      check(facade.get(1).toNullable()).isNotNull().isEmpty;
+      check(facade.contains(1)).isTrue;
     });
   });
 
@@ -134,8 +134,8 @@ void main() {
 
       await facade.remove(1, 'a').run();
 
-      check(facade.get(1).toNullable()).isNotNull().isEmpty();
-      check(facade.contains(1)).isTrue();
+      check(facade.get(1).toNullable()).isNotNull().isEmpty;
+      check(facade.contains(1)).isTrue;
     });
 
     scenario('remove is a no-op for an absent key or an absent entry', () async {
@@ -145,7 +145,7 @@ void main() {
       await facade.remove(9, 'a').run();
       await facade.remove(1, 'missing').run();
 
-      check(observer.calls).isEmpty();
+      check(observer.calls).isEmpty;
       check(facade.getOr(1)).deepEquals({'a': 1});
     });
   });
@@ -217,7 +217,7 @@ void main() {
       check(facade.keys).deepEquals([3]);
 
       await facade.clear().run();
-      check(facade.isEmpty).isTrue();
+      check(facade.isEmpty).isTrue;
     });
 
     scenario('the box-key gate throws at the call site and nothing is written', () {
@@ -228,7 +228,7 @@ void main() {
         }),
       ).throws<ArgumentError>();
 
-      check(box.store).isEmpty();
+      check(box.store).isEmpty;
     });
 
     scenario('close is terminal: sync reads and later effects surface hive errors', () async {

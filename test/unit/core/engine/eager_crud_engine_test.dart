@@ -40,7 +40,7 @@ void main() {
     scenario('an absent key reads as None and dispatches the miss', () {
       final result = engine.get(const RawKey(7), 7);
 
-      check(result.isNone()).isTrue();
+      check(result.isNone()).isTrue;
       check(observer.calls).deepEquals(['read:users:7:null']);
     });
 
@@ -81,11 +81,11 @@ void main() {
       await engine.putAll([entry(1, 'a'), entry(2, 'b')]).run();
 
       check(engine.rawKeys).deepEquals([1, 2]);
-      check(engine.contains(const RawKey(1))).isTrue();
-      check(engine.contains(const RawKey(9))).isFalse();
+      check(engine.contains(const RawKey(1))).isTrue;
+      check(engine.contains(const RawKey(9))).isFalse;
       check(engine.length).equals(2);
-      check(engine.isEmpty).isFalse();
-      check(engine.isNotEmpty).isTrue();
+      check(engine.isEmpty).isFalse;
+      check(engine.isNotEmpty).isTrue;
       check(engine.name).equals('users');
     });
   });
@@ -94,7 +94,7 @@ void main() {
     scenario('a Task is lazy: nothing is written until run', () async {
       final write = engine.put(const RawKey(7), 7, 'v');
 
-      check(box.store).isEmpty();
+      check(box.store).isEmpty;
 
       await write.run();
 
@@ -132,7 +132,7 @@ void main() {
       final update = engine.update(const RawKey(7), 7, (value) => value);
 
       await check(update.run()).throws<ArgumentError>();
-      check(box.store).isEmpty();
+      check(box.store).isEmpty;
     });
 
     scenario('edit writes what it returns, an absent key reaching it as None', () async {
@@ -158,7 +158,7 @@ void main() {
       await engine.edit(const RawKey(9), 9, (_) => const None()).run();
 
       check(box.store).deepEquals({7: 'v'});
-      check(observer.calls).isEmpty();
+      check(observer.calls).isEmpty;
     });
   });
 
@@ -170,7 +170,7 @@ void main() {
       await engine.delete(const RawKey(7), 7).run();
       await engine.delete(const RawKey(9), 9).run();
 
-      check(box.store).isEmpty();
+      check(box.store).isEmpty;
       check(observer.calls).deepEquals(['deleted:users:7', 'deleted:users:9']);
     });
 
@@ -190,7 +190,7 @@ void main() {
 
       await engine.clear().run();
 
-      check(box.store).isEmpty();
+      check(box.store).isEmpty;
       check(observer.calls).deepEquals(['cleared:users']);
     });
   });
@@ -200,7 +200,7 @@ void main() {
       check(() => engine.put(const RawKey(-1), -1, 'v')).throws<ArgumentError>();
       check(() => engine.edit(const RawKey(-1), -1, (storedOrNone) => storedOrNone))
           .throws<ArgumentError>();
-      check(box.store).isEmpty();
+      check(box.store).isEmpty;
     });
 
     scenario('a value the codec refuses fails at the call too', () {
@@ -214,13 +214,13 @@ void main() {
 
     scenario('one bad key in a batch fails the whole call before anything is written', () {
       check(() => engine.putAll([entry(1, 'a'), entry(-1, 'b')])).throws<ArgumentError>();
-      check(box.store).isEmpty();
+      check(box.store).isEmpty;
     });
 
     scenario('two entries encoding to one raw key trip the duplicate assert', () {
       check(() => engine.putAll([entry(1, 'a'), entry(1, 'b')])).throws<AssertionError>();
 
-      check(box.store).isEmpty();
+      check(box.store).isEmpty;
     });
   });
 
@@ -266,7 +266,7 @@ void main() {
 
       await engine.deleteFromDisk().run();
 
-      check(box.wasDeletedFromDisk).isTrue();
+      check(box.wasDeletedFromDisk).isTrue;
       check(observer.calls).deepEquals(['deletedFromDisk:users']);
     });
 

@@ -77,8 +77,8 @@ package URI.
 - A view-model is a `final class XxxViewModel extends ViewModel`. Expose state through getters. Name
   mutation handlers `on<Thing>Changed` / `on<Thing>Toggled`. A boolean handler takes a named
   `{required bool value}` (per `avoid_positional_boolean_parameters`). `value` is the assigned-value
-  parameter, exempt from the package's [predicate-naming rule](../CODESTYLE.md#naming) the same way a
-  setter's `value` is. The view adapts it:
+  parameter, exempt from the package's [predicate-naming rule](../CODESTYLE.md#naming) the same way
+  a setter's `value` is. The view adapts it:
   `onChanged: (value) => viewModel.onThingToggled(value: value)`.
 
 ### View-model member ordering

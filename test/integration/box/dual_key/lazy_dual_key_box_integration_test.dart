@@ -18,12 +18,12 @@ void main() {
     scenario('construction touches nothing; queries auto-open the real box', () async {
       final facade = LazyDualKeyBox<String, int, int>('grid');
 
-      check(Hive.isBoxOpen('grid')).isFalse();
+      check(Hive.isBoxOpen('grid')).isFalse;
 
       final matches = await facade.queryByPrimary(1).run();
 
-      check(Hive.isBoxOpen('grid')).isTrue();
-      check(matches).isEmpty();
+      check(Hive.isBoxOpen('grid')).isTrue;
+      check(matches).isEmpty;
     });
 
     scenario('the composite default persists across close and a new instance', () async {
@@ -79,8 +79,8 @@ void main() {
 
       await untouched.close().run();
 
-      check(Hive.isBoxOpen('never_used')).isFalse();
-      check(tempHive.boxFile('never_used').existsSync()).isFalse();
+      check(Hive.isBoxOpen('never_used')).isFalse;
+      check(tempHive.boxFile('never_used').existsSync()).isFalse;
       await check(untouched.put(1, 2, 'v').run()).throws<HiveError>();
     });
   });

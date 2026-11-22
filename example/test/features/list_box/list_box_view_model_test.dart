@@ -75,7 +75,7 @@ void main() {
         await enterEach(sut.tagController, sut.onAddPressed, [tag]);
 
         sut.onKeySelected(otherList);
-        check(sut.tags.value).isEmpty();
+        check(sut.tags.value).isEmpty;
 
         sut.onKeySelected(homeList);
         check(sut.tags.value).deepEquals([tag]);

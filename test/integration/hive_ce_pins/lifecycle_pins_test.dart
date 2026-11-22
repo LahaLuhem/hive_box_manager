@@ -18,7 +18,7 @@ void main() {
       final first = await Hive.openBox<String>('lifecycle');
       final second = await Hive.openBox<String>('lifecycle');
 
-      check(identical(first, second)).isTrue();
+      check(identical(first, second)).isTrue;
     });
 
     scenario('opening the same name as a different box kind throws while open', () async {
@@ -29,13 +29,13 @@ void main() {
 
     scenario('isBoxOpen tracks open and close, and a closed name reopens fine', () async {
       final box = await Hive.openBox<String>('lifecycle');
-      check(Hive.isBoxOpen('lifecycle')).isTrue();
+      check(Hive.isBoxOpen('lifecycle')).isTrue;
 
       await box.close();
-      check(Hive.isBoxOpen('lifecycle')).isFalse();
+      check(Hive.isBoxOpen('lifecycle')).isFalse;
 
       final reopened = await Hive.openBox<String>('lifecycle');
-      check(reopened.isOpen).isTrue();
+      check(reopened.isOpen).isTrue;
     });
   });
 }

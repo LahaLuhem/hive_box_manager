@@ -42,9 +42,9 @@ void main() {
     scenario('set, get, getOr, update, and clear round-trip', () async {
       final facade = await SingleValueBox.open<String>('config').run();
 
-      check(facade.get().isNone()).isTrue();
+      check(facade.get().isNone()).isTrue;
       check(facade.getOr('fallback')).equals('fallback');
-      check(facade.isEmpty).isTrue();
+      check(facade.isEmpty).isTrue;
 
       await facade.set('v').run();
 
@@ -55,7 +55,7 @@ void main() {
 
       await facade.clear().run();
 
-      check(facade.get().isNone()).isTrue();
+      check(facade.get().isNone()).isTrue;
       await check(facade.update((value) => value).run()).throws<ArgumentError>();
       check(await facade.update((value) => value, ifAbsent: () => 'seed').run()).equals('seed');
     });
@@ -102,11 +102,11 @@ void main() {
       await facade.set('v').run();
       await facade.flush().run();
       final boxFile = tempHive.boxFile('doomed');
-      check(boxFile.existsSync()).isTrue();
+      check(boxFile.existsSync()).isTrue;
 
       await facade.deleteFromDisk().run();
 
-      check(boxFile.existsSync()).isFalse();
+      check(boxFile.existsSync()).isFalse;
       check(facade.get).throws<HiveError>();
     });
   });

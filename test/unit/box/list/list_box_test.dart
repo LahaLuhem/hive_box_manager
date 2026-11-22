@@ -93,12 +93,12 @@ void main() {
 
   feature('ListBox absent vs stored-empty', () {
     scenario('an absent key is None; a stored empty list is Some(empty)', () async {
-      check(facade.get(1).isNone()).isTrue();
+      check(facade.get(1).isNone()).isTrue;
 
       await facade.put(1, <String>[]).run();
 
       check(facade.get(1).toNullable()).isNotNull().deepEquals(<String>[]);
-      check(facade.contains(1)).isTrue();
+      check(facade.contains(1)).isTrue;
     });
   });
 
@@ -135,7 +135,7 @@ void main() {
       await facade.remove(1, 'a').run();
 
       check(facade.get(1).toNullable()).isNotNull().deepEquals(<String>[]);
-      check(facade.contains(1)).isTrue();
+      check(facade.contains(1)).isTrue;
     });
 
     scenario('remove is a no-op for an absent key or an absent element', () async {
@@ -145,7 +145,7 @@ void main() {
       await facade.remove(9, 'a').run();
       await facade.remove(1, 'missing').run();
 
-      check(observer.calls).isEmpty();
+      check(observer.calls).isEmpty;
       check(facade.getOr(1)).deepEquals(['a']);
     });
 
@@ -185,13 +185,13 @@ void main() {
       check(facade.values.map((values) => values.join())).deepEquals(['a', 'b']);
       check(facade.keys).deepEquals([1, 2]);
       check(facade.length).equals(2);
-      check(facade.isNotEmpty).isTrue();
+      check(facade.isNotEmpty).isTrue;
 
       await facade.delete(1).run();
       await facade.deleteAll([2]).run();
       await facade.clear().run();
 
-      check(facade.isEmpty).isTrue();
+      check(facade.isEmpty).isTrue;
     });
 
     scenario('putAllGrouped collects a flat iterable into one list per extracted key', () async {
@@ -232,7 +232,7 @@ void main() {
         }),
       ).throws<ArgumentError>();
 
-      check(box.store).isEmpty();
+      check(box.store).isEmpty;
     });
 
     scenario('close is terminal: sync reads and later effects surface hive errors', () async {

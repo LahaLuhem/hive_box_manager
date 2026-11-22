@@ -33,12 +33,12 @@ void main() {
     scenario('construction touches nothing, and inspectors work after the first effect', () async {
       final box = members();
 
-      check(Hive.isBoxOpen('members')).isFalse();
+      check(Hive.isBoxOpen('members')).isFalse;
       check(() => box.length).throws<StateError>();
 
       await box.put(1, [Member(1, 'a')]).run();
 
-      check(Hive.isBoxOpen('members')).isTrue();
+      check(Hive.isBoxOpen('members')).isTrue;
       check(box.keys).deepEquals([1]);
     });
 
@@ -82,8 +82,8 @@ void main() {
       final second = members();
 
       check(await second.namesUnder(1)).deepEquals(['c', 'a', 'b']);
-      check((await second.get(2).run()).toNullable()).isNotNull().isEmpty();
-      check((await second.get(9).run()).isNone()).isTrue();
+      check((await second.get(2).run()).toNullable()).isNotNull().isEmpty;
+      check((await second.get(9).run()).isNone()).isTrue;
     });
 
     scenario('without idOf, an element that compares by identity fails at the first write', () {

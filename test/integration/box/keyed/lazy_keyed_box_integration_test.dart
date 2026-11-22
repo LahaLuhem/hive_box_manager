@@ -19,12 +19,12 @@ void main() {
       final observer = RecordingBoxObserver();
       final box = LazyKeyedBox<String, int>('logs', observer: observer);
 
-      check(Hive.isBoxOpen('logs')).isFalse();
-      check(observer.calls).isEmpty();
+      check(Hive.isBoxOpen('logs')).isFalse;
+      check(observer.calls).isEmpty;
 
       await box.put(7, 'v').run();
 
-      check(Hive.isBoxOpen('logs')).isTrue();
+      check(Hive.isBoxOpen('logs')).isTrue;
       check(observer.calls).deepEquals(['opened:logs', 'written:logs:7:v']);
     });
 
@@ -33,8 +33,8 @@ void main() {
 
       await box.ensureInitialised().run();
 
-      check(Hive.isBoxOpen('logs')).isTrue();
-      check(box.isEmpty).isTrue();
+      check(Hive.isBoxOpen('logs')).isTrue;
+      check(box.isEmpty).isTrue;
     });
 
     scenario('the sync inspectors throw StateError before open, then read the keystore', () async {
@@ -47,8 +47,8 @@ void main() {
 
       check(box.length).equals(2);
       check(box.keys).deepEquals([1, 2]);
-      check(box.contains(1)).isTrue();
-      check(box.isNotEmpty).isTrue();
+      check(box.contains(1)).isTrue;
+      check(box.isNotEmpty).isTrue;
     });
   });
 
@@ -60,7 +60,7 @@ void main() {
       await box.putAll({2: 'b', 3: 'c'}).run();
 
       check((await box.get(1).run()).toNullable()).equals('a');
-      check((await box.get(9).run()).isNone()).isTrue();
+      check((await box.get(9).run()).isNone()).isTrue;
       check(await box.getOr(9, 'fallback').run()).equals('fallback');
       check(await box.values.run()).deepEquals(['a', 'b', 'c']);
 
@@ -72,7 +72,7 @@ void main() {
       await box.deleteAll([2, 3]).run();
       await box.clear().run();
 
-      check(box.isEmpty).isTrue();
+      check(box.isEmpty).isTrue;
     });
 
     scenario('values persist across close and a new instance (disk truth)', () async {
@@ -103,7 +103,7 @@ void main() {
 
       check(() => box.put(-1, 'v')).throws<ArgumentError>();
 
-      check(Hive.isBoxOpen('logs')).isFalse();
+      check(Hive.isBoxOpen('logs')).isFalse;
     });
   });
 
@@ -121,7 +121,7 @@ void main() {
         LazyTypedBoxEvent<String, int>(key: 7, value: Some('v')),
         LazyTypedBoxEvent<String, int>(key: 7, value: None()),
       ]);
-      check(events.last.deleted).isTrue();
+      check(events.last.deleted).isTrue;
     });
   });
 
@@ -131,8 +131,8 @@ void main() {
 
       await untouched.close().run();
 
-      check(Hive.isBoxOpen('never_used')).isFalse();
-      check(tempHive.boxFile('never_used').existsSync()).isFalse();
+      check(Hive.isBoxOpen('never_used')).isFalse;
+      check(tempHive.boxFile('never_used').existsSync()).isFalse;
       await check(untouched.put(1, 'a').run()).throws<HiveError>();
     });
 
@@ -142,7 +142,7 @@ void main() {
 
       await box.close().run();
 
-      check(Hive.isBoxOpen('logs')).isFalse();
+      check(Hive.isBoxOpen('logs')).isFalse;
       await check(box.get(1).run()).throws<HiveError>();
     });
 
@@ -152,11 +152,11 @@ void main() {
       await box.flush().run();
       await box.compact().run();
       final boxFile = tempHive.boxFile('doomed');
-      check(boxFile.existsSync()).isTrue();
+      check(boxFile.existsSync()).isTrue;
 
       await box.deleteFromDisk().run();
 
-      check(boxFile.existsSync()).isFalse();
+      check(boxFile.existsSync()).isFalse;
     });
   });
 }

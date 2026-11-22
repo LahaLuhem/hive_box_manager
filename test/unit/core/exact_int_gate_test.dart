@@ -18,7 +18,7 @@ void main() {
         '-2^53': -(1 << 53),
         '2^53 + 2, past the range every int fits': (1 << 53) + 2,
       },
-      outline: (value) => check(hiveKeepsExactly(value)).isTrue(),
+      outline: (value) => check(hiveKeepsExactly(value)).isTrue,
     );
 
     scenarioOutline<int>(
@@ -27,7 +27,7 @@ void main() {
         '2^53 + 1': ProbeKeyLimits.firstWebImpreciseInt,
         '-(2^53 + 1)': -ProbeKeyLimits.firstWebImpreciseInt,
       },
-      outline: (value) => check(hiveKeepsExactly(value)).isFalse(),
+      outline: (value) => check(hiveKeepsExactly(value)).isFalse,
     );
   });
 
@@ -41,7 +41,7 @@ void main() {
 
       check(() => ensureExactIntKey(key))
           .throws<ArgumentError>()
-          .has((error) => error.invalidValue, 'invalidValue')
+          .has('invalidValue', (error) => error.invalidValue)
           .equals(key);
     });
   });

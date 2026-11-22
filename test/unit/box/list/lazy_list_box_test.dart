@@ -55,9 +55,9 @@ void main() {
 
       check(facade.length).equals(1);
       check(facade.keys).deepEquals([1]);
-      check(facade.contains(1)).isTrue();
-      check(facade.isNotEmpty).isTrue();
-      check(facade.isEmpty).isFalse();
+      check(facade.contains(1)).isTrue;
+      check(facade.isNotEmpty).isTrue;
+      check(facade.isEmpty).isFalse;
     });
 
     scenario('the corruption gate throws at the call site, before the box even opens', () {
@@ -104,7 +104,7 @@ void main() {
   feature('LazyListBox reads and absent vs stored-empty', () {
     scenario('an absent key is None; a stored empty list is Some(empty)', () async {
       final absent = await facade.get(1).run();
-      check(absent.isNone()).isTrue();
+      check(absent.isNone()).isTrue;
 
       await facade.put(1, <String>[]).run();
 
@@ -146,7 +146,7 @@ void main() {
 
       final storedEmpty = await facade.get(1).run();
       check(storedEmpty.toNullable()).isNotNull().deepEquals(<String>[]);
-      check(facade.contains(1)).isTrue();
+      check(facade.contains(1)).isTrue;
     });
 
     scenario('remove is a no-op for an absent key or an absent element', () async {
@@ -156,7 +156,7 @@ void main() {
       await facade.remove(9, 'a').run();
       await facade.remove(1, 'missing').run();
 
-      check(observer.calls).isEmpty();
+      check(observer.calls).isEmpty;
       check(await facade.getOr(1).run()).deepEquals(['a']);
     });
 
@@ -197,8 +197,8 @@ void main() {
       check(events).length.equals(2);
       check(events.first.value.toNullable()).isNotNull().deepEquals(['a']);
       check(() => events.first.value.toNullable()![0] = 'rogue').throws<UnsupportedError>();
-      check(events.last.value.isNone()).isTrue();
-      check(events.last.deleted).isTrue();
+      check(events.last.value.isNone()).isTrue;
+      check(events.last.deleted).isTrue;
     });
   });
 

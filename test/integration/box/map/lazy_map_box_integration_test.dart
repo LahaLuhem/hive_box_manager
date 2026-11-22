@@ -36,12 +36,12 @@ void main() {
     scenario('construction touches nothing, and inspectors work after the first effect', () async {
       final box = people();
 
-      check(Hive.isBoxOpen('people')).isFalse();
+      check(Hive.isBoxOpen('people')).isFalse;
       check(() => box.length).throws<StateError>();
 
       await box.put(1, {'ada': ada}).run();
 
-      check(Hive.isBoxOpen('people')).isTrue();
+      check(Hive.isBoxOpen('people')).isTrue;
       check(box.keys).deepEquals([1]);
     });
 
@@ -70,8 +70,8 @@ void main() {
       final second = people();
 
       check((await second.getOr(1).run()).keys).deepEquals(['cy', 'ada', 'bob']);
-      check((await second.get(2).run()).toNullable()).isNotNull().isEmpty();
-      check((await second.get(9).run()).isNone()).isTrue();
+      check((await second.get(2).run()).toNullable()).isNotNull().isEmpty;
+      check((await second.get(9).run()).isNone()).isTrue;
     });
   });
 }

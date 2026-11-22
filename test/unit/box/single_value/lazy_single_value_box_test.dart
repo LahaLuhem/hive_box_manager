@@ -54,7 +54,7 @@ void main() {
       await facade.ensureInitialised().run();
 
       check(facade.length).equals(0);
-      check(facade.isEmpty).isTrue();
+      check(facade.isEmpty).isTrue;
     });
   });
 
@@ -62,7 +62,7 @@ void main() {
     scenario('an unset box reads None and falls back through getOr', () async {
       final result = await facade.get().run();
 
-      check(result.isNone()).isTrue();
+      check(result.isNone()).isTrue;
       check(await facade.getOr('fallback').run()).equals('fallback');
     });
 
@@ -88,7 +88,7 @@ void main() {
       await facade.clear().run();
 
       final result = await facade.get().run();
-      check(result.isNone()).isTrue();
+      check(result.isNone()).isTrue;
     });
   });
 
@@ -119,7 +119,7 @@ void main() {
 
       check(box.flushCount).equals(1);
       check(box.compactCount).equals(1);
-      check(box.wasDeletedFromDisk).isTrue();
+      check(box.wasDeletedFromDisk).isTrue;
     });
   });
 

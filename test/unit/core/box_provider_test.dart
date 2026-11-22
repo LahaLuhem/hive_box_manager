@@ -38,7 +38,7 @@ void main() {
 
       final opened = await provider.openEagerBox('users');
 
-      check(identical(opened, box)).isTrue();
+      check(identical(opened, box)).isTrue;
       final captured = verify(
         hive.openBox<Object?>(
           captureAny,
@@ -98,7 +98,7 @@ void main() {
 
       final opened = await provider.openLazyBox('logs');
 
-      check(identical(opened, box)).isTrue();
+      check(identical(opened, box)).isTrue;
     });
 
     scenario('defaults to the global Hive instance when nothing is injected', () {

@@ -39,14 +39,14 @@ void main() {
     scenario('construction touches nothing; inspectors work after the first effect', () async {
       final facade = LazyListBox<String, int>('tags');
 
-      check(Hive.isBoxOpen('tags')).isFalse();
+      check(Hive.isBoxOpen('tags')).isFalse;
       check(() => facade.length).throws<StateError>();
 
       await facade.put(1, ['a']).run();
 
-      check(Hive.isBoxOpen('tags')).isTrue();
+      check(Hive.isBoxOpen('tags')).isTrue;
       check(facade.keys).deepEquals([1]);
-      check(facade.contains(1)).isTrue();
+      check(facade.contains(1)).isTrue;
     });
 
     scenario('absent is None, stored-empty is Some(empty), values materialise', () async {
@@ -56,7 +56,7 @@ void main() {
       await facade.put(2, ['b']).run();
 
       final absent = await facade.get(9).run();
-      check(absent.isNone()).isTrue();
+      check(absent.isNone()).isTrue;
 
       final storedEmpty = await facade.get(1).run();
       check(storedEmpty.toNullable()).isNotNull().deepEquals(<String>[]);
@@ -101,7 +101,7 @@ void main() {
 
       check(events).length.equals(2);
       check(events.first.value.toNullable()).isNotNull().deepEquals(['a']);
-      check(events.last.deleted).isTrue();
+      check(events.last.deleted).isTrue;
     });
 
     scenario('close before first use never creates the box, yet is terminal', () async {
@@ -109,8 +109,8 @@ void main() {
 
       await untouched.close().run();
 
-      check(Hive.isBoxOpen('never_used')).isFalse();
-      check(tempHive.boxFile('never_used').existsSync()).isFalse();
+      check(Hive.isBoxOpen('never_used')).isFalse;
+      check(tempHive.boxFile('never_used').existsSync()).isFalse;
       await check(untouched.put(1, ['a']).run()).throws<HiveError>();
     });
   });

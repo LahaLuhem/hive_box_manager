@@ -34,7 +34,7 @@ void main() {
       const written = [alice, bob];
       await box.put('list', written);
 
-      check(identical(box.get('list'), written)).isTrue();
+      check(identical(box.get('list'), written)).isTrue;
     });
 
     scenario('a written List<T> reads back as List<dynamic>, castable at the boundary', () async {
@@ -43,7 +43,7 @@ void main() {
       box = await reopen(box);
 
       final raw = box.get('list');
-      check(raw is List<Person>).isFalse();
+      check(raw is List<Person>).isFalse;
       final castView = check(raw).isA<List<dynamic>>();
       castView.length.equals(2);
       check((raw! as List<dynamic>).cast<Person>().first).equals(alice);
@@ -55,9 +55,9 @@ void main() {
       box = await reopen(box);
 
       final raw = box.get('set');
-      check(raw is Set<Person>).isFalse();
+      check(raw is Set<Person>).isFalse;
       check(raw).isA<Set<dynamic>>();
-      check((raw! as Set<dynamic>).cast<Person>().contains(alice)).isTrue();
+      check((raw! as Set<dynamic>).cast<Person>().contains(alice)).isTrue;
     });
 
     scenario('a written Map<K, V> reads back as Map<dynamic, dynamic>, castable', () async {
@@ -66,7 +66,7 @@ void main() {
       box = await reopen(box);
 
       final raw = box.get('map');
-      check(raw is Map<String, Person>).isFalse();
+      check(raw is Map<String, Person>).isFalse;
       check(raw).isA<Map<dynamic, dynamic>>();
       check((raw! as Map<dynamic, dynamic>).cast<String, Person>()['a']).equals(alice);
     });

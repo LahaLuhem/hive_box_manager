@@ -115,10 +115,10 @@ void main() {
       await engine.put(const RawKey(7), 7, 'v').run();
 
       check(engine.length).equals(1);
-      check(engine.isEmpty).isFalse();
-      check(engine.isNotEmpty).isTrue();
+      check(engine.isEmpty).isFalse;
+      check(engine.isNotEmpty).isTrue;
       check(engine.rawKeys).deepEquals([7]);
-      check(engine.contains(const RawKey(7))).isTrue();
+      check(engine.contains(const RawKey(7))).isTrue;
       check(engine.name).equals('logs');
     });
   });
@@ -129,7 +129,7 @@ void main() {
 
       final result = await engine.get(const RawKey(7), 7).run();
 
-      check(result.isNone()).isTrue();
+      check(result.isNone()).isTrue;
       check(observer.calls).deepEquals(['opened:logs', 'read:logs:7:null']);
     });
 
@@ -170,7 +170,7 @@ void main() {
       final write = engine.put(const RawKey(7), 7, 'v');
 
       check(opener.count).equals(0);
-      check(box.store).isEmpty();
+      check(box.store).isEmpty;
 
       await write.run();
 
@@ -203,7 +203,7 @@ void main() {
       check(() => engine.putAll([entry(1, 'a'), entry(1, 'b')])).throws<AssertionError>();
 
       check(opener.count).equals(0);
-      check(box.store).isEmpty();
+      check(box.store).isEmpty;
     });
 
     scenario('update rewrites, seeds via ifAbsent, and mirrors Map.update on absence', () async {
@@ -242,7 +242,7 @@ void main() {
       await engine.edit(const RawKey(9), 9, (_) => const None()).run();
 
       check(box.store).deepEquals({7: 'v'});
-      check(observer.calls).isEmpty();
+      check(observer.calls).isEmpty;
     });
 
     scenario('a failing edit reaches the observer as edit', () async {
@@ -263,7 +263,7 @@ void main() {
       await engine.deleteAll([const RawKey(1), const RawKey(2)], [1, 2]).run();
       await engine.clear().run();
 
-      check(box.store).isEmpty();
+      check(box.store).isEmpty;
       check(observer.calls).deepEquals(['deleted:logs:1', 'deleted:logs:2', 'cleared:logs']);
     });
   });
@@ -327,7 +327,7 @@ void main() {
       gate.complete();
       await racing.wait;
 
-      check(box.store).isEmpty();
+      check(box.store).isEmpty;
     });
 
     scenario('a failing write does not hold up the one queued behind it', () async {
@@ -404,7 +404,7 @@ void main() {
 
       await engine.close().run();
 
-      check(box.isClosed).isTrue();
+      check(box.isClosed).isTrue;
       await check(engine.get(const RawKey(7), 7).run()).throws<HiveError>();
       check(
         observer.calls,
@@ -418,7 +418,7 @@ void main() {
 
       await engine.deleteFromDisk().run();
 
-      check(box.wasDeletedFromDisk).isTrue();
+      check(box.wasDeletedFromDisk).isTrue;
       check(observer.calls).deepEquals(['deletedFromDisk:logs']);
     });
   });

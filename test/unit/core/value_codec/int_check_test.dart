@@ -27,7 +27,7 @@ void main() {
         'a custom type': () => intCheckFor<Person>(),
         'elements of a custom type': () => elementsCheckFor<Person>(),
       },
-      outline: (pick) => check(pick()).isNull(),
+      outline: (pick) => check(pick()).isNull,
     );
 
     scenarioOutline<({IntCheck? intCheck, Object Function(int value) holding})>(
@@ -71,7 +71,7 @@ void main() {
         check(() => row.intCheck!(row.holding(kept))).returnsNormally();
         check(() => row.intCheck!(row.holding(changed)))
             .throws<ArgumentError>()
-            .has((error) => error.name, 'name')
+            .has('name', (error) => error.name)
             .equals('value');
       },
     );
@@ -82,7 +82,7 @@ void main() {
       check(() => entriesCheck({kept: 'v'})).returnsNormally();
       check(() => entriesCheck({changed: 'v'}))
           .throws<ArgumentError>()
-          .has((error) => error.name, 'name')
+          .has('name', (error) => error.name)
           .equals('key');
     });
   });

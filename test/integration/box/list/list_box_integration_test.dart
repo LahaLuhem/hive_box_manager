@@ -51,7 +51,7 @@ void main() {
 
       facade = await ListBox.open<Person, int>('people').run();
 
-      check(facade.get(9).isNone()).isTrue();
+      check(facade.get(9).isNone()).isTrue;
       check(facade.get(1).toNullable()).isNotNull().deepEquals(const <Person>[]);
     });
   });
@@ -99,7 +99,7 @@ void main() {
       check(facade.get(1).toNullable()).isNotNull().deepEquals(<String>[]);
 
       await facade.remove(9, 'a').run();
-      check(facade.get(9).isNone()).isTrue();
+      check(facade.get(9).isNone()).isTrue;
     });
 
     scenario('with idOf, remove takes out a copy rebuilt after a reopen', () async {
@@ -139,7 +139,7 @@ void main() {
       await facade.delete(1).run();
       await facade.clear().run();
 
-      check(facade.isEmpty).isTrue();
+      check(facade.isEmpty).isTrue;
     });
 
     scenario('close is terminal; deleteFromDisk removes the box file', () async {
@@ -147,11 +147,11 @@ void main() {
       await facade.put(1, ['a']).run();
       await facade.flush().run();
       final boxFile = tempHive.boxFile('doomed');
-      check(boxFile.existsSync()).isTrue();
+      check(boxFile.existsSync()).isTrue;
 
       await facade.deleteFromDisk().run();
 
-      check(boxFile.existsSync()).isFalse();
+      check(boxFile.existsSync()).isFalse;
       check(() => facade.get(1)).throws<HiveError>();
     });
   });

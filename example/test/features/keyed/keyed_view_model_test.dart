@@ -36,7 +36,7 @@ void main() {
         await sut.onAddPressed();
 
         check(sut.entries.value).deepEquals([(storedKey, typedValue)]);
-        check(sut.observer.entries.value.any((line) => line.contains('wrote'))).isTrue();
+        check(sut.observer.entries.value.any((line) => line.contains('wrote'))).isTrue;
       });
 
   Bdd(feature)
@@ -82,6 +82,6 @@ void main() {
         sut.valueController.text = typedValue;
         await sut.onAddPressed();
 
-        check(sut.entries.value).isEmpty();
+        check(sut.entries.value).isEmpty;
       });
 }

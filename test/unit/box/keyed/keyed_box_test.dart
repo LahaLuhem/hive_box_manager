@@ -66,9 +66,9 @@ void main() {
 
   feature('KeyedBox reads', () {
     scenario('an absent key reads as None, falls back through getOr, and is not contained', () {
-      check(facade.get(7).isNone()).isTrue();
+      check(facade.get(7).isNone()).isTrue;
       check(facade.getOr(7, 'fallback')).equals('fallback');
-      check(facade.contains(7)).isFalse();
+      check(facade.contains(7)).isFalse;
     });
 
     scenario('stored entries surface through every inspector, decoded', () async {
@@ -76,12 +76,12 @@ void main() {
 
       check(facade.get(1).toNullable()).equals('a');
       check(facade.getOr(1, 'fallback')).equals('a');
-      check(facade.contains(1)).isTrue();
+      check(facade.contains(1)).isTrue;
       check(facade.values).deepEquals(['a', 'b']);
       check(facade.keys).deepEquals([1, 2]);
       check(facade.length).equals(2);
-      check(facade.isEmpty).isFalse();
-      check(facade.isNotEmpty).isTrue();
+      check(facade.isEmpty).isFalse;
+      check(facade.isNotEmpty).isTrue;
       check(facade.name).equals('users');
     });
   });
@@ -90,7 +90,7 @@ void main() {
     scenario('a write Task is lazy: nothing lands until run', () async {
       final write = facade.put(7, 'v');
 
-      check(box.store).isEmpty();
+      check(box.store).isEmpty;
 
       await write.run();
 
@@ -101,8 +101,8 @@ void main() {
       check(() => facade.put(-1, 'v')).throws<ArgumentError>();
       check(() => facade.putAll({1: 'a', -1: 'b'})).throws<ArgumentError>();
 
-      check(box.store).isEmpty();
-      check(observer.calls).isEmpty();
+      check(box.store).isEmpty;
+      check(observer.calls).isEmpty;
     });
 
     scenario('putAllBy writes one entry per distinct extracted key', () async {
@@ -116,13 +116,13 @@ void main() {
       check(() => facade.putAllBy(['ant', 'bee'], keyOf: (value) => value.length))
           .throws<AssertionError>();
 
-      check(box.store).isEmpty();
+      check(box.store).isEmpty;
     });
 
     scenario('putAllBy gates a non-storable extracted key at the call site', () {
       check(() => facade.putAllBy(['a'], keyOf: (value) => -1)).throws<ArgumentError>();
 
-      check(box.store).isEmpty();
+      check(box.store).isEmpty;
     });
 
     scenario('update rewrites, seeds via ifAbsent, and mirrors Map.update on absence', () async {
@@ -141,7 +141,7 @@ void main() {
       await facade.deleteAll([2, 3]).run();
       await facade.clear().run();
 
-      check(box.store).isEmpty();
+      check(box.store).isEmpty;
       check(observer.calls)
           .deepEquals(['deleted:users:1', 'deleted:users:2', 'deleted:users:3', 'cleared:users']);
     });
@@ -197,8 +197,8 @@ void main() {
 
       await facade.deleteFromDisk().run();
 
-      check(box.wasDeletedFromDisk).isTrue();
-      check(box.store).isEmpty();
+      check(box.wasDeletedFromDisk).isTrue;
+      check(box.store).isEmpty;
       check(observer.calls).deepEquals(['deletedFromDisk:users']);
     });
 

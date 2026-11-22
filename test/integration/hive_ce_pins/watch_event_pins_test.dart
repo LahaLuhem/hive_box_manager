@@ -27,7 +27,7 @@ void main() {
 
       check(events).length.equals(3);
       final deleteEvent = events.last;
-      check(deleteEvent.deleted).isTrue();
+      check(deleteEvent.deleted).isTrue;
       check(deleteEvent.value).equals('v2');
     });
 
@@ -52,10 +52,10 @@ void main() {
       });
 
       check(events).length.equals(2);
-      check(events.first.deleted).isFalse();
+      check(events.first.deleted).isFalse;
       check(events.first.value).equals('stored-value');
-      check(events.last.deleted).isTrue();
-      check(events.last.value).isNull();
+      check(events.last.deleted).isTrue;
+      check(events.last.value).isNull;
     });
 
     scenario('the delete event stays null after a reopen (disk truth)', () async {
@@ -67,8 +67,8 @@ void main() {
       final events = await recordEvents(box.watch(), () => box.delete('k'));
 
       check(events).length.equals(1);
-      check(events.single.deleted).isTrue();
-      check(events.single.value).isNull();
+      check(events.single.deleted).isTrue;
+      check(events.single.value).isNull;
     });
 
     scenario('clear() emits per-key delete events, each carrying null', () async {

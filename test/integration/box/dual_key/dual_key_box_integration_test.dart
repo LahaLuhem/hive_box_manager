@@ -67,8 +67,8 @@ void main() {
     scenario('no matches is a plain empty list, and absent-vs-empty stays honest', () async {
       final facade = await DualKeyBox.open<String, int, int>('grid').run();
 
-      check(facade.queryByPrimary(42)).isEmpty();
-      check(facade.get(42, 1).isNone()).isTrue();
+      check(facade.queryByPrimary(42)).isEmpty;
+      check(facade.get(42, 1).isNone()).isTrue;
     });
 
     scenario('a 10K-entry scan answers both axes exactly (the O(K) sanity)', () async {
@@ -83,11 +83,11 @@ void main() {
 
       final byPrimary = facade.queryByPrimary(42);
       check(byPrimary).length.equals(scanGridSide);
-      check(byPrimary.every((value) => value.startsWith('42/'))).isTrue();
+      check(byPrimary.every((value) => value.startsWith('42/'))).isTrue;
 
       final bySecondary = facade.queryBySecondary(7);
       check(bySecondary).length.equals(scanGridSide);
-      check(bySecondary.every((value) => value.endsWith('/7'))).isTrue();
+      check(bySecondary.every((value) => value.endsWith('/7'))).isTrue;
     });
   });
 
@@ -111,11 +111,11 @@ void main() {
       await facade.put(1, 1, 'v').run();
       await facade.flush().run();
       final boxFile = tempHive.boxFile('doomed');
-      check(boxFile.existsSync()).isTrue();
+      check(boxFile.existsSync()).isTrue;
 
       await facade.deleteFromDisk().run();
 
-      check(boxFile.existsSync()).isFalse();
+      check(boxFile.existsSync()).isFalse;
     });
   });
 }

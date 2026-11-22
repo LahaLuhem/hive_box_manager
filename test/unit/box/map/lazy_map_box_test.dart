@@ -61,7 +61,7 @@ void main() {
 
       check(facade.length).equals(1);
       check(facade.keys).deepEquals([1]);
-      check(facade.contains(1)).isTrue();
+      check(facade.contains(1)).isTrue;
     });
   });
 
@@ -100,11 +100,11 @@ void main() {
 
   feature('LazyMapBox reads and absent vs stored-empty', () {
     scenario('an absent key is None, a stored empty map is Some(empty)', () async {
-      check((await facade.get(1).run()).isNone()).isTrue();
+      check((await facade.get(1).run()).isNone()).isTrue;
 
       await facade.put(1, <String, int>{}).run();
 
-      check((await facade.get(1).run()).toNullable()).isNotNull().isEmpty();
+      check((await facade.get(1).run()).toNullable()).isNotNull().isEmpty;
     });
 
     scenario('values reads every stored map', () async {
@@ -151,7 +151,7 @@ void main() {
 
       await facade.remove(1, 'a').run();
       await facade.remove(1, 'c').run();
-      check((await facade.get(1).run()).toNullable()).isNotNull().isEmpty();
+      check((await facade.get(1).run()).toNullable()).isNotNull().isEmpty;
     });
 
     scenario('remove is a no-op for an absent key or an absent entry', () async {
@@ -161,7 +161,7 @@ void main() {
       await facade.remove(9, 'a').run();
       await facade.remove(1, 'missing').run();
 
-      check(observer.calls).isEmpty();
+      check(observer.calls).isEmpty;
       check(await facade.getOr(1).run()).deepEquals({'a': 1});
     });
   });
@@ -229,7 +229,7 @@ void main() {
       check(facade.keys).deepEquals([3]);
 
       await facade.clear().run();
-      check(facade.isEmpty).isTrue();
+      check(facade.isEmpty).isTrue;
     });
 
     scenario('the box-key gate throws at the call site, before the box even opens', () {
@@ -249,7 +249,7 @@ void main() {
       check(events).length.equals(2);
       check(events.first.value.toNullable()).isNotNull().deepEquals({'a': 1});
       check(() => events.first.value.toNullable()!['rogue'] = 9).throws<UnsupportedError>();
-      check(events.last.value.isNone()).isTrue();
+      check(events.last.value.isNone()).isTrue;
     });
   });
 

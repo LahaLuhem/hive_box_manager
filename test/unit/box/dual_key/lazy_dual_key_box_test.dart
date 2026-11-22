@@ -40,7 +40,7 @@ void main() {
       final matches = await facade.queryByPrimary(1).run();
 
       check(opener.count).equals(1);
-      check(matches).isEmpty();
+      check(matches).isEmpty;
     });
 
     scenario('non-(int, int) parts without a codec fail the wiring assert', () {
@@ -68,9 +68,9 @@ void main() {
 
       check(facade.length).equals(1);
       check(facade.keys).deepEquals([(1, 2)]);
-      check(facade.contains(1, 2)).isTrue();
-      check(facade.isNotEmpty).isTrue();
-      check(facade.isEmpty).isFalse();
+      check(facade.contains(1, 2)).isTrue;
+      check(facade.isNotEmpty).isTrue;
+      check(facade.isEmpty).isFalse;
     });
   });
 
@@ -78,7 +78,7 @@ void main() {
     scenario('absent composite keys read as None and fall back through getOr', () async {
       final absent = await facade.get(1, 2).run();
 
-      check(absent.isNone()).isTrue();
+      check(absent.isNone()).isTrue;
       check(await facade.getOr(1, 2, 'fallback').run()).equals('fallback');
     });
 
@@ -96,7 +96,7 @@ void main() {
       final matches = await facade.queryByPrimary(42).run();
 
       check(matches).isA<List<String>>();
-      check(matches).isEmpty();
+      check(matches).isEmpty;
     });
 
     scenario('queries collect every match by the requested part', () async {
@@ -143,7 +143,7 @@ void main() {
         ),
       ).throws<AssertionError>();
 
-      check(box.store).isEmpty();
+      check(box.store).isEmpty;
     });
 
     scenario('delete, deleteAll, and clear remove entries', () async {
@@ -153,7 +153,7 @@ void main() {
       await facade.deleteAll([(2, 2)]).run();
       await facade.clear().run();
 
-      check(box.store).isEmpty();
+      check(box.store).isEmpty;
     });
   });
 
@@ -168,7 +168,7 @@ void main() {
         LazyTypedBoxEvent<String, (int, int)>(key: (1, 2), value: Some('v')),
         LazyTypedBoxEvent<String, (int, int)>(key: (1, 2), value: None()),
       ]);
-      check(events.last.deleted).isTrue();
+      check(events.last.deleted).isTrue;
     });
   });
 

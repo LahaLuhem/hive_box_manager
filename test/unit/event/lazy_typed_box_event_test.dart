@@ -15,8 +15,8 @@ void main() {
       const written = LazyTypedBoxEvent<String, int>(key: 7, value: Some('v'));
       const deleted = LazyTypedBoxEvent<String, int>(key: 7, value: None());
 
-      check(written.deleted).isFalse();
-      check(deleted.deleted).isTrue();
+      check(written.deleted).isFalse;
+      check(deleted.deleted).isTrue;
     });
 
     scenario('equality and hashCode are structural, through the Option', () {
@@ -26,7 +26,7 @@ void main() {
 
       check(event).equals(same);
       check(event.hashCode).equals(same.hashCode);
-      check(event).not((it) => it.equals(gone));
+      check(event).not(.it()..equals(gone));
     });
 
     scenario('toString names the key and the optional value', () {

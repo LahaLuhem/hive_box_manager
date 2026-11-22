@@ -18,7 +18,7 @@ void main() {
       final observer = RecordingBoxObserver();
       final openTask = KeyedBox.open<String, int>('users', observer: observer);
 
-      check(observer.calls).isEmpty();
+      check(observer.calls).isEmpty;
 
       final box = await openTask.run();
 
@@ -44,13 +44,13 @@ void main() {
       await box.putAll({2: 'b', 3: 'c'}).run();
 
       check(box.get(1).toNullable()).equals('a');
-      check(box.get(9).isNone()).isTrue();
+      check(box.get(9).isNone()).isTrue;
       check(box.getOr(9, 'fallback')).equals('fallback');
-      check(box.contains(2)).isTrue();
+      check(box.contains(2)).isTrue;
       check(box.values).deepEquals(['a', 'b', 'c']);
       check(box.keys).deepEquals([1, 2, 3]);
       check(box.length).equals(3);
-      check(box.isNotEmpty).isTrue();
+      check(box.isNotEmpty).isTrue;
 
       check(await box.update(1, (value) => '$value!').run()).equals('a!');
       check(await box.update(9, (value) => value, ifAbsent: () => 'seed').run()).equals('seed');
@@ -60,7 +60,7 @@ void main() {
       await box.deleteAll([2, 3]).run();
       await box.clear().run();
 
-      check(box.isEmpty).isTrue();
+      check(box.isEmpty).isTrue;
     });
 
     scenario('values persist across close and reopen (disk truth)', () async {
@@ -102,7 +102,7 @@ void main() {
       check(() => box.put(-1, 'v')).throws<ArgumentError>();
       check(() => box.put(HiveKeyLimits.maxIntKey + 1, 'v')).throws<ArgumentError>();
 
-      check(box.isEmpty).isTrue();
+      check(box.isEmpty).isTrue;
     });
   });
 
@@ -140,7 +140,7 @@ void main() {
 
       await box.flush().run();
 
-      check(tempHive.boxFile('users').existsSync()).isTrue();
+      check(tempHive.boxFile('users').existsSync()).isTrue;
     });
 
     scenario('compact completes and the box stays readable', () async {
@@ -168,11 +168,11 @@ void main() {
       await box.put(1, 'a').run();
       await box.flush().run();
       final boxFile = tempHive.boxFile('doomed');
-      check(boxFile.existsSync()).isTrue();
+      check(boxFile.existsSync()).isTrue;
 
       await box.deleteFromDisk().run();
 
-      check(boxFile.existsSync()).isFalse();
+      check(boxFile.existsSync()).isFalse;
     });
   });
 }

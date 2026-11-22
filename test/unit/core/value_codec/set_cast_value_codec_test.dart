@@ -18,7 +18,7 @@ void main() {
 
       check(view).isA<Set<String>>();
       check(view).deepEquals({'a', 'b'});
-      check(view.contains('b')).isTrue();
+      check(view.contains('b')).isTrue;
     });
 
     scenario('elements of another type fail at the decode, not when touched', () async {
@@ -62,7 +62,7 @@ void main() {
       final codec = SetCastValueCodec<String>();
       final value = {'a', 'b'};
 
-      check(identical(codec.toStorable(value), value)).isTrue();
+      check(identical(codec.toStorable(value), value)).isTrue;
     });
   });
 
