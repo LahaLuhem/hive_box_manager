@@ -140,7 +140,8 @@ now declare the constructor-assigned fields on every façade, both engines, and 
 ([`CODESTYLE.md#class-structure`](./CODESTYLE.md#class-structure)). One floor serves consumers and
 contributors alike, the test toolchain (`test`, `build_runner`) flooring below the package. 1.0 was
 the sanctioned breaking release, so the bump rode it, and since a floor can only be raised without a
-breaking change, any further bump is recorded here.
+breaking change, any further bump is recorded here. 3.14 came with Flutter 3.50, for no language
+feature, since the floor follows the newest stable, the one CI checks against.
 
 The runtime dependencies are `hive_ce`, `fpdart`, `meta`, `collection` and `synchronized`, and
 `pubspec.yaml` carries the constraints. `hive_ce` is floored at the version every behaviour pin was
