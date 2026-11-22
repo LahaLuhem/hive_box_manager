@@ -1,3 +1,7 @@
+## [Unreleased]
+### Changed
+- Require Dart 3.14
+
 ## [1.3.0] - 2026-10-19
 ### Added
 - \[#42\] Lists remove by idOf, value types need none
@@ -114,6 +118,7 @@
 - Collection BoxManagers
 - (Lazy) Dual Int Index LazyBoxManager
 
+[Unreleased]: https://github.com/LahaLuhem/hive_box_manager/compare/1.3.0...HEAD
 [1.3.0]: https://github.com/LahaLuhem/hive_box_manager/compare/1.2.0...1.3.0
 [1.2.0]: https://github.com/LahaLuhem/hive_box_manager/compare/1.1.1...1.2.0
 [1.1.1]: https://github.com/LahaLuhem/hive_box_manager/compare/1.1.0...1.1.1
