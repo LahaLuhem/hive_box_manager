@@ -54,6 +54,6 @@ void main() {
         await sut.onClearPressed();
         await pumpEventQueue();
 
-        check(sut.current.value.isNone()).isTrue();
+        check(sut.current.value.isNone()).isTrue;
       });
 }

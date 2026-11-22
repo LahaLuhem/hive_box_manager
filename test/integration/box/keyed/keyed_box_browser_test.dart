@@ -29,7 +29,7 @@ void main() {
       check(box.length).equals(2);
 
       await box.delete(1).run();
-      check(box.get(1).isNone()).isTrue();
+      check(box.get(1).isNone()).isTrue;
 
       await box.deleteFromDisk().run();
     });
@@ -46,7 +46,7 @@ void main() {
       final absent = await second.get('missing').run();
 
       check(present.toNullable()).equals('v');
-      check(absent.isNone()).isTrue();
+      check(absent.isNone()).isTrue;
 
       await second.deleteFromDisk().run();
     });

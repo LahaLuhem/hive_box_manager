@@ -68,7 +68,7 @@ void main() {
       final codec = CollectionCastValueCodec<String>();
       final value = ['a', 'b'];
 
-      check(identical(codec.toStorable(value), value)).isTrue();
+      check(identical(codec.toStorable(value), value)).isTrue;
     });
   });
 

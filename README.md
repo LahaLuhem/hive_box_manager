@@ -464,8 +464,9 @@ contents while your observer reports what the code did to them.
 
 ## 📏 Eager or lazy? (measured)
 
-Folklore says "lazy opens instantly and saves all the memory." The maintainer benchmark (macOS
-Apple Silicon, AOT, [setup here](https://github.com/LahaLuhem/hive_box_manager/blob/master/benchmark/README.md#results))
+Folklore says "lazy opens instantly and saves all the memory." The maintainer benchmark (macOS Apple
+Silicon, AOT,
+[setup here](https://github.com/LahaLuhem/hive_box_manager/blob/master/benchmark/README.md#results))
 disagrees:
 
 - **Opening costs about the same either way**, and it scales with file size: ~65 ms at 100K
@@ -490,9 +491,9 @@ a RAM cost you pay regardless.
 ### 💥 When a record won't decode
 
 An eager box decodes every value while it opens, so one record its adapter can't read stops the
-whole box from opening. hive_ce won't skip it ([hive_ce#318](https://github.com/IO-Design-Team/hive_ce/issues/318)).
-A lazy box decodes on read instead, and `values` throws an `UndecodableValueException` naming the
-key.
+whole box from opening. hive_ce won't skip it
+([hive_ce#318](https://github.com/IO-Design-Team/hive_ce/issues/318)). A lazy box decodes on read
+instead, and `values` throws an `UndecodableValueException` naming the key.
 
 Keep fields you add to a model after its first release nullable, since older records won't have
 them. If a box already won't open, open it lazily, delete each key an `UndecodableValueException`
@@ -607,10 +608,10 @@ included, so the read view really is copy-free.
 | box file size, 100K           | 1.9 MB                             | 2.7 MB           |
 | lazy get / single put         | codec-indifferent (disk dominates) |                  |
 
-Medians measured **through `DualKeyBox` itself** (macOS Apple Silicon, AOT, constant 1-byte values to
-isolate key cost), not through a hand-rolled stand-in. Web is unmeasured. Its ordering is assumed to
-follow the VM. `StringCompositeDualCodec` is the safe default. Reach for `PackedIntDualCodec` when
-these wins matter and both parts fit in 16 bits.
+Medians measured **through `DualKeyBox` itself** (macOS Apple Silicon, AOT, constant 1-byte values
+to isolate key cost), not through a hand-rolled stand-in. Web is unmeasured. Its ordering is assumed
+to follow the VM. `StringCompositeDualCodec` is the safe default. Reach for `PackedIntDualCodec`
+when these wins matter and both parts fit in 16 bits.
 
 The table rows are the 100K slice of these curves, and the gap widens as boxes grow:
 

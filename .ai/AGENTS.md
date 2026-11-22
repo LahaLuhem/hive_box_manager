@@ -9,8 +9,9 @@ A developer-experience wrapper over [`hive_ce`](https://pub.dev/packages/hive_ce
 Hive fork, docs at <https://docs.hive.isar.community>), giving Hive's `Box` / `LazyBox` a typed,
 functional surface. It adds no storage engine of its own. 4 aims:
 
-- **fpdart-first surface.** Reads and writes hand back lazy [`fpdart`](https://pub.dev/packages/fpdart)
-  `Task` / `TaskOption` / `Option`, never a bare `Future` or `null`. Absence is an `Option`.
+- **fpdart-first surface.** Reads and writes hand back lazy
+  [`fpdart`](https://pub.dev/packages/fpdart) `Task` / `TaskOption` / `Option`, never a bare
+  `Future` or `null`. Absence is an `Option`.
 - **CRUD for free.** The per-box get / put / update / delete / clear boilerplate consumers usually
   hand-write ships as ready-made box façades.
 - **Purpose-built box variants.** Façade families, each in an eager and a lazy variant:
@@ -33,8 +34,8 @@ engine, and `fpdart` is the paradigm. Rationale:
   for pedantic static analysis, as CI runs it (pedantic mode is intentional). No Flutter
   dependency in the package, no platform channels. The `example/` app is Flutter and carries its
   own pubspec, which dartender's CI checks too.
-- **`dependency_validator`** guards the dependency set. It skips `example/` by itself, since that's
-  a package of its own.
+- **`dependency_validator`** guards the dependency set. dartender's CI activates it globally and
+  runs it on the package and on `example/`, so neither pubspec lists it.
 - **Container-based linters** run from the [`linterpol`](https://github.com/LahaLuhem/linterpol)
   Docker image, not local installs, so only Docker is needed. The check set and image
   tag live in one manifest, [`.github/lint-checks.json`](../.github/lint-checks.json), which
@@ -147,8 +148,8 @@ Enforced by dartender's `conventions.yml`, through
   | `sem-skip`      | (skip)       | Internal-only change (CI, docs, tests, …)      |
 
   The PR title becomes the changelog line verbatim, so phrase it as a release-note bullet.
-- **PR body must not be empty**, **no merge commits in the PR range** (rebase to integrate `master`),
-  **commit subjects ≤ 82 characters**.
+- **PR body must not be empty**, **no merge commits in the PR range** (rebase to integrate
+  `master`), **commit subjects ≤ 82 characters**.
 
 ## Style
 

@@ -100,10 +100,10 @@ void main() {
       await facade.put(7, 'v').run();
 
       check(facade.length).equals(1);
-      check(facade.isEmpty).isFalse();
-      check(facade.isNotEmpty).isTrue();
+      check(facade.isEmpty).isFalse;
+      check(facade.isNotEmpty).isTrue;
       check(facade.keys).deepEquals([7]);
-      check(facade.contains(7)).isTrue();
+      check(facade.contains(7)).isTrue;
     });
 
     scenario('a failed open dispatches, resets, and the next run retries', () async {
@@ -133,7 +133,7 @@ void main() {
     scenario('an absent key reads as None and falls back through getOr', () async {
       final result = await facade.get(7).run();
 
-      check(result.isNone()).isTrue();
+      check(result.isNone()).isTrue;
       check(await facade.getOr(7, 'fallback').run()).equals('fallback');
     });
 
@@ -154,7 +154,7 @@ void main() {
       check(() => facade.putAll({1: 'a', -1: 'b'})).throws<ArgumentError>();
 
       check(opener.count).equals(0);
-      check(box.store).isEmpty();
+      check(box.store).isEmpty;
     });
 
     scenario('putAllBy writes one entry per distinct extracted key', () async {
@@ -169,13 +169,13 @@ void main() {
           .throws<AssertionError>();
 
       check(opener.count).equals(0);
-      check(box.store).isEmpty();
+      check(box.store).isEmpty;
     });
 
     scenario('putAllBy gates a non-storable extracted key at the call site', () {
       check(() => facade.putAllBy(['a'], keyOf: (value) => -1)).throws<ArgumentError>();
 
-      check(box.store).isEmpty();
+      check(box.store).isEmpty;
     });
 
     scenario('update rewrites, seeds via ifAbsent, and mirrors Map.update on absence', () async {
@@ -194,7 +194,7 @@ void main() {
       await facade.deleteAll([2, 3]).run();
       await facade.clear().run();
 
-      check(box.store).isEmpty();
+      check(box.store).isEmpty;
       check(observer.calls)
           .deepEquals(['deleted:logs:1', 'deleted:logs:2', 'deleted:logs:3', 'cleared:logs']);
     });
@@ -211,7 +211,7 @@ void main() {
         LazyTypedBoxEvent<String, int>(key: 7, value: Some('v')),
         LazyTypedBoxEvent<String, int>(key: 7, value: None()),
       ]);
-      check(events.last.deleted).isTrue();
+      check(events.last.deleted).isTrue;
     });
 
     scenario('a key filter narrows the stream to that key', () async {
@@ -241,7 +241,7 @@ void main() {
 
       await facade.close().run();
 
-      check(box.isClosed).isTrue();
+      check(box.isClosed).isTrue;
       await check(facade.get(7).run()).throws<HiveError>();
       check(observer.calls).deepEquals(['closed:logs', 'error:logs:get:HiveError']);
     });
@@ -253,7 +253,7 @@ void main() {
 
       check(box.flushCount).equals(1);
       check(box.compactCount).equals(1);
-      check(box.wasDeletedFromDisk).isTrue();
+      check(box.wasDeletedFromDisk).isTrue;
     });
   });
 

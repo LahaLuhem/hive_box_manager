@@ -2,10 +2,10 @@ Library-package code style. Project facts (goal, stack, repo layout, hard rules)
 [`.ai/AGENTS.md`](./.ai/AGENTS.md), and design rationale in [`APPENDIX.md`](./APPENDIX.md).
 
 The lint posture is deliberately strict (see
-[dartender's shared lints](https://github.com/LahaLuhem/dartender/blob/main/lints/lib/analysis_options.yaml), which
-[`analysis_options.yaml`](./analysis_options.yaml) includes).
-The house style values explicit types, no ambient mutability, small focused types, no `null` on the
-public surface, and one consistent shape across every Manager in the package.
+[dartender's shared lints](https://github.com/LahaLuhem/dartender/blob/main/lints/lib/analysis_options.yaml),
+which [`analysis_options.yaml`](./analysis_options.yaml) includes). The house style values explicit
+types, no ambient mutability, small focused types, no `null` on the public surface, and one
+consistent shape across every Manager in the package.
 
 Each heading below carries an explicit `<a id="…">` anchor. Link by anchor, not by heading text, so
 renames don't break callers.
@@ -118,9 +118,9 @@ under [*Hard rules* in `.ai/AGENTS.md`](./.ai/AGENTS.md#hard-rules).
   leads with a predicate word (`is`, `are`, `was`, `has`, `can`, `should`, `will`, `would`, `must`,
   `needs`) or a plain verb, so it reads as a question at the use site (`if (isEmpty)`,
   `emitsValueOnDelete ? old : null`), never a noun or bare adjective (`empty`, `single`). A method
-  that's already a verb (`contains`, `deleteAll`) is a predicate by construction and needs no prefix.
-  2 carve-outs: a name fixed by a dependency keeps its spelling (`crashRecovery`, `deleted` mirror
-  `hive_ce`), and a setter / handler parameter stays the conventional `value` (per the
+  that's already a verb (`contains`, `deleteAll`) is a predicate by construction and needs no
+  prefix. 2 carve-outs: a name fixed by a dependency keeps its spelling (`crashRecovery`, `deleted`
+  mirror `hive_ce`), and a setter / handler parameter stays the conventional `value` (per the
   callback-parameter exemption above).
 - **Name an extractor for what it returns, ending in `Of`** (`keyOf:`, `primaryOf:`), like
   package:collection. A bare noun (`key:`) reads like a value, not a function.
@@ -315,9 +315,9 @@ The per-family member sets live in each façade's dartdoc, and the design reason
 ### Compose in fpdart, run at the boundary
 
 Build the pipeline with `map` / `flatMap` on `Task` / `TaskOption` / `Option`. Call `.run()` (or
-fold the `Option`) once, at the edge where the effect is actually needed. Don't `.run()` mid-pipeline
-to pull a value out and drop back into imperative code. Return the lazy type from library methods and
-let the consumer decide when to run it.
+fold the `Option`) once, at the edge where the effect is actually needed. Don't `.run()`
+mid-pipeline to pull a value out and drop back into imperative code. Return the lazy type from
+library methods and let the consumer decide when to run it.
 
 ```dart
 // Prefer: stays lazy, one run at the edge
@@ -371,7 +371,8 @@ lazy: don't end a chain with a reflexive `.toList()`. Leave it an `Iterable` and
 consumer drive evaluation. Do side effects with a plain `for` loop, never `forEach` with a closure
 (`avoid_function_literals_in_foreach_calls`). A pipeline only wins when it costs no extra pass: a
 lazy `Iterable` walked twice reruns every step, so materialise it once or restructure. Reach for
-`package:collection` first, since collections are its whole job, then fpdart's `Iterable` extensions.
+`package:collection` first, since collections are its whole job, then fpdart's `Iterable`
+extensions.
 
 <a id="idioms-observers"></a>
 ### Observability: semantic event observers, not level-based loggers
@@ -396,8 +397,8 @@ Diagnostics follow the maintainer's cross-package observer convention (reference
 
 Legitimate uses: sealed-class cases across files (Dart requires the same library for sealed
 subtypes) and code-generation outputs. Avoid it for general organisation. Imports are explicit, and
-parts leak `_private` symbols across files. (The pre-1.0 code leaned on `part` to share a base across
-the dual-index managers. The 1.0 code dropped that.)
+parts leak `_private` symbols across files. (The pre-1.0 code leaned on `part` to share a base
+across the dual-index managers. The 1.0 code dropped that.)
 
 <a id="idioms-dot-shorthands"></a>
 ### Static dot shorthands where the context type is known
@@ -484,9 +485,9 @@ cite a measurement once where it lives instead of restating it at every site tha
 
 ### `@docImport` for dartdoc-only references
 
-When a file needs a symbol only for `[Name]` references in dartdoc, use Dart's dartdoc-only directive
-rather than a real `import`. A regular import declares a runtime dependency and makes the import
-graph lie.
+When a file needs a symbol only for `[Name]` references in dartdoc, use Dart's dartdoc-only
+directive rather than a real `import`. A regular import declares a runtime dependency and makes the
+import graph lie.
 
 ```dart
 /// @docImport 'package:hive_ce/hive.dart';
@@ -529,8 +530,8 @@ library;
   growing custom-fake count as a design smell to investigate, not a pattern to extend.
 - **Mirror `lib/src/` in `test/`.**
 - **Test against an in-memory box seam, not a real Hive box on disk.** The pre-1.0 dual-index tests
-  injected a fake `LazyBox` through a `@visibleForTesting` seam. Keep that pattern so unit tests stay
-  fast and deterministic.
+  injected a fake `LazyBox` through a `@visibleForTesting` seam. Keep that pattern so unit tests
+  stay fast and deterministic.
 - **Cover the absence and failure paths, not just the happy path.** For a functional surface that
   means asserting `None` / empty `Option` where a key is missing, not only the found case. A
   positive-only suite hides the exact bugs a no-null surface is meant to prevent.
@@ -575,8 +576,8 @@ Structure and spelling here, voice in [Prose & voice](#prose).
 - **`shellcheck` is the lint contract** for `benchmark/*.sh`, mirroring `dart analyze` for Dart. It
   runs from the [`linterpol`](https://github.com/LahaLuhem/linterpol) Docker image
   (`docker run --rm -v "$PWD:/work:ro" ghcr.io/lahaluhem/linterpol:latest shellcheck benchmark/*.sh`),
-  so the only local requirement is Docker. dartender's CI enforces it, reading the check set and
-  the image tag from [`.github/lint-checks.json`](./.github/lint-checks.json).
+  so the only local requirement is Docker. dartender's CI enforces it, reading the check set and the
+  image tag from [`.github/lint-checks.json`](./.github/lint-checks.json).
 - **Prefer `# shellcheck disable=SC<code>` + a one-line "why" over refactoring for simple cases.**
   Refactor when the warning points at a real bug. Reach for the directive when the code is correct
   and ShellCheck is just over-conservative. Always pair the directive with a comment.

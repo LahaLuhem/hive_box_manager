@@ -21,8 +21,8 @@ void main() {
       const packed = PackedIntDualCodec();
       const dated = DateIntDualCodec();
 
-      check(identical(resolveDualKeyCodec<int, int>(packed), packed)).isTrue();
-      check(identical(resolveDualKeyCodec<DateTime, int>(dated), dated)).isTrue();
+      check(identical(resolveDualKeyCodec<int, int>(packed), packed)).isTrue;
+      check(identical(resolveDualKeyCodec<DateTime, int>(dated), dated)).isTrue;
     });
 
     scenario('any other part pair without a codec fails the wiring assert', () {

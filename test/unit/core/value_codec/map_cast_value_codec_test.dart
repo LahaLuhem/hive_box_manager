@@ -69,7 +69,7 @@ void main() {
       final codec = MapCastValueCodec<String, int>();
       final value = {'a': 1};
 
-      check(identical(codec.toStorable(value), value)).isTrue();
+      check(identical(codec.toStorable(value), value)).isTrue;
     });
 
     scenarioOutline<Object Function()>(
@@ -119,7 +119,7 @@ void main() {
       outline: (row) =>
           check(row.write)
               .throws<ArgumentError>()
-              .has((error) => error.name, 'name')
+              .has('name', (error) => error.name)
               .equals(row.name),
     );
 

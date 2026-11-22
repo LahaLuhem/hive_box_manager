@@ -105,7 +105,7 @@ void main() {
       final deduped = dedupedById([first, _Thing('b'), _Thing('a')], idOf);
 
       check(deduped.map(idOf)).deepEquals(['a', 'b']);
-      check(identical(deduped.first, first)).isTrue();
+      check(identical(deduped.first, first)).isTrue;
     });
 
     scenario('value types dedup by themselves', () {
@@ -115,7 +115,7 @@ void main() {
     scenario("the result compares with the elements' own ==, not the id", () {
       final deduped = dedupedById([_Thing('a')], idOf);
 
-      check(deduped.contains(_Thing('a'))).isFalse();
+      check(deduped.contains(_Thing('a'))).isFalse;
     });
 
     scenario('elements with different ids but equal == fail the merge assert', () {
@@ -137,7 +137,7 @@ void main() {
       final upserted = upsertedById([_Thing('a'), _Thing('b'), _Thing('c')], [replacement], idOf);
 
       check(upserted.map(idOf)).deepEquals(['a', 'b', 'c']);
-      check(identical(upserted.elementAt(1), replacement)).isTrue();
+      check(identical(upserted.elementAt(1), replacement)).isTrue;
     });
 
     scenario('puts new ids on the end, in encounter order', () {
@@ -151,7 +151,7 @@ void main() {
 
       final upserted = upsertedById([_Thing('a')], [first, _Thing('a')], idOf);
 
-      check(identical(upserted.single, first)).isTrue();
+      check(identical(upserted.single, first)).isTrue;
     });
   });
 }

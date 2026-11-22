@@ -32,11 +32,11 @@ void main() {
     scenario('no matches means an empty result, never an absence', () {
       liveKeys.add(codec.encode(1, 10));
 
-      check(scan.rawKeysByPrimary(99)).isEmpty();
+      check(scan.rawKeysByPrimary(99)).isEmpty;
     });
 
     scenario('scans the live key set, not a snapshot taken at construction', () {
-      check(scan.rawKeysByPrimary(1)).isEmpty();
+      check(scan.rawKeysByPrimary(1)).isEmpty;
 
       liveKeys.add(codec.encode(1, 10));
 

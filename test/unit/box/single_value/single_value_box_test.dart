@@ -42,11 +42,11 @@ void main() {
 
   feature('SingleValueBox reads', () {
     scenario('an unset box reads None, falls back through getOr, and counts as empty', () {
-      check(facade.get().isNone()).isTrue();
+      check(facade.get().isNone()).isTrue;
       check(facade.getOr('fallback')).equals('fallback');
       check(facade.length).equals(0);
-      check(facade.isEmpty).isTrue();
-      check(facade.isNotEmpty).isFalse();
+      check(facade.isEmpty).isTrue;
+      check(facade.isNotEmpty).isFalse;
       check(facade.name).equals('config');
     });
 
@@ -56,7 +56,7 @@ void main() {
       check(facade.get().toNullable()).equals('v');
       check(facade.getOr('fallback')).equals('v');
       check(facade.length).equals(1);
-      check(facade.isNotEmpty).isTrue();
+      check(facade.isNotEmpty).isTrue;
     });
   });
 
@@ -64,7 +64,7 @@ void main() {
     scenario('a set Task is lazy and replaces the previous value', () async {
       final write = facade.set('first');
 
-      check(box.store).isEmpty();
+      check(box.store).isEmpty;
 
       await write.run();
       await facade.set('second').run();
@@ -87,7 +87,7 @@ void main() {
       await facade.clear().run();
 
       check(observer.calls).deepEquals(['cleared:config']);
-      check(facade.get().isNone()).isTrue();
+      check(facade.get().isNone()).isTrue;
     });
   });
 
@@ -127,8 +127,8 @@ void main() {
 
       await facade.deleteFromDisk().run();
 
-      check(box.wasDeletedFromDisk).isTrue();
-      check(box.store).isEmpty();
+      check(box.wasDeletedFromDisk).isTrue;
+      check(box.store).isEmpty;
     });
   });
 

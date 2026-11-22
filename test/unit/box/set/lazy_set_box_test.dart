@@ -68,7 +68,7 @@ void main() {
 
       check(facade.length).equals(1);
       check(facade.keys).deepEquals([1]);
-      check(facade.contains(1)).isTrue();
+      check(facade.contains(1)).isTrue;
     });
 
     scenario('the corruption gate throws at the call site, before the box even opens', () {
@@ -113,11 +113,11 @@ void main() {
 
   feature('LazySetBox reads and absent vs stored-empty', () {
     scenario('an absent key is None, a stored empty set is Some(empty)', () async {
-      check((await facade.get(1).run()).isNone()).isTrue();
+      check((await facade.get(1).run()).isNone()).isTrue;
 
       await facade.put(1, <String>[]).run();
 
-      check((await facade.get(1).run()).toNullable()).isNotNull().isEmpty();
+      check((await facade.get(1).run()).toNullable()).isNotNull().isEmpty;
     });
 
     scenario('values reads every stored set', () async {
@@ -216,7 +216,7 @@ void main() {
         check(await members.namesUnder(1)).deepEquals(['b']);
 
         await members.remove(1, Member(2, 'fresh copy')).run();
-        check((await members.get(1).run()).toNullable()).isNotNull().isEmpty();
+        check((await members.get(1).run()).toNullable()).isNotNull().isEmpty;
       },
     );
 
@@ -227,7 +227,7 @@ void main() {
       await facade.remove(9, 'a').run();
       await facade.remove(1, 'missing').run();
 
-      check(observer.calls).isEmpty();
+      check(observer.calls).isEmpty;
     });
   });
 
@@ -241,7 +241,7 @@ void main() {
       check(events).length.equals(2);
       check(events.first.value.toNullable()).isNotNull().deepEquals({'a'});
       check(() => events.first.value.toNullable()!.add('rogue')).throws<UnsupportedError>();
-      check(events.last.value.isNone()).isTrue();
+      check(events.last.value.isNone()).isTrue;
     });
   });
 

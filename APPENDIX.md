@@ -67,10 +67,10 @@ Every Dependabot PR, majors included, auto-merges through the `Auto-merge` job i
 <a id="pure-dart-not-flutter"></a>
 ## Pure-Dart package, no Flutter dependency
 
-`hive_box_manager` is storage logic over `hive_ce`, and `hive_ce` is itself pure Dart, so the wrapper
-stays pure Dart too: no Flutter dependency, no `dart:io`, no platform channels in the package. That
-keeps it usable in a Dart server, a CLI, a web app, and a Flutter app alike, which is the same set of
-places Hive is used.
+`hive_box_manager` is storage logic over `hive_ce`, and `hive_ce` is itself pure Dart, so the
+wrapper stays pure Dart too: no Flutter dependency, no `dart:io`, no platform channels in the
+package. That keeps it usable in a Dart server, a CLI, a web app, and a Flutter app alike, which is
+the same set of places Hive is used.
 
 Anything that would need Flutter (a `ValueListenable` view over a box's change stream, a widget
 binding) does not go here. It goes in a companion package (see
@@ -85,10 +85,11 @@ Flutter.
 
 The package's first aim is a clean functional surface, chosen for 2 reasons. First, it removes a
 whole class of caller-side bugs: a read either yields a value or an explicit `Option`, so "did this
-key exist?" is answered by the type instead of a nullable that every caller has to remember to check.
-Second, the maintainer's apps already lean heavily on [`fpdart`](https://pub.dev/packages/fpdart), so
-a surface that hands back `Task` / `TaskOption` / `Option` drops straight into existing pipelines
-instead of forcing an `await`-and-rewrap at every call site.
+key exist?" is answered by the type instead of a nullable that every caller has to remember to
+check. Second, the maintainer's apps already lean heavily on
+[`fpdart`](https://pub.dev/packages/fpdart), so a surface that hands back `Task` / `TaskOption` /
+`Option` drops straight into existing pipelines instead of forcing an `await`-and-rewrap at every
+call site.
 
 The concrete commitments:
 
@@ -125,8 +126,8 @@ decision turns on *what a dependency is for*.
   layer, a codec for a specific serialisation. Each becomes its own package depending on core plus
   its one integration dependency.
 
-Companions are built when actually needed, as their own repositories, matching the maintainer's other
-packages.
+Companions are built when actually needed, as their own repositories, matching the maintainer's
+other packages.
 
 ---
 
@@ -234,8 +235,8 @@ both 1.x). The query seam already carries write/delete hooks so the 1.x index pl
 touching the public surface: the scan strategy implements them as no-ops.
 
 **A value codec restores a type hive loses. It never serialises.** That's the adapter's job, and
-adapters are the consumer's. JSON settled it: as a codec it would parse on every eager read, where an
-adapter parses once at open.
+adapters are the consumer's. JSON settled it: as a codec it would parse on every eager read, where
+an adapter parses once at open.
 
 ---
 

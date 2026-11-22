@@ -19,11 +19,11 @@ void main() {
     scenario('construction touches nothing; the first effect opens and hits slot 0', () async {
       final facade = LazySingleValueBox<String>('config');
 
-      check(Hive.isBoxOpen('config')).isFalse();
+      check(Hive.isBoxOpen('config')).isFalse;
 
       await facade.set('v').run();
 
-      check(Hive.isBoxOpen('config')).isTrue();
+      check(Hive.isBoxOpen('config')).isTrue;
       final read = await facade.get().run();
       check(read.toNullable()).equals('v');
     });
@@ -32,7 +32,7 @@ void main() {
       final facade = LazySingleValueBox<String>('config');
 
       final absent = await facade.get().run();
-      check(absent.isNone()).isTrue();
+      check(absent.isNone()).isTrue;
       check(await facade.getOr('fallback').run()).equals('fallback');
 
       await facade.set('v').run();
@@ -51,7 +51,7 @@ void main() {
       await facade.clear().run();
 
       final unset = await facade.get().run();
-      check(unset.isNone()).isTrue();
+      check(unset.isNone()).isTrue;
     });
 
     scenario('the value persists across close and a new instance (disk truth)', () async {
@@ -80,8 +80,8 @@ void main() {
 
       await untouched.close().run();
 
-      check(Hive.isBoxOpen('never_used')).isFalse();
-      check(tempHive.boxFile('never_used').existsSync()).isFalse();
+      check(Hive.isBoxOpen('never_used')).isFalse;
+      check(tempHive.boxFile('never_used').existsSync()).isFalse;
       await check(untouched.set('v').run()).throws<HiveError>();
     });
   });

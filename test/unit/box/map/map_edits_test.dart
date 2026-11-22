@@ -26,7 +26,7 @@ void main() {
         hashCode: (key) => key.toLowerCase().hashCode,
       )..['Ada'] = 1;
 
-      check(storableCopyOf(caseInsensitive)['ADA']).isNull();
+      check(storableCopyOf(caseInsensitive)['ADA']).isNull;
     });
   });
 }

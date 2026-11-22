@@ -80,9 +80,9 @@ void main() {
 
   feature('DualKeyBox reads', () {
     scenario('absent composite keys read as None, fall back, and are not contained', () {
-      check(facade.get(1, 2).isNone()).isTrue();
+      check(facade.get(1, 2).isNone()).isTrue;
       check(facade.getOr(1, 2, 'fallback')).equals('fallback');
-      check(facade.contains(1, 2)).isFalse();
+      check(facade.contains(1, 2)).isFalse;
     });
 
     scenario('stored entries surface through every inspector, decoded to records', () async {
@@ -90,11 +90,11 @@ void main() {
 
       check(facade.get(1, 1).toNullable()).equals('a');
       check(facade.getOr(1, 1, 'fallback')).equals('a');
-      check(facade.contains(2, 2)).isTrue();
+      check(facade.contains(2, 2)).isTrue;
       check(facade.keys).deepEquals([(1, 1), (2, 2)]);
       check(facade.values).deepEquals(['a', 'b']);
       check(facade.length).equals(2);
-      check(facade.isNotEmpty).isTrue();
+      check(facade.isNotEmpty).isTrue;
       check(facade.name).equals('grid');
     });
   });
@@ -104,8 +104,8 @@ void main() {
       final matches = facade.queryByPrimary(42);
 
       check(matches).isA<List<String>>();
-      check(matches).isEmpty();
-      check(facade.queryBySecondary(42)).isEmpty();
+      check(matches).isEmpty;
+      check(facade.queryBySecondary(42)).isEmpty;
     });
 
     scenario('queries collect every match by the requested part', () async {
@@ -166,7 +166,7 @@ void main() {
         ),
       ).throws<AssertionError>();
 
-      check(box.store).isEmpty();
+      check(box.store).isEmpty;
     });
 
     scenario('delete, deleteAll, and clear remove entries with per-key dispatch', () async {
@@ -177,7 +177,7 @@ void main() {
       await facade.deleteAll([(2, 2), (3, 3)]).run();
       await facade.clear().run();
 
-      check(box.store).isEmpty();
+      check(box.store).isEmpty;
       check(observer.calls).deepEquals([
         'deleted:grid:(1, 1)',
         'deleted:grid:(2, 2)',
@@ -232,8 +232,8 @@ void main() {
 
       await facade.deleteFromDisk().run();
 
-      check(box.wasDeletedFromDisk).isTrue();
-      check(box.store).isEmpty();
+      check(box.wasDeletedFromDisk).isTrue;
+      check(box.store).isEmpty;
     });
   });
 

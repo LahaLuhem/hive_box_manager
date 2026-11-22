@@ -91,7 +91,7 @@ void main() {
         await saveEach(saved);
 
         sut.onUserSelected(otherUser);
-        check(listed()).isEmpty();
+        check(listed()).isEmpty;
 
         sut.onUserSelected(homeUser);
         check(sut.settings.value).deepEquals(saved);

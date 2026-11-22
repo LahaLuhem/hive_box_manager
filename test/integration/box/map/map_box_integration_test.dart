@@ -111,8 +111,8 @@ void main() {
 
       final reopened = await reopen(box);
 
-      check(reopened.get(9).isNone()).isTrue();
-      check(reopened.get(1).toNullable()).isNotNull().isEmpty();
+      check(reopened.get(9).isNone()).isTrue;
+      check(reopened.get(1).toNullable()).isNotNull().isEmpty;
     });
 
     scenario('writes are copied and reads reject mutation, before and after a reopen', () async {

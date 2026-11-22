@@ -75,7 +75,7 @@ void main() {
       check(box.get('person')).equals(const Person('web', 1));
 
       final raw = box.get('list');
-      check(raw is List<Person>).isFalse();
+      check(raw is List<Person>).isFalse;
       check((raw! as List<dynamic>).cast<Person>().first).equals(const Person('web-a', 2));
 
       await box.deleteFromDisk();

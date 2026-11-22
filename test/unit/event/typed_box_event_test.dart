@@ -18,8 +18,8 @@ void main() {
 
       check(event).equals(same);
       check(event.hashCode).equals(same.hashCode);
-      check(event).not((it) => it.equals(otherDeleted));
-      check(event).not((it) => it.equals(otherKey));
+      check(event).not(.it()..equals(otherDeleted));
+      check(event).not(.it()..equals(otherKey));
     });
 
     scenario('toString names every field for log-worthiness', () {

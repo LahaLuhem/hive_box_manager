@@ -177,7 +177,7 @@ void main() {
       await pumpEventQueue();
       await subscription.cancel();
 
-      check(events).isEmpty();
+      check(events).isEmpty;
       check(failures).length.equals(1);
       final failure = failures.single as UndecodableValueException;
       check(failure.key).equals(7);
@@ -312,7 +312,7 @@ void main() {
 
       // Unwrapped: hive decodes every frame during openBox, so there is no per-value seam here.
       await check(KeyedBox.open<Thing, String>('probeBox').run()).throws<FormatException>();
-      check(Hive.isBoxOpen('probeBox')).isFalse();
+      check(Hive.isBoxOpen('probeBox')).isFalse;
     });
 
     scenario('deleting the bad record then compacting restores the eager open', () async {

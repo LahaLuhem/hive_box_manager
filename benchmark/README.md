@@ -66,10 +66,10 @@ before the seeding was equalised and the RSS window moved after the seed.
 
 <!-- -->
 
-> **On a phone, warm up first.** The first timed pass absorbs the CPU frequency ramp, which is enough
-> to make a plain global load measure *slower* than a thread-local one. Burn a full pass before
-> timing anything. Pinning with `taskset` helps until the governor offlines the core you picked, and
-> then it just fails, so treat it as a bonus rather than the plan.
+> **On a phone, warm up first.** The first timed pass absorbs the CPU frequency ramp, which is
+> enough to make a plain global load measure *slower* than a thread-local one. Burn a full pass
+> before timing anything. Pinning with `taskset` helps until the governor offlines the core you
+> picked, and then it just fails, so treat it as a bonus rather than the plan.
 
 ### Percentages lie on cheap operations
 
@@ -83,8 +83,8 @@ percentage is a fact about the denominator.
 
 The list-box lane has the same hazard from the other direction: on `List<String>` its `get` ratio
 falls from 2.8x at one element per key to 0.94x at a thousand, which looks like the wrapper getting
-cheaper at scale. It isn't. A **~265 ns fixed term per get** just stops dominating. What each element
-adds over `correct` depends on its type:
+cheaper at scale. It isn't. A **~265 ns fixed term per get** just stops dominating. What each
+element adds over `correct` depends on its type:
 
 | Element type | Per element | Why |
 |---|---|---|

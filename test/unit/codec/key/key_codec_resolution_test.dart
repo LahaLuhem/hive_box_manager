@@ -25,8 +25,8 @@ void main() {
       const dateCodec = DateKeyCodec();
       const intCodec = IntKeyCodec();
 
-      check(identical(resolveKeyCodec<DateTime>(dateCodec), dateCodec)).isTrue();
-      check(identical(resolveKeyCodec<int>(intCodec), intCodec)).isTrue();
+      check(identical(resolveKeyCodec<DateTime>(dateCodec), dateCodec)).isTrue;
+      check(identical(resolveKeyCodec<int>(intCodec), intCodec)).isTrue;
     });
 
     scenario('any other K without a codec fails the wiring assert', () {
